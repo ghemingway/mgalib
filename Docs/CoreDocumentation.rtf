@@ -1,0 +1,226 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf320
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red100\green56\blue32;}
+\margl1440\margr1440\vieww17780\viewh17120\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\b\fs30 \cf0 \ul \ulc0 CoreProject Interface
+\b0\fs24 \ulnone \
+\
+The CoreProject interface...\
+\
+Save\
+\
+Begin Transaction\
+\
+CommitTransaction\
+\
+AbortTransaction\
+\
+NestedTransactionCount\
+\
+Object\
+\
+CreateObject\
+\
+DeleteObject\
+\
+RootObject\
+\
+UndoTransaction\
+\
+RedoTransaction\
+\
+FlushUndoQueue\
+\
+FlushRedoQueue\
+\
+UndoQueueSize\
+\
+RedoQueueSize\
+\
+CreateTerritory\
+\
+PushTerritory\
+\
+PopTerritory\
+\
+\
+
+\b\fs30 \ul CoreObject Interface
+\b0\fs24 \ulnone \
+\
+The CoreObject interface\'85\
+\
+\
+\
+\
+\
+
+\b\fs30 \ul Project Operations
+\b0\fs24 \ulnone \
+\
+The CoreStorage interface \
+\
+\
+\ul RegisterStorage\ulnone  dynamically registers a new CoreStorage-compliant class.\
+\
+\ul Create\ulnone  creates a new instance of a CoreStorage-compliant class to handle the given tag.\
+\
+\ul Open\ulnone  creates an instance of the appropriate CoreStorage-compliant class to open an existing database.\
+\
+\ul Save\ulnone  writes all committed changes to a database back out to a file.  If no filename is passed to the function then the existing filename is used.  Additionally, a bool flag may be set to force the writing of a version 2 MGA file.\
+\
+\
+
+\b\fs30 \ul Transaction Operations
+\b0\fs24 \ulnone \
+\
+Three basic transaction operations are supported via the CoreStorage interface.  First a transaction is started with BeginTransaction.  Some series of cursor operations: OpenObject, CreateObject, DeleteObject, GetAttributeValue, SetAttributeValue and CloseObject calls are then performed.  To save these actions permanently into the database CommitTransaction is called.  To rollback all changes since BeginTransaction was called, AbortTransaction can be invoked.\
+\
+\
+\ul BeginTransaction\ulnone  starts a new transaction.  At the CoreStorage level nested transactions are not supported, so CommitTransaction or AbortTransaction must be called before BeginTransaction can be called again.\
+	Errors:\
+		- It is an error to attempt to begin a new transaction while a transaction is already ongoing (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)\
+\
+
+\f0\fs24 \cf0 \ul \ulc0 \CocoaLigature1 CommitTransaction\ulnone  completes a transaction and saves all pending changes to the database.  At the CoreStorage level, a committed transaction can not be undone.  CommitTransaction does imply that any open object (see cursor operations below) is closed.\
+	Errors:\
+		- It is an error to attempt to \
+\
+\
+\ul AbortTransaction\ulnone  undoes all changes made to a database since the most recent BeginTransaction call was made.  Once these changes have been rolled back, the transaction is ended.  AbortTransaction does imply that any open object is closed.\
+	Errors:\
+		- It is an error to attempt to\
+\
+\
+
+\b\fs30 \ul Object Cursor Operations
+\b0\fs24 \
+\
+\ulnone Cursor operations are only executed in the context of a transaction.  No cursor operations are permanent until CommitTransaction has been called and can be reverted using AbortTransaction.  Cursor operations do not mark a project as being dirty as this only occurs on a non-empty transaction commit.  One, and only one, object is considered at any given time.  This object is set using the OpenObject or CreateObject calls.  The CloseObject or DeleteObject calls set the cursor to the NULL object.\
+\
+\
+\ul OpenObject\ulnone  implies that the object is fetched from its location, pointed at by _openedObject, and placed into the cache.  All attribute operations will be performed on the open object.  If an object is already open when OpenObject is called, the currently opened object is first closed, then the requested object is opened.\
+	Errors:\
+		- It is an error to attempt to open an object if BeginTransaction has not been called (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+		- It is an error to attempt to open an object using METAID_NONE or OBJID_NONE (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+		- It is an error to attempt to open an object using and invalid MetaID-ObjID pair (
+\f1\fs22 \cf2 \CocoaLigature0 E_NOTFOUND)
+\f0\fs24 \cf0 \CocoaLigature1 \
+\
+\
+\ul CreateObject\ulnone  creates a new BinObject using the MetaObject blueprint provided.  The object is initially placed into the cache and it pointed at by _openedObject.  The object is also entered into _metaIDHash and _createObjects.  CreateObject will increment the maximum ObjID for a given MetaID.  It is acceptable to immediately change or delete a created object.  The newly created object is set as the open object.  If CreateObject is called while another object is already open, CloseObject is implicitly called on the open object and then CreateObject proceeds.\
+	Errors:\
+		- It is an error to create an object using a MetaID of METAID_NONE (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+		- It is an error to create an object using an unknown MetaID (
+\f1\fs22 \cf2 \CocoaLigature0 E_METAID)
+\f0\fs24 \cf0 \CocoaLigature1 \
+		- It is an error to attempt to create an object if BeginTransaction has not been called (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+\
+\
+\ul DeleteObject\ulnone  deletes the object from the CoreBinFile.  The object is fetched from its current location and is also removed from the cache.  Once the parent transaction is committed, the object can not be recovered.  Deleting an object implies that the object has been closed.\
+	Errors:\
+		- It is an error to attempt to create an object if BeginTransaction has not been called (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)\
+		
+\f0\fs24 \cf0 \CocoaLigature1 - It is an error to attempt to delete an object if one is not currently open (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+\
+\ul CloseObject\ulnone  closes the currently open object, if one is open.  Multiple calls to CloseObject change nothing.  If an object has been deleted via DeleteObject, calling CloseObject changes nothing.\
+	Errors:\
+		- It is an error to attempt to close an object if BeginTransaction has not been called (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+\
+\
+\ul SetAttributeValue\ulnone  sets the given attribute on the open object with the given value.  The function is overloaded for the seven different data types (ValueType) that attributes currently support (long, real, string, collection, pointer, lock, and binary.\
+		- It is an error to attempt to set an attribute value if BeginTransaction has not been called (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)\
+		
+\f0\fs24 \cf0 \CocoaLigature1 - It is an error to attempt to set an attribute value if an object is not currently open (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)\
+		
+\f0\fs24 \cf0 \CocoaLigature1 - It is an error to attempt to set an attribute value using the SetAttributeValue method for a different ValueType (
+\f1\fs22 \cf2 \CocoaLigature0 E_ATTVALTYPE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+\
+\ul GetAttributeValue\ulnone  returns the requested attribute from the open object.  The function is overloaded for the seven different data types (ValueType) that attributes currently support (long, real, string, collection, pointer, lock, and binary.\
+		- It is an error to attempt to get an attribute value if BeginTransaction has not been called (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)\
+		
+\f0\fs24 \cf0 \CocoaLigature1 - It is an error to attempt to get an attribute value if an object is one is not currently open (
+\f1\fs22 \cf2 \CocoaLigature0 E_INVALID_USAGE)\
+		
+\f0\fs24 \cf0 \CocoaLigature1 - It is an error to attempt to get an attribute value using the GetAttributeValue method for a different ValueType (
+\f1\fs22 \cf2 \CocoaLigature0 E_ATTVALTYPE)
+\f0\fs24 \cf0 \CocoaLigature1 \
+\
+\
+
+\b\fs30 \ul MGA Binary File Format - Version 3 
+\b0\fs24 \ulnone \
+\
+Bytes (all ordered little endian):\
+\
+0-3: Size of GUID (always = 16)\
+4-19: GUID (long, short, short, 8xChar)\
+		\{ 68, 116, 143, 2, 81, 46, 211, 17, 179, 109, 0, 98, 8, 45, 248, 116)\
+\
+\
+*** New Addition ***\
+20-21: DTID_INDEX (2B, if present then index is present)\
+22-26: Size of Index (4 bytes ObjID_t)\
+\
+-- Index Entry\
+	MetaID (2 bytes)\
+	ObjID(4 bytes)\
+	File Position (8 bytes)\
+*** End of Addition ***\
+\
+\
+--- Start of Objects\
+\
+0-1: MetaID (2 bytes)\
+2-5: ObjID (4 bytes)\
+\
+-- Start of Attributes\
+\
+0-1: ValueType (2 bytes)\
+2-3: AttrID (2 bytes)\
+-- Read Attribute Value\
+	Long: 4 bytes \
+	Real: 4 bytes\
+	String: 4 bytes for length + length number of bytes\
+	Binary: 4 bytes for length + length number of bytes\
+	Lock: 0 bytes\
+	Collection: 0 bytes (***New Addition: 4 bytes size, + MetaID,ObjID (6B) per item in collection ***)\
+	Pointer: 2 bytes (MetaID) + 4 bytes (ObjID) - only MetaID if MetaID == METAID_NONE\
+\
+-- End of Attributes when ValueType == VALUETYPE_NONE == 0\
+\
+-- End of Objects when MetaID == METAID_NONE == 0\
+\
+\
+\
+
+\b\fs30 \ul CoreBinStorage - The 3 Object Locations
+\b0\fs24 \ulnone \
+\
+BinObjects can be in one of three locations during run-time.  First is in _inputFile, which is the file that the user opens.  _inputFile is read-only.  It serves as the original source of all BinObjects.  _inputHash is a hash lookup table for the objects in _inputFile.  On OpenProject all objects are assumed to be in an unchanged state, and as such, all objects are indexed in _inputHash.  Objects in the _inputHash do not actually exist in memory, only in the _inputFile.  The _inputHash simply has an in-file location from which the object can be read.\
+\
+The second location of BinObjects is the object cache, _cacheHash.  Through the private FetchObject call an object is guaranteed to be in memory and in the cache.  An OpenObject call simply implies a FetchObject call.  If an object currently resides in the _inputHash it is removed from that hash, read from file into memory, and entered into the _cacheHash.  A CloseObject call similarly implies a call to the private FlushObject method.  FetchObject and FlushObject are discussed in greater detail below.  Simply understand that if an object is in the cache it exists as an in-memory BinObject.\
+\
+The final location of BinObjects is in the scratch file, _scratchFile with its corresponding _scratchHash.  Objects may be removed from the cache in order to make space for other objects.  If the object being removed from the cache is unchanged it is moved back to the _inputFile.  If the object has been changed (or is newly created) it is instead moved to _scratchFile.  Similar to _inputFile, _scratchFile does not keep objects in memory, instead it only points to in-file locations of object data.\
+\
+}

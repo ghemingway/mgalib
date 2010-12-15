@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MGARegistry regversion="1.0"
+			 iconpath="$PARADIGMDIR\icons;$PROJECTDIR\icons"
+			 javaclasspath="asdfasdfasdfa"
+			 javamemory="64M">
+	<Components></Components>
+	<GUI>
+		<GME></GME>
+	</GUI>
+	<Paradigms>
+		<Paradigm name="ESMoL" currentversion="{abcd}">
+			<Version guid="{abcd}" connection="MGA=/Users/ghemingway/Documents/MGALib/Testing/TestSamples/ESMoL.mta"/>
+		</Paradigm>
+		<Paradigm name="MetaGME" currentversion="{9D3F9884-FE60-409C-8FC1-45789193989B}">
+			<Version guid="{9D3F9884-FE60-409C-8FC1-45789193989B}" connection="MGA=~/Documents/MGALib/Testing/TestSamples/MetaGME.mta"/>
+		</Paradigm>
+	</Paradigms>
+</MGARegistry>
