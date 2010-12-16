@@ -5,6 +5,8 @@
 
 The MGA file format has not changed in quite a while.  This has been good, but it is time for a change.  Listed below are the proposed changes at both the [http://code.google.com/p/mgalib/source/browse/trunk/Core/BinFile.cpp?r=6 BinFile] level and as will be incurred by changing [http://code.google.com/p/mgalib/source/browse/trunk/MGA/MgaGeneric.cpp?r=5 MgaGeneric] and [http://code.google.com/p/mgalib/source/browse/trunk/Meta/MetaGeneric.cpp?r=5 MetaGeneric].
 
+Any of these changes may impact the actual binary format of the MGA file.  An attempt at a complete description of the v3 MGA file format can be found at [MGAv3_Binary_File_Format].
+
 
 = Proposed Changes =
 
