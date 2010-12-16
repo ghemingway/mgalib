@@ -1,4 +1,5 @@
 #summary Byte-level Description of the MGA binary file.
+#labels Phase-Implementation
 
 = Introduction =
 
