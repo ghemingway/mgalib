@@ -45,6 +45,6 @@ Bytes (all ordered little endian):
   * Collection: 0 bytes (***New Addition: 4 bytes size, + MetaID,ObjID (6B) per item in collection ***)
   * Pointer: 2 bytes (MetaID) + 4 bytes (ObjID) - only MetaID if MetaID == METAID_NONE
 
-=== End of Attributes when ValueType equals VALUETYPE_NONE ===
+=== End of Attributes when !ValueType equals VALUETYPE_NONE ===
 
 === End of Objects when MetaID equals METAID_NONE ===
