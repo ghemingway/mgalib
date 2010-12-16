@@ -3,7 +3,7 @@
 
 = Introduction =
 
-The MGA file format has not changed in quite a while.  This has been good, but it is time for a change.  Listed below are the proposed changes at both the BinFile level and as will be incurred by changing MgaGeneric and MetaGeneric.
+The MGA file format has not changed in quite a while.  This has been good, but it is time for a change.  Listed below are the proposed changes at both the BinFile level and as will be incurred by changing [http://code.google.com/p/mgalib/source/browse/trunk/MGA/MgaGeneric.cpp?r=5 MgaGeneric] and [http://code.google.com/p/mgalib/source/browse/trunk/Meta/MetaGeneric.cpp?r=5 MetaGeneric].
 
 
 = Proposed Changes =
