@@ -2,7 +2,7 @@
 
 = Introduction =
 
-Below is the byte-level description of the MGA binary file format.  This will change depending on the work being done regarding changes to the MGA "special sauce" and the binary format itself, as described in MGA.
+Below is the byte-level description of the MGA binary file format.  This will change depending on the work being done regarding changes to the MGA "special sauce" and the binary format itself, as described in MGA_v2_to_v3_Changes.
 
 = MGA Binary File Format - Version 3 =
 
