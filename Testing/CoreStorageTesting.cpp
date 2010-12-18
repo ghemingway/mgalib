@@ -37,6 +37,31 @@ TEST(UtilityTests,GUIDConversions)
 }
 
 
+TEST(UtilityTests,UUIDConversions)
+{
+	UUID uuidA;
+	// From a UUID to vector and string
+	std::vector<unsigned char> vectorUUIDA = uuidA;
+	std::string stringUUIDA = uuidA;
+	
+	// From vector to UUID and string
+	UUID uuidB = vectorUUIDA;
+	std::string stringUUIDB = UUID::ToString(vectorUUIDA);
+	
+	// From string to UUID and vector
+	UUID uuidC = stringUUIDB;
+	std::vector<unsigned char> vectorUUIDC = UUID::ToVector(stringUUIDB);
+
+	UUID uuidD;
+	EXPECT_NE( uuidA, uuidD );
+	EXPECT_EQ( uuidA, uuidB );
+	EXPECT_EQ( uuidB, uuidC );
+	EXPECT_EQ( stringUUIDA, stringUUIDB );
+	EXPECT_EQ( vectorUUIDA, vectorUUIDC );
+}
+
+
+
 // --------------------------- StaticICoreStorage --------------------------- //
 
 
