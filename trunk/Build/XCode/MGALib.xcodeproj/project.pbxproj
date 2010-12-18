@@ -106,6 +106,8 @@
 		5843910312B9711100F4AB58 /* MgaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390FF12B9711100F4AB58 /* MgaProjectTesting.cpp */; };
 		5843910412B9711100F4AB58 /* MgaRegistrarTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843910112B9711100F4AB58 /* MgaRegistrarTesting.cpp */; };
 		5843913E12B9749600F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
+		587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 587E25BD12BBB8050035DB9E /* CoreTypes.cpp */; };
+		587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */; };
 		58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 		58F92C2A125FABD200FAF4C6 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 /* End PBXBuildFile section */
@@ -219,6 +221,8 @@
 		5843910212B9711100F4AB58 /* MgaRegistrarTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MgaRegistrarTesting.h; path = ../../Testing/MgaRegistrarTesting.h; sourceTree = SOURCE_ROOT; };
 		58542D8A1291F25D00947FA9 /* MGALib_wrap.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MGALib_wrap.cxx; path = Interfaces/MGALib_wrap.cxx; sourceTree = "<group>"; };
 		58542D8B1291F25D00947FA9 /* MGALib.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MGALib.py; path = Interfaces/MGALib.py; sourceTree = "<group>"; };
+		587E25BD12BBB8050035DB9E /* CoreTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreTypes.cpp; path = ../../Core/CoreTypes.cpp; sourceTree = SOURCE_ROOT; };
+		587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		58E90A1F124CEFFF00B8E3CF /* MGALib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MGALib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		58E90A20124CEFFF00B8E3CF /* MGALib-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MGALib-Info.plist"; sourceTree = "<group>"; };
 		58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -232,6 +236,7 @@
 				5843399C125B8B5400DD904D /* MGALib.framework in Frameworks */,
 				58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */,
 				5843913E12B9749600F4AB58 /* libxerces-c.a in Frameworks */,
+				587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,6 +378,7 @@
 				5843907D12B9703300F4AB58 /* CoreObject.cpp */,
 				5843907E12B9703300F4AB58 /* CoreProject.cpp */,
 				5843907F12B9703300F4AB58 /* CoreStorage.cpp */,
+				587E25BD12BBB8050035DB9E /* CoreTypes.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -492,6 +498,7 @@
 			isa = PBXGroup;
 			children = (
 				5843905712B96FD900F4AB58 /* libxerces-c.a */,
+				587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */,
 				58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */,
 			);
 			name = External;
@@ -749,6 +756,7 @@
 				584390F112B970C900F4AB58 /* MgaProject.cpp in Sources */,
 				584390F212B970C900F4AB58 /* MgaRegistrar.cpp in Sources */,
 				584390F312B970C900F4AB58 /* MgaTerritory.cpp in Sources */,
+				587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

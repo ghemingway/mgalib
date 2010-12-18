@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <CoreServices/CoreServices.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <time.h>
 
 

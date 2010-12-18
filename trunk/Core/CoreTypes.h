@@ -82,6 +82,33 @@ typedef struct GUID_t {
 } GUID_t;
 
 
+class UUID {
+private:
+	uint8_t		_data[16];
+public:
+	// Constructors
+	UUID();
+	UUID(const GUID_t &guid);
+	UUID(const std::vector<unsigned char> &vector);
+	UUID(const std::string &string);
+	// Coversions
+	UUID& operator=(const UUID &uuid);
+	UUID& operator=(const std::vector<unsigned char> &vector);
+	UUID& operator=(const std::string &string);
+	operator std::vector<unsigned char>() const;
+	operator std::string() const;
+	static std::vector<unsigned char> ToVector(const std::string &string);
+	static std::string ToString(const std::vector<unsigned char> &vector);
+	// Operators
+	bool operator==(const UUID &uuid) const;
+	bool operator!=(const UUID &uuid) const;
+	bool operator>(const UUID &uuid) const;
+	bool operator<(const UUID &uuid) const;
+	// Friends
+	friend std::ostream& operator<<(std::ostream& out, const UUID &uuid);
+};
+
+
 /******************************************/
 
 
