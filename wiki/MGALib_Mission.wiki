@@ -1,0 +1,11 @@
+#summary What are we really trying to do with this project.
+#labels Phase-Requirements
+
+= Goals =
+
+Here are my goals (perhaps even in descending importance to me):
+  * Standard C++ implementation of MGA
+  * Cross platform (Win32, OSX, Linux)
+  * High-performance while also memory efficient
+  * Rationalize 10+ year old code base (i.e. refactor)
+  * Python bindings for use in web services
