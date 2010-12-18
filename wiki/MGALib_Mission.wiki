@@ -9,3 +9,6 @@ Here are my goals (perhaps even in descending importance to me):
   * High-performance while also memory efficient
   * Rationalize 10+ year old code base (i.e. refactor)
   * Python bindings for use in web services
+  * Inheritance as a first-class concept
+  * Types-instances as a first-class concept
+  * External references as a first-class concept
