@@ -90,6 +90,7 @@ public:
 	UUID();
 	UUID(const GUID_t &guid);
 	UUID(const std::vector<unsigned char> &vector);
+	UUID(const char* string);
 	UUID(const std::string &string);
 	// Coversions
 	UUID& operator=(const UUID &uuid);

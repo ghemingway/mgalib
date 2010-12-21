@@ -116,7 +116,7 @@ private:
 	// Base State Variables
 	std::string							_filename;					//!< Primary file name (opened as read-only)
 	bool								_isV3;						//!< Is primary input file (see above) v3 format?
-	std::vector<unsigned char>			_metaProjectID;				//!< MetaProject ID
+	UUID								_metaProjectUUID;			//!< MetaProject UUID
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
 	MetaObjIDHash						_metaIDHash;				//!< Hash of allowed metaIDs (from metaProject)
@@ -145,7 +145,7 @@ private:
 
 	// Private Methods
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
-	void OpenMetaProject(void);										//!< MetaProject GUID -> _metaProjectID and hash all METAIDs
+	void OpenMetaProject(void);										//!< MetaProject UUID -> _metaProjectUUID and hash all METAIDs
 	const Result_t ReadIndex(std::fstream &stream);					//!< Read an index from an MGA file
 	const Result_t WriteIndex(std::fstream &stream, const IndexHash &hash);	//!< Write an index into an MGA file
 	const Result_t BuildIndex(void);								//!< Build an index by reading through an entire MGA file

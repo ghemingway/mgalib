@@ -23,13 +23,13 @@ protected:
 	std::list<CoreMetaObject*>					_objects;		//!< metaObjects in the metaProject
 	std::string									_token;			//!< Short name of the metaProject
 	std::string									_name;			//!< Full name of the metaProject
-	GUID_t										_guid;			//!< Unique GUID of the metaProject
+	UUID										_uuid;			//!< Unique UUID of the metaProject
 public:
-	CoreMetaProject(const std::string &token, const std::string &name, const GUID_t &guid) :
-		_objects(), _token(token), _name(name), _guid(guid) { }
+	CoreMetaProject(const std::string &token, const std::string &name, const UUID &uuid) :
+		_objects(), _token(token), _name(name), _uuid(uuid) { }
 	~CoreMetaProject();
 
-	inline const Result_t GUID(GUID_t &guid) const throw()			{ guid = this->_guid; return S_OK; }
+	inline const Result_t GetUUID(UUID &uuid) const throw()			{ uuid = this->_uuid; return S_OK; }
 	inline const Result_t Token(std::string &token) const throw()	{ token = this->_token; return S_OK; }
 	inline const Result_t Name(std::string &name) const throw()		{ name = this->_name; return S_OK; }
 	inline const Result_t Objects(std::list<CoreMetaObject*> &objectList) const throw()	{ objectList = this->_objects; return S_OK; }
