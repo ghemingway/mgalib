@@ -8,6 +8,10 @@
 
 
 /*** Xerces Included Header Files ***/
+#ifdef _WIN32
+#include <xercesc/util/Xerces_autoconf_config.msvc.hpp>
+#define XERCES_AUTOCONFIG_CONFIG_HPP
+#endif
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMDocumentType.hpp>

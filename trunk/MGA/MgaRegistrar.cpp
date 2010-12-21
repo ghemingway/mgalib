@@ -135,7 +135,7 @@ const Result_t XMLRegistrar::Parse(void)
 	{
 		this->_configFileParser->parse( this->_filename.c_str() );
 		// no need to free this pointer - owned by the parent parser object
-		DOMDocument* xmlDoc = this->_configFileParser->getDocument();
+		xercesc::DOMDocument* xmlDoc = this->_configFileParser->getDocument();
 		// Get the top-level element: NAme is "root". No attributes for "root"
 		DOMElement* elementRoot = xmlDoc->getDocumentElement();
 		if( !elementRoot )
@@ -372,7 +372,7 @@ const Result_t XMLRegistrar::OpenRegistry(const std::string &filename, MgaRegist
 		//		throw ( std::runtime_error("File can not be read\n"));
 	}
 
-	XMLRegistrar *xmlRegistrar;
+	XMLRegistrar *xmlRegistrar = NULL;
 	try
 	{
 		xmlRegistrar = new XMLRegistrar(filename);

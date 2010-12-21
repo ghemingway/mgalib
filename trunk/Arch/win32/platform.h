@@ -60,9 +60,6 @@ typedef int								socklen_t;
 typedef HANDLE							Semaphore;
 typedef HANDLE							pthread_t;
 //#ifndef _WINDOWS_
-#define bool							int
-#define true							1
-#define false							0
 #define INLINE							__inline
 //#endif
 
