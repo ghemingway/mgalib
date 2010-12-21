@@ -821,10 +821,10 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
-					/Users/ghemingway/Documents/googletest/,
-					/Users/ghemingway/Documents/googletest/include,
 					../..,
 					../../Include,
+					../../Include/googletest,
+					../../Include/googletest/include,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../Lib\"";
