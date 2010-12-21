@@ -229,6 +229,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -264,14 +266,16 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateExpansionKey</key>
 							<array>
 								<string>0867D691FE84028FC02AAC07</string>
+								<string>5843398A125B8ABD00DD904D</string>
+								<string>58FB9FEB129ADF0200953701</string>
 								<string>1C37FBAC04509CD000000102</string>
 								<string>1C37FAAC04509CD000000102</string>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>7</integer>
-									<integer>0</integer>
+									<integer>18</integer>
+									<integer>16</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -305,14 +309,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>CoreTypes.h</string>
+								<string>TestingHarness.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -320,11 +322,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>CoreTypes.h</string>
+										<string>TestingHarness.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>5812632312C1528700064E2F</string>
+										<string>5812633712C154A400064E2F</string>
 										<key>history</key>
 										<array>
 											<string>58E90A5F124CF67900B8E3CF</string>
@@ -373,7 +375,6 @@
 											<string>5843911512B971D200F4AB58</string>
 											<string>5843911612B971D200F4AB58</string>
 											<string>584391FC12B974DC00F4AB58</string>
-											<string>584391FD12B974DC00F4AB58</string>
 											<string>584391FE12B974DC00F4AB58</string>
 											<string>587E262612BBC2430035DB9E</string>
 											<string>587E262912BBC2430035DB9E</string>
@@ -394,7 +395,8 @@
 											<string>5812631412C151A800064E2F</string>
 											<string>5812631512C151A800064E2F</string>
 											<string>5812632212C1528700064E2F</string>
-											<string>5812630B12C151A800064E2F</string>
+											<string>5812632812C153FC00064E2F</string>
+											<string>5812632912C153FC00064E2F</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -406,14 +408,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {986, 1392}}</string>
+								<string>{{0, 0}, {986, 1231}}</string>
 								<key>RubberWindowFrame</key>
 								<string>0 46 1285 1532 0 0 2560 1578 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>1392pt</string>
+							<string>1231pt</string>
 						</dict>
 						<dict>
 							<key>ContentConfiguration</key>
@@ -426,14 +428,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 1397}, {986, 94}}</string>
+								<string>{{0, 1236}, {986, 255}}</string>
 								<key>RubberWindowFrame</key>
 								<string>0 46 1285 1532 0 0 2560 1578 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
 							<key>Proportion</key>
-							<string>94pt</string>
+							<string>255pt</string>
 						</dict>
 					</array>
 					<key>Proportion</key>
@@ -596,8 +598,8 @@
 		<string>5812631912C151A800064E2F</string>
 		<string>5812631A12C151A800064E2F</string>
 		<string>1C78EAAD065D492600B07095</string>
-		<string>5883026B124BE8E1009251F4</string>
 		<string>1CD10A99069EF8BA00B06720</string>
+		<string>5883026B124BE8E1009251F4</string>
 		<string>/Users/ghemingway/Documents/MGALib/Build/XCode/MGALib.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
@@ -617,14 +619,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>MetaGeneric.cpp</string>
+								<string>TestingHarness.cpp</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -641,6 +641,8 @@
 							<string>1066pt</string>
 						</dict>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
