@@ -648,13 +648,9 @@ const Result_t BinFile::ReadIndex(std::fstream &stream) {
 	if( stream.fail() ) return E_FILEOPEN;
 	// Therefore, the index is how large...
 	uint32_t indexSizeB = objCount * (sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));
-#ifdef _WIN32
 	std::vector<char> indexBuffer;
 	indexBuffer.reserve(indexSizeB);
 	char *indexPointer = &indexBuffer[0];
-#else
-	char indexBuffer[indexSizeB], *indexPointer = indexBuffer;
-#endif
 	stream.read(indexPointer, indexSizeB);
 	// Read in each item for the index
 	for (ObjID_t i=0; i < objCount; ++i)
@@ -694,13 +690,9 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &hash) 
 	_Write(stream, objCount);
 	// Therefore, the index is how large...
 	uint32_t indexSizeB = objCount * (sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));
-#ifdef _WIN32
 	std::vector<char> indexBuffer;
 	indexBuffer.reserve(indexSizeB);
 	char *indexPointer = &indexBuffer[0];
-#else
-	char indexBuffer[indexSizeB], *indexPointer = indexBuffer;
-#endif
 	// Write each item from the index into the buffer
 	IndexHash::const_iterator hashIter = hash.begin();
 	while( hashIter != hash.end() ) {

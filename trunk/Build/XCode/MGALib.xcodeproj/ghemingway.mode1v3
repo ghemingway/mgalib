@@ -269,6 +269,9 @@
 								<string>08FB77ACFE841707C02AAC07</string>
 								<string>5883029D124BEAAF009251F4</string>
 								<string>5883029C124BEAA9009251F4</string>
+								<string>58542F38129436FF00947FA9</string>
+								<string>5897494912947939003FB158</string>
+								<string>5897494812947934003FB158</string>
 								<string>5843398A125B8ABD00DD904D</string>
 								<string>58FB9FEB129ADF0200953701</string>
 								<string>58EE44D5129090480026976D</string>
@@ -279,10 +282,9 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>39</integer>
-									<integer>37</integer>
-									<integer>32</integer>
-									<integer>30</integer>
+									<integer>55</integer>
+									<integer>47</integer>
+									<integer>28</integer>
 									<integer>0</integer>
 								</array>
 							</array>
@@ -322,7 +324,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>CoreStorageTesting.cpp</string>
+								<string>MetaGeneric.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -330,11 +332,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>CoreStorageTesting.cpp</string>
+										<string>MetaGeneric.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>581262BA12C0F22E00064E2F</string>
+										<string>5812632112C151C700064E2F</string>
 										<key>history</key>
 										<array>
 											<string>58E90A5F124CF67900B8E3CF</string>
@@ -386,15 +388,25 @@
 											<string>584391FD12B974DC00F4AB58</string>
 											<string>584391FE12B974DC00F4AB58</string>
 											<string>587E262612BBC2430035DB9E</string>
-											<string>587E262712BBC2430035DB9E</string>
-											<string>587E262812BBC2430035DB9E</string>
 											<string>587E262912BBC2430035DB9E</string>
 											<string>587E262A12BBC2430035DB9E</string>
 											<string>587E262B12BBC2430035DB9E</string>
 											<string>587E262D12BBC2430035DB9E</string>
-											<string>587E267412BBD8260035DB9E</string>
-											<string>587E269B12BBD9630035DB9E</string>
-											<string>581262B912C0F22E00064E2F</string>
+											<string>5812630812C151A800064E2F</string>
+											<string>5812630912C151A800064E2F</string>
+											<string>5812630A12C151A800064E2F</string>
+											<string>5812630B12C151A800064E2F</string>
+											<string>5812630C12C151A800064E2F</string>
+											<string>5812630D12C151A800064E2F</string>
+											<string>5812630E12C151A800064E2F</string>
+											<string>5812630F12C151A800064E2F</string>
+											<string>5812631012C151A800064E2F</string>
+											<string>5812631112C151A800064E2F</string>
+											<string>5812631212C151A800064E2F</string>
+											<string>5812631312C151A800064E2F</string>
+											<string>5812631412C151A800064E2F</string>
+											<string>5812631512C151A800064E2F</string>
+											<string>5812631612C151A800064E2F</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -592,6 +604,10 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>1C530D57069F1CE1000CFCEE</string>
+		<string>5812631912C151A800064E2F</string>
+		<string>5812631A12C151A800064E2F</string>
+		<string>1C78EAAD065D492600B07095</string>
 		<string>5883026B124BE8E1009251F4</string>
 		<string>1CD10A99069EF8BA00B06720</string>
 		<string>/Users/ghemingway/Documents/MGALib/Build/XCode/MGALib.xcodeproj</string>
@@ -613,12 +629,14 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string></string>
+								<string>MetaGeneric.cpp</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -687,7 +705,7 @@
 			<key>WindowToolGUID</key>
 			<string>5883026B124BE8E1009251F4</string>
 			<key>WindowToolIsVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>
@@ -834,7 +852,7 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CDD528C0622207200134675</string>
 										<key>PBXProjectModuleLabel</key>
-										<string></string>
+										<string>MetaProject.cpp</string>
 										<key>StatusBarVisibility</key>
 										<true/>
 									</dict>
@@ -892,8 +910,8 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C530D57069F1CE1000CFCEE</string>
-				<string>58CCA6CC12B2E96B004D7E51</string>
-				<string>58CCA6CD12B2E96B004D7E51</string>
+				<string>5812630512C1519800064E2F</string>
+				<string>5812630612C1519800064E2F</string>
 				<string>1CDD528C0622207200134675</string>
 				<string>1CD0528E0623707200166675</string>
 			</array>
@@ -958,7 +976,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C78EAAD065D492600B07095</string>
-				<string>587E263112BBC2430035DB9E</string>
+				<string>5812630712C1519800064E2F</string>
 				<string>1C78EAAC065D492600B07095</string>
 			</array>
 			<key>ToolbarConfiguration</key>
