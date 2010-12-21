@@ -334,7 +334,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>587E269E12BBD9630035DB9E</string>
+										<string>581262BA12C0F22E00064E2F</string>
 										<key>history</key>
 										<array>
 											<string>58E90A5F124CF67900B8E3CF</string>
@@ -394,7 +394,7 @@
 											<string>587E262D12BBC2430035DB9E</string>
 											<string>587E267412BBD8260035DB9E</string>
 											<string>587E269B12BBD9630035DB9E</string>
-											<string>587E269C12BBD9630035DB9E</string>
+											<string>581262B912C0F22E00064E2F</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -406,14 +406,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {986, 1393}}</string>
+								<string>{{0, 0}, {986, 1392}}</string>
 								<key>RubberWindowFrame</key>
 								<string>0 46 1285 1532 0 0 2560 1578 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>1393pt</string>
+							<string>1392pt</string>
 						</dict>
 						<dict>
 							<key>ContentConfiguration</key>
@@ -426,14 +426,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 1398}, {986, 93}}</string>
+								<string>{{0, 1397}, {986, 94}}</string>
 								<key>RubberWindowFrame</key>
 								<string>0 46 1285 1532 0 0 2560 1578 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
 							<key>Proportion</key>
-							<string>93pt</string>
+							<string>94pt</string>
 						</dict>
 					</array>
 					<key>Proportion</key>
@@ -452,9 +452,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>587E25B312BBB5F30035DB9E</string>
+				<string>581262BB12C0F22E00064E2F</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>587E25B412BBB5F30035DB9E</string>
+				<string>581262BC12C0F22E00064E2F</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -592,10 +592,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>587E263212BBC2430035DB9E</string>
-		<string>587E263312BBC2430035DB9E</string>
 		<string>5883026B124BE8E1009251F4</string>
-		<string>1C78EAAD065D492600B07095</string>
 		<string>1CD10A99069EF8BA00B06720</string>
 		<string>/Users/ghemingway/Documents/MGALib/Build/XCode/MGALib.xcodeproj</string>
 	</array>
@@ -638,8 +635,6 @@
 							<string>1066pt</string>
 						</dict>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -679,7 +674,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>5883026B124BE8E1009251F4</string>
-				<string>587E25B512BBB5F30035DB9E</string>
+				<string>581262BD12C0F22E00064E2F</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
@@ -692,7 +687,7 @@
 			<key>WindowToolGUID</key>
 			<string>5883026B124BE8E1009251F4</string>
 			<key>WindowToolIsVisible</key>
-			<true/>
+			<false/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>
@@ -766,9 +761,9 @@
 									<key>DebugVariablesTableConfiguration</key>
 									<array>
 										<string>Name</string>
-										<real>189</real>
+										<real>180</real>
 										<string>Value</string>
-										<real>146</real>
+										<real>137</real>
 										<string>Summary</string>
 										<real>80</real>
 									</array>
@@ -801,13 +796,13 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1CD10A99069EF8BA00B06720</string>
-				<string>587E25B612BBB5F30035DB9E</string>
+				<string>581262BE12C0F22E00064E2F</string>
 				<string>1C162984064C10D400B95A72</string>
-				<string>587E25B712BBB5F30035DB9E</string>
-				<string>587E25B812BBB5F30035DB9E</string>
-				<string>587E25B912BBB5F30035DB9E</string>
-				<string>587E25BA12BBB5F30035DB9E</string>
-				<string>587E25BB12BBB5F30035DB9E</string>
+				<string>581262BF12C0F22E00064E2F</string>
+				<string>581262C012C0F22E00064E2F</string>
+				<string>581262C112C0F22E00064E2F</string>
+				<string>581262C212C0F22E00064E2F</string>
+				<string>581262C312C0F22E00064E2F</string>
 			</array>
 			<key>ToolbarConfiguration</key>
 			<string>xcode.toolbar.config.debugV3</string>

@@ -2,7 +2,7 @@
 #include "MetaGeneric.h"
 
 
-const Result_t CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
+static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject)
 {
 	GUID_t guid = {0x028F7AA4,0x2E51,0x11D3,{0xB3,0x17,0x00,0x62,0x08,0x2D,0xF8,0x85}};
 	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", guid);
@@ -222,3 +222,21 @@ const Result_t CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaP
 
 	return S_OK;
 }
+
+
+static const Result_t _CreateMetaCoreMetaProjectv3(CoreMetaProject* &metaProject)
+{
+	UUID uuid = "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}";
+	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", uuid);
+	ASSERT( metaProject != NULL );
+
+	return S_OK;
+}
+
+
+const Result_t CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
+{
+	if (v2) return _CreateMetaCoreMetaProjectv2(metaProject);
+	else return _CreateMetaCoreMetaProjectv3(metaProject);
+}
+

@@ -36,6 +36,18 @@ static void _Read(std::fstream &ifs, std::vector<unsigned char> &value)
 		ifs.read( (char *) &value[0], len);
 }
 
+static void _Read(std::fstream &ifs, UUID &value)
+{
+	// Make sure the file is open
+	ASSERT( ifs.is_open() );
+	// Get the length of the UUID (must be 16)
+	uint32_t len;
+	_Read(ifs, len);
+	ASSERT( len == 16 );
+	// Read data into the UUID
+	ifs.read( (char *) &value, len);
+}
+
 static void _Read(std::fstream &ifs, std::string &str)
 {
 	// Make sure the file is open
@@ -90,6 +102,17 @@ static void _Write(std::fstream &ofs, const std::vector<unsigned char> &value) {
 	// Write the actual the vector
 	if( len > 0 )
 		ofs.write( (char*)&value[0], len);
+}
+
+static void _Write(std::fstream &ofs, UUID &value) {
+	// Make sure the file is open
+	ASSERT( ofs.is_open() );
+	// Write the length of the UUID (always 16)
+	uint32_t len = sizeof(UUID);
+	ASSERT( len == 16 );
+	_Write(ofs, len);
+	// Write the actual the UUID
+	ofs.write( (char*)&value, len);
 }
 
 static void _Write(std::fstream &ofs, const std::string &str) {
@@ -432,7 +455,7 @@ BinAttribute* BinObject::Attribute(const AttrID_t &attrID)
 
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
-	_filename(filename), _isV3(false), _metaProjectID(), _inputFile(), _scratchFile(), _metaIDHash(),
+	_filename(filename), _isV3(false), _metaProjectUUID(), _inputFile(), _scratchFile(), _metaIDHash(),
 	_inputHash(), _scratchHash(), _cacheHash(), _cacheQueue(), _maxCacheSize(COREBIN_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects()
 {
@@ -542,11 +565,11 @@ const Result_t BinFile::Load(void)
 		return E_FILEOPEN;
 	}
 
-	// Read the project GUID from the file
-	std::vector<unsigned char> guid;
-	_Read(this->_inputFile, guid);
-	// Make sure the GUID matches 
-	if( !(guid == this->_metaProjectID) ) {
+	// Read the project UUID from the file
+	UUID uuid;
+	_Read(this->_inputFile, uuid);
+	// Make sure the UUID matches 
+	if( !(uuid == this->_metaProjectUUID) ) {
 		// Close the files
 		this->_inputFile.close();
 		this->_scratchFile.close();
@@ -583,14 +606,8 @@ const Result_t BinFile::Load(void)
 void BinFile::OpenMetaProject(void)
 {
 	ASSERT( this->_metaProject != NULL );
-	// Get the metaProject guid
-	GUID_t guid;
-	ASSERT( this->_metaProject->GUID(guid) == S_OK );
-	// Make sure the vector is sized properly
-	this->_metaProjectID.clear();
-	this->_metaProjectID.resize(sizeof(GUID_t));
-	// Copy the GUID into the metaProjectID
-	memcpy(&this->_metaProjectID[0], &guid, sizeof(GUID_t));
+	// Get the metaProject uuid
+	ASSERT( this->_metaProject->GetUUID(this->_metaProjectUUID) == S_OK );
 	// Initialize the metaIDHash
 	this->_metaIDHash.clear();
 	// Get the coreMetaObjects from the project
@@ -646,7 +663,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream) {
 		memcpy(&position, indexPointer, sizeof(uint64_t));
 		indexPointer += sizeof(uint64_t);
 		pos = position;
-		// Make sure this is a valid ObjID
+		// Make sure this is a valid MetaID
 		MetaObjIDHashIterator hashIter = this->_metaIDHash.find(idPair.metaID);
 		ASSERT( hashIter != this->_metaIDHash.end() );
 		// Get the largest objID for each metaID, used when we create new objects to ensure unique objID
@@ -717,7 +734,7 @@ const Result_t BinFile::BuildIndex(void) {
 			// Make sure its meta is correct
 			MetaID_t metaID = binObject->MetaID();
 			ObjID_t objID = binObject->ObjID();
-			// Make sure this is a valid ObjID
+			// Make sure this is a valid MetaID
 			MetaObjIDHashIterator hashIter = this->_metaIDHash.find(metaID);
 			ASSERT( hashIter != this->_metaIDHash.end() );
 //			CoreMetaObject* metaObject;
@@ -976,7 +993,6 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 	ASSERT( this->_metaProject != NULL );
 	ASSERT( this->_inputFile.is_open() );
 	ASSERT( this->_scratchFile.is_open() );
-	ASSERT( this->_metaProjectID.size() == 16 );
 	// Passing an empty filename implies saving the file with the current filename
 	std::string saveAs;
 	if (filename == "") saveAs = this->_filename;
@@ -996,7 +1012,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 	
 //	std::cout << "Pre-Save State (Cache: " << this->_cacheHash.size() << ", Input: " << this->_inputHash.size() << ", Scratch: " << this->_scratchHash.size() << ").\n";
 	// Write out the metaProjectID
-	_Write(outputFile, this->_metaProjectID);
+	_Write(outputFile, this->_metaProjectUUID);
 	// Move streampos to end of what will be the index
 	int indexSizeB = this->_inputHash.size() + this->_scratchHash.size() + this->_cacheHash.size();
 	indexSizeB = indexSizeB * 14;//(sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));	// Index entry size = 14B (MetaID + ObjID + 64-bit pos)
