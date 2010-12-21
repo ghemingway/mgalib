@@ -72,7 +72,7 @@ static void _Read(std::fstream &ifs, std::list<MetaObjIDPair> &collection)
 	ASSERT( len >= 0 );
 	// Read data into the list
 	MetaObjIDPair idPair;
-	for (int32_t i=0; i<len; ++i)
+	for (uint32_t i=0; i<len; ++i)
 	{
 		_Read(ifs, idPair);
 		collection.push_back(idPair);
@@ -645,11 +645,17 @@ const Result_t BinFile::ReadIndex(std::fstream &stream) {
 	std::streampos pos;
 	_Read(stream, objCount);
 	// Was the read good?
-	if( stream.bad() ) return E_FILEOPEN;
+	if( stream.fail() ) return E_FILEOPEN;
 	// Therefore, the index is how large...
 	uint32_t indexSizeB = objCount * (sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));
+#ifdef _WIN32
+	std::vector<char> indexBuffer;
+	indexBuffer.reserve(indexSizeB);
+	char *indexPointer = &indexBuffer[0];
+#else
 	char indexBuffer[indexSizeB], *indexPointer = indexBuffer;
-	stream.read(indexBuffer, indexSizeB);
+#endif
+	stream.read(indexPointer, indexSizeB);
 	// Read in each item for the index
 	for (ObjID_t i=0; i < objCount; ++i)
 	{
@@ -688,7 +694,13 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &hash) 
 	_Write(stream, objCount);
 	// Therefore, the index is how large...
 	uint32_t indexSizeB = objCount * (sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));
+#ifdef _WIN32
+	std::vector<char> indexBuffer;
+	indexBuffer.reserve(indexSizeB);
+	char *indexPointer = &indexBuffer[0];
+#else
 	char indexBuffer[indexSizeB], *indexPointer = indexBuffer;
+#endif
 	// Write each item from the index into the buffer
 	IndexHash::const_iterator hashIter = hash.begin();
 	while( hashIter != hash.end() ) {
@@ -706,7 +718,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &hash) 
 		++hashIter;
 	}
 	// Now write out the data to the file
-	stream.write(indexBuffer, indexSizeB);
+	stream.write(indexPointer, indexSizeB);
 //	std::cout << "\t" << hash.size() << " objects written into index. @ " << stream.tellp() << ".\n";
 	return S_OK;
 }

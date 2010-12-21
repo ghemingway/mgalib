@@ -147,7 +147,7 @@ UUID::UUID()
 	memcpy(this->_data, &cfuuid, sizeof(CFUUIDBytes));
 	// Make sure to release 
 	CFRelease(cfuuidRef);
-#elif WIN32
+#elif _WIN32
 	// Needs implementation
 	ASSERT(false);
 #elif __linux__

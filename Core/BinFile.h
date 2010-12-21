@@ -21,10 +21,10 @@ class BinFileFactory;
 
 
 /*** Type Definitions ***/
-typedef STDEXT::hash_map<MetaID_t, ObjID_t> MetaObjIDHash;
+typedef MGALib_unordered_map<MetaID_t, ObjID_t> MetaObjIDHash;
 typedef MetaObjIDHash::iterator MetaObjIDHashIterator;
 
-typedef STDEXT::hash_map<MetaObjIDPair,std::streampos,MetaObjIDPair_HashFunc,MetaObjIDPair_EqualKey> IndexHash;
+typedef MGALib_unordered_map<MetaObjIDPair,std::streampos,MetaObjIDPair_HashFunc,MetaObjIDPair_EqualKey> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
 
 typedef struct CacheEntry
@@ -32,7 +32,7 @@ typedef struct CacheEntry
 	BinObject								*object;
 	std::streampos							pos;
 } CacheEntry;
-typedef STDEXT::hash_map<MetaObjIDPair,CacheEntry,MetaObjIDPair_HashFunc,MetaObjIDPair_EqualKey> CacheHash;
+typedef MGALib_unordered_map<MetaObjIDPair,CacheEntry,MetaObjIDPair_HashFunc,MetaObjIDPair_EqualKey> CacheHash;
 typedef CacheHash::iterator CacheHashIterator;
 
 typedef struct AttributeChangeBase

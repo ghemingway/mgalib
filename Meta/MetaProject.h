@@ -14,7 +14,7 @@ class MetaFolder;
 
 
 /*** Type Definitions ***/
-typedef STDEXT::hash_map<MetaRef_t,MetaBase*> MetaObjHash;
+typedef MGALib_unordered_map<MetaRef_t,MetaBase*> MetaObjHash;
 typedef MetaObjHash::iterator MetaObjHashIterator;
 
 

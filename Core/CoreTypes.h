@@ -11,13 +11,20 @@
 #include <set>
 #include <map>
 #include <vector>
+#ifdef _WIN32
+#include <unordered_map>
+#define MGALib_unordered_map std::tr1::unordered_map
+#include <memory>
+#else
 #include <ext/hash_map>
+#define MGALib_unordered_map  STDEXT::hash_map
 #include <tr1/memory>
+#endif
 #include <assert.h>
 #include "CoreError.h"
 
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "Arch\win32\platform.h"
 #endif
 #ifdef __APPLE__
@@ -43,8 +50,11 @@ extern void _SplitPath(const std::string &path, std::string &directory, std::str
 
 
 // Will need to be platform independent
+#ifdef _WIN32
+#define STDEXT stdext
+#else
 #define STDEXT __gnu_cxx
-
+#endif
 
 //typedef long guid_t;
 typedef int16_t MetaID_t;

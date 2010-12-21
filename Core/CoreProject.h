@@ -32,7 +32,7 @@ typedef UndoItemsList::iterator		UndoItemsListIterator;
 typedef std::list<UndoItemsList>	UndoItemsListList;
 
 
-typedef STDEXT::hash_map<MetaObjIDPair,CoreObjectBase*,MetaObjID2Pair_HashFunc> ObjectHash;
+typedef MGALib_unordered_map<MetaObjIDPair,CoreObjectBase*,MetaObjID2Pair_HashFunc> ObjectHash;
 typedef ObjectHash::iterator ObjectHashIterator;
 
 
