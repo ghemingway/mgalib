@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaAttribute;
 class MetaRole;
@@ -50,6 +54,10 @@ class MetaAtom : public MetaFCO
 {
 public:
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_METAFCO_H__

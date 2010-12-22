@@ -34,6 +34,7 @@
 #include "Arch/linux64/platform.h"
 #endif
 
+
 /*****************************************************************************/
 
 
@@ -55,6 +56,11 @@ extern void _SplitPath(const std::string &path, std::string &directory, std::str
 #else
 #define STDEXT __gnu_cxx
 #endif
+
+
+/*** Namespace Declaration ***/
+namespace MGA {
+
 
 //typedef long guid_t;
 typedef int16_t MetaID_t;
@@ -94,14 +100,13 @@ typedef struct GUID_t {
 
 class UUID {
 private:
-	uint8_t		_data[16];
+	uint8_t		_data[16];								//!< Just 16 bytes of data - that is all
 public:
-	// Constructors
-	UUID();
-	UUID(const GUID_t &guid);
-	UUID(const std::vector<unsigned char> &vector);
-	UUID(const char* string);
-	UUID(const std::string &string);
+	UUID();												//!< Default constructor creates new unique UUID
+	UUID(const GUID_t &guid);							//!< To be removed
+	UUID(const std::vector<unsigned char> &vector);		//!< Binary vector constructor
+	UUID(const char* string);							//!< Char string constructor
+	UUID(const std::string &string);					//!< Std::string constructor
 	// Coversions
 	UUID& operator=(const UUID &uuid);
 	UUID& operator=(const std::vector<unsigned char> &vector);
@@ -274,6 +279,14 @@ public:
 	inline bool operator==(const LockType &type) const	{ return this->_type == type._type; }	//!< Equality operator
 	inline bool operator!=(const LockType &type) const	{ return this->_type != type._type; }	//!< Inequality operator
 };
+
+
+/*** End of MGA Namespace ***/
+}
+
+
+/*** Used Namespaces ***/
+using namespace MGA;
 
 
 #endif //__CORE_TYPES_H__

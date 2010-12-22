@@ -6,6 +6,10 @@
 #include "../Core/CoreTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+	
+
 typedef int32_t MetaRef_t;
 
 typedef enum ObjType_t
@@ -156,6 +160,10 @@ typedef enum MgaErrors {
 
 
 const std::string GetMgaErrorInfo(const Result_t &result);
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __MGA_TYPES_H__

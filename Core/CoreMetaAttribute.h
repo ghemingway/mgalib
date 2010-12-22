@@ -6,6 +6,10 @@
 #include "CoreTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreMetaObject;
 
@@ -45,6 +49,10 @@ public:
 		return out;
 	}
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_METAATTRIBUTE_H__

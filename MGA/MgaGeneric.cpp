@@ -3,7 +3,7 @@
 
 
 /*** Version 2 of the special sauce ***/
-const Result_t CreateMGACoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
+const Result_t MGA::CreateMGACoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
 {
 	GUID_t guid = {0x028F7444,0x2E51,0x11D3,{0xB3,0x6D,0x00,0x62,0x08,0x2D,0xF8,0x74}};
 	metaProject = new CoreMetaProject("MgaProject", "MgaProject", guid);

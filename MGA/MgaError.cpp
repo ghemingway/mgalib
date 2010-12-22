@@ -73,7 +73,7 @@ MgaErrorCodes mga_descs[] = {
 };
 
 
-const std::string GetMgaErrorInfo(const Result_t &result)
+const std::string MGA::GetMgaErrorInfo(const Result_t &result)
 {
 	std::string desc = "Unknown Error Code";
 //	if( E_COMMON_FIRST <= result && result <= E_COMMON_LAST ) desc = common_descs[result - E_COMMON_FIRST];

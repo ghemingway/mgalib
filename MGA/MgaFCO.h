@@ -7,6 +7,10 @@
 //#include "MgaAttribute.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MgaProject;
 class CoreObject;
@@ -412,6 +416,10 @@ private:
 public:
 	MgaAtom(MgaTerritory *territory, MgaProject* &project, CoreObject* &coreObject) : ::MgaFCO(territory, project, coreObject)	{ }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif //__MGA_FCO_H__

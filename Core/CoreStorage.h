@@ -6,6 +6,10 @@
 #include "CoreTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreMetaProject;
 class CoreMetaObject;
@@ -94,6 +98,10 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::vector<unsigned char> &value) throw()=0;//!< Set binary
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const MetaObjIDPair &value) throw()=0;			//!< Set pointer
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_STORAGE_H__

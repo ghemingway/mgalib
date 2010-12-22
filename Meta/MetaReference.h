@@ -6,6 +6,10 @@
 #include "MetaFCO.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaPointerSpec;
 
@@ -26,6 +30,10 @@ public:
 	const Result_t GetRefSpec(MetaPointerSpec* &pointerSpec) const throw();
 	const Result_t CheckPath(const std::string &path, bool &valid) const throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_REFERENCE_H__

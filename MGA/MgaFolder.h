@@ -6,6 +6,10 @@
 #include "MgaFCO.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaFCO;
 class MgaAttribute;
@@ -91,6 +95,10 @@ public:
 	const Result_t RemoveAttrByName(const std::string &name) throw()						{ return E_MGA_NOT_SUPPORTED; }
 	const Result_t GetMeta(MetaFCO* &metaFCO) throw()										{ return E_MGA_NOT_SUPPORTED; }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif //__MGA_FOLDER_H__

@@ -367,7 +367,7 @@ bool UUID::operator<(const UUID &uuid) const
 }
 
 
-std::ostream& operator<<(std::ostream& out, const UUID &uuid)
+std::ostream& MGA::operator<<(std::ostream& out, const UUID &uuid)
 {
 	// Get a string version of the UUID
 	std::string stringVersion = uuid;

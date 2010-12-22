@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaFCO;
 class MetaAttribute;
@@ -50,6 +54,10 @@ public:
 //	const Result_t AddLegalRootObject(MetaFCO* &metaFCO) throw()					{ return ComAddLink(this, METAID_METAROOTOBJLINK, ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p); }
 //	const Result_t RemoveLegalRootObject(MetaFCO* &metaFCO) throw()					{ return ComRemoveLink(this, METAID_METAROOTOBJLINK, ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p); }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_FOLDER_H__

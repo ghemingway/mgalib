@@ -25,9 +25,11 @@
 #include <xercesc/util/XMLUni.hpp>
 #include <sys/stat.h>
 #include <stdexcept>
-
-
 using namespace xercesc;
+
+
+/*** Namespace Declaration ***/
+namespace MGA {
 
 
 // --------------------------- MgaRegistrar --------------------------- //
@@ -201,6 +203,11 @@ public:
 
 	virtual ~XMLRegistrar();
 };
+
+
+/*** End of MGA Namespace ***/
+}
+
 
 #endif // __MGA_REGISTRAR_H__
 

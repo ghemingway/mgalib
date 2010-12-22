@@ -7,6 +7,9 @@
 #include "Core/CoreMetaObject.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
 
 /*** Public Method Declarations ***/
 const Result_t CreateMGACoreMetaProject(const bool &v2, CoreMetaProject* &metaProject);
@@ -109,6 +112,10 @@ const Result_t CreateMGACoreMetaProject(const bool &v2, CoreMetaProject* &metaPr
 
 // the maximum numeric extension assigned to new objects;
 #define NEWNAME_MAXNUM					10000
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __MGA_GENERIC_H__

@@ -5,6 +5,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaFCO;
 class MetaEnumItem;
@@ -34,6 +38,10 @@ public:
 //	const Result_t SetViewable(const bool &flag) throw();				//{ return ComPutAttrValue(GetUnknown(), ATTRID_VIEWABLE, (p == VARIANT_FALSE)?0L:1L); }
 //	const Result_t CreateEnumItem(std::list<int> &list) throw();		//{ return ComCreateMetaObj(GetUnknown(), METAID_METAENUMITEM, ATTRID_ENUMITEMS_COLL, p); }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_ATTRIBUTE_H_

@@ -7,12 +7,15 @@
 #include "MgaEventSink.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MgaProject;
 class MgaObject;
 class MgaFCO;
 class MgaFCOBase;
-typedef std::list<MgaFCO*> MgaFCOs;
 
 
 // --------------------------- MgaTerritory --------------------------- //
@@ -53,7 +56,7 @@ public:
 //	const Result_t Associate(MgaObject *obj, VARIANT userdata) throw();
 	const Result_t OpenObj(MgaObject *oldptr, MgaObject **newptr) throw();
 	const Result_t OpenFCO(MgaFCO *oldptr, MgaFCO **newptr) throw();
-	const Result_t OpenFCOs(MgaFCOs &oldptr, MgaFCOs* &newptr) throw();
+	const Result_t OpenFCOs(std::list<MgaFCO*> &oldptr, std::list<MgaFCO*> &newptr) throw();
 	const Result_t CloseObj(MgaObject *obj) throw();
 };
 
@@ -102,6 +105,10 @@ public:
 	const Result_t CheckProject(MgaProject *project);  
 	const Result_t Destroy(void);
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __MGA_TERRITORY_H__

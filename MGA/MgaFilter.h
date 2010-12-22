@@ -6,6 +6,10 @@
 #include "MgaFCO.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MgaProject;
 class CoreObject;
@@ -50,5 +54,10 @@ public:
 	const Result_t SetName(const std::string &name) throw()			{ this->_name = name; this->_newName = true; return S_OK; }
 	const Result_t GetProject(MgaProject* &project) const throw()	{ project = this->_mgaProject; return S_OK; }
 };
+
+
+/*** End of MGA Namespace ***/
+}
+
 
 #endif //__MGAFILTER_H_

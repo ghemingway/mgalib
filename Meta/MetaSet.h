@@ -6,6 +6,10 @@
 #include "MetaFCO.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaProject;
 class CoreObject;
@@ -28,6 +32,10 @@ public:
 	const Result_t GetMemberSpec(MetaPointerSpec* &metaPointerSpec) const throw();
 	const Result_t CheckPath(const std::string &path, bool &valid) const throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_SET_H__

@@ -6,6 +6,10 @@
 #include "MetaFCO.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaConnJoint;
 
@@ -31,6 +35,10 @@ public:
 	inline const Result_t IsSimple(bool &value)	const throw()			{ value = true; return S_OK; }
 //	const Result_t CreateJoint(MetaConnJoint* &connJoint) throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_CONNECTION_H__

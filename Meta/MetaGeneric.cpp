@@ -234,7 +234,7 @@ static const Result_t _CreateMetaCoreMetaProjectv3(CoreMetaProject* &metaProject
 }
 
 
-const Result_t CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
+const Result_t MGA::CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
 {
 	if (v2) return _CreateMetaCoreMetaProjectv2(metaProject);
 	else return _CreateMetaCoreMetaProjectv3(metaProject);
