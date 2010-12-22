@@ -9,6 +9,10 @@
 #include "../Core/CoreObject.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaConstraint;
 
@@ -110,6 +114,10 @@ public:
 //	virtual const Result_t CreateConstraint(MetaConstraint* &constraint) throw();			// { return ComCreateMetaObj(GetUnknown(), METAID_METACONSTRAINT, ATTRID_CONSTRAINT_PTR, p); }
 //	virtual const Result_t Delete(void) throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_BASE_H__

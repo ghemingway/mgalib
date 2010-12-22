@@ -6,6 +6,10 @@
 #include "../MGA/MgaTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaBase;
 class CoreObject;
@@ -74,6 +78,10 @@ public:
 	inline const Result_t GetNamespace(std::string &name) const throw()		{ name = this->_namespace; return S_OK; }
 	inline const Result_t SetNamespace(const std::string &name) throw()		{ this->_namespace = name; return S_OK; }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_PROJECT_H__

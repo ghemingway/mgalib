@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 // None
 
@@ -45,6 +49,10 @@ public:
 //	const Result_t Remove(void)												//{ return ComDeleteObject(GetUnknown()); }
 //	const Result_t SetDefinedForNamespace( std::string pStr);
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_CONSTRAINT_H__

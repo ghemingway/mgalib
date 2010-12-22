@@ -9,6 +9,10 @@
 #include "CoreStorage.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreObjectBase;
 
@@ -196,6 +200,11 @@ public:
 	virtual void DiscardLastItemCancel() throw();
 };
 */
+
+
+/*** End of MGA Namespace ***/
+}
+
 
 #endif	// __CORE_ATTRIBUTE_H__
 

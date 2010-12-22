@@ -6,6 +6,10 @@
 #include "MetaFCO.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Included Header Files ***/
 class MetaRole;
 class MetaAspect;
@@ -42,6 +46,10 @@ public:
 //	const Result_t CreateAspect)(IMgaMetaAspect **p)				{ return ComDefineBase(this, METAID_METAASPECT, ATTRID_ASPECTS_COLL, p); }
 //	const Result_t CreateRole)(IMgaMetaFCO *kind, IMgaMetaRole **p);
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_MODEL_H__

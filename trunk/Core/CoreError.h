@@ -10,6 +10,10 @@
 #include <iomanip>
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Type Definitions ***/
 typedef long Result_t;
 #define ASSERT	assert
@@ -180,6 +184,10 @@ typedef long Result_t;
 
 // Stringify the Error Code
 const std::string GetErrorInfo(const Result_t &result);
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_ERROR_H__

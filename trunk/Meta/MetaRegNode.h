@@ -6,6 +6,10 @@
 #include "../MGA/MgaTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaRegNode;
 class CoreObject;
@@ -45,6 +49,10 @@ public:
 //	const Result_t Delete(void);
 
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_REGNODE_H__

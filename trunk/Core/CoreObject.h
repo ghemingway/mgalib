@@ -7,6 +7,10 @@
 #include "CoreAttribute.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreProject;
 class CoreMetaObject;
@@ -168,6 +172,10 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& out, const CoreObject *object) { return out << object->_base; }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_OBJECT_H__

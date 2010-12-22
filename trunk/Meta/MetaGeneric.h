@@ -7,6 +7,9 @@
 #include "Core/CoreMetaObject.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
 
 /*** Public Method Declarations ***/
 const Result_t CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaProject);
@@ -112,6 +115,10 @@ const Result_t CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaP
 #define ATTRID_CONSPRIORITY				303
 #define ATTRID_CONSTYPE					304
 #define ATTRID_CONSNAMESPC				305
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_GENERIC_H__

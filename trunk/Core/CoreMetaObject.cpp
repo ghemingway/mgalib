@@ -62,7 +62,7 @@ const Result_t CoreMetaObject::AddAttribute(const AttrID_t &attrID, const std::s
 }
 
 
-std::ostream& operator<<(std::ostream& out, const CoreMetaObject *object)
+std::ostream& MGA::operator<<(std::ostream& out, const CoreMetaObject *object)
 {
 	out << "(" << object->_metaID << ") " << object->_name << " -- " << object->_token << ".\n";
 	// Just print out all of the attribute info

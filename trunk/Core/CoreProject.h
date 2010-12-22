@@ -8,6 +8,10 @@
 #include "CoreTransactionItem.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreProject;
 class CoreObject;
@@ -106,6 +110,10 @@ public:
 	const Result_t UndoQueueSize(uint16_t &size) const throw();
 	const Result_t RedoQueueSize(uint16_t &size) const throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_PROJECT_H__

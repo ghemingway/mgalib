@@ -6,6 +6,10 @@
 #include "CoreTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+	
+
 /*** Class Predefinitions ***/
 class CoreMetaProject;
 class CoreMetaAttribute;
@@ -44,6 +48,10 @@ public:
 								const ValueType &valueType, CoreMetaAttribute* &attribute) throw();
 	friend std::ostream& operator<<(std::ostream& out, const CoreMetaObject *object);
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_METAOBJECT_H__

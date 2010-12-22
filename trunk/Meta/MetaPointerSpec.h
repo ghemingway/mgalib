@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaProject;
 class CoreObject;
@@ -31,6 +35,10 @@ public:
 //	const Result_t SetName(const std::string &name) throw();			//{ return ComPutAttrValue(GetUnknown(), ATTRID_PTRSPECNAME, p); }
 //	const Result_t CreateItem(MetaPointerItem* &pointerItem) throw();	//{ return ComCreateMetaObj(GetUnknown(), METAID_METAPOINTERITEM, ATTRID_PTRITEMS_COLL, p); }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_POINTERSPEC_H__

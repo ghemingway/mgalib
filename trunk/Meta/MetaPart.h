@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaRole;
 class MetaAspect;
@@ -42,6 +46,10 @@ public:
 //	const Result_t put_IsPrimary)(VARIANT_BOOL p);
 //	const Result_t put_IsLinked)(VARIANT_BOOL p);
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_PART_H__

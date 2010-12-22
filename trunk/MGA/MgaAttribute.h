@@ -6,6 +6,10 @@
 #include "MgaTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreObject;
 class MetaAttribute;
@@ -308,6 +312,10 @@ public:
 	}
 };
 */
+
+/*** End of MGA Namespace ***/
+}
+
 
 #endif // __MGA_ATTRIBUTE_H__
 

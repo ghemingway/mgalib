@@ -7,6 +7,10 @@
 #include "MgaEventSink.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class CoreProject;
 class MgaRegistrar;
@@ -226,6 +230,10 @@ public:
 		} COMCATCH(;);
 	}*/
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif //__MGA_PROJECT_H__

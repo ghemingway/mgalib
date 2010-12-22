@@ -6,6 +6,10 @@
 #include "CoreTypes.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+	
+
 /*** Class Predefinitions ***/
 class CoreMetaObject;
 
@@ -37,6 +41,10 @@ public:
 	const Result_t AddObject(const MetaID_t &metaID, const std::string &token, const std::string &name,
 							 CoreMetaObject* &object) throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif	//__CORE_METAPROJECT_H__

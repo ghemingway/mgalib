@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaAttribute;
 
@@ -27,6 +31,10 @@ public:
 //	const Result_t SetDisplayedName(const std::string &name) throw();		//{ return ComPutAttrValue(GetUnknown(), ATTRID_NAME, p); }
 //	const Result_t SetValue(const std::string &value) throw();				//{ return ComPutAttrValue(GetUnknown(), ATTRID_VALUE, p); }
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_ENUMITEM_H__

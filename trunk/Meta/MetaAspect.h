@@ -6,6 +6,10 @@
 #include "MetaBase.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class MetaModel;
 class MetaPart;
@@ -32,6 +36,10 @@ public:
 //	const Result_t RemoveAttribute(MetaAttribute* &attrib) throw();			//{ return ComRemoveLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p); }
 //	const Result_t CreatePart(MetaRole* &role, MetaPart* &part) throw();
 };
+
+
+/*** End of MGA Namespace ***/
+}
 
 
 #endif // __META_ASPECT_H__

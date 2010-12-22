@@ -9,6 +9,10 @@
 #include "CoreMetaAttribute.h"
 
 
+/*** Namespace Declaration ***/
+namespace MGA {
+
+
 /*** Class Predefinitions ***/
 class BinFile;
 class BinObject;
@@ -308,5 +312,8 @@ public:
 		return BinFile::Open(filename, metaProject, storage); }
 };
 
+
+/*** End of MGA Namespace ***/
+}
 
 #endif	//__BINFILE_H__
