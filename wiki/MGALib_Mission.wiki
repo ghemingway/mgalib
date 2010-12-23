@@ -41,3 +41,5 @@ There are a large number of enhancements and changes that users of GME would lik
   * *Refactor Code Base* - The MGA code base is over 10 years old and not received much refactoring over time to refine or remove existing code.  One goal of the MGALib project should be to clean up the code as much as possible as we move through the library.
 
   * *Reconsider Add-On interface* - for thoroughness
+
+  * *Replace All String Types with Single Wide String* - GME currently uses a number of string representations, none of which are UTF-16 I believe.  We should move to a single wide string representation and use it consistently throughout the entire library.
