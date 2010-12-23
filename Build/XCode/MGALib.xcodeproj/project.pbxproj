@@ -108,6 +108,7 @@
 		5843913E12B9749600F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
 		587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 587E25BD12BBB8050035DB9E /* CoreTypes.cpp */; };
 		587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */; };
+		58E371BF12C3F56F00BA324B /* MetaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */; };
 		58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 		58F92C2A125FABD200FAF4C6 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 /* End PBXBuildFile section */
@@ -223,6 +224,8 @@
 		58542D8B1291F25D00947FA9 /* MGALib.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MGALib.py; path = Interfaces/MGALib.py; sourceTree = "<group>"; };
 		587E25BD12BBB8050035DB9E /* CoreTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreTypes.cpp; path = ../../Core/CoreTypes.cpp; sourceTree = SOURCE_ROOT; };
 		587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		58E371BD12C3F56F00BA324B /* MetaProjectTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaProjectTesting.h; path = ../../Testing/MetaProjectTesting.h; sourceTree = SOURCE_ROOT; };
+		58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaProjectTesting.cpp; path = ../../Testing/MetaProjectTesting.cpp; sourceTree = SOURCE_ROOT; };
 		58E90A1F124CEFFF00B8E3CF /* MGALib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MGALib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		58E90A20124CEFFF00B8E3CF /* MGALib-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MGALib-Info.plist"; sourceTree = "<group>"; };
 		58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -552,6 +555,7 @@
 		58FBB21712AFF97D00953701 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -559,6 +563,7 @@
 		58FBB21812AFF98300953701 /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				58E371BD12C3F56F00BA324B /* MetaProjectTesting.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -665,7 +670,10 @@
 			mainGroup = 0867D691FE84028FC02AAC07 /* GME_OSX */;
 			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
 			projectDirPath = "";
-			projectRoot = "";
+			projectRoots = (
+				"",
+				../../..,
+			);
 			targets = (
 				58E90A1E124CEFFF00B8E3CF /* MGALib */,
 				5843398E125B8AFC00DD904D /* MGALibTestHarness */,
@@ -714,6 +722,7 @@
 				584390FE12B970F400F4AB58 /* CoreTesting.cpp in Sources */,
 				5843910312B9711100F4AB58 /* MgaProjectTesting.cpp in Sources */,
 				5843910412B9711100F4AB58 /* MgaRegistrarTesting.cpp in Sources */,
+				58E371BF12C3F56F00BA324B /* MetaProjectTesting.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

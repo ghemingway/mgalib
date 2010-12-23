@@ -88,7 +88,7 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 	if (result != S_OK)
 	{
 		// Clean up and exit
-		delete coreMetaProject;
+//		delete coreMetaProject;
 		return result;
 	}
 	ASSERT( coreProject != NULL );
