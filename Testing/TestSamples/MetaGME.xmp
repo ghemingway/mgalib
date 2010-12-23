@@ -1,0 +1,3213 @@
+<?xml version="1.0"?>
+<!DOCTYPE paradigm SYSTEM "edf.dtd">
+
+<paradigm name="MetaGME" guid="{9D3F9884-FE60-409C-8FC1-45789193989B}" cdate="Mon Jun 22 12:03:20 2009" mdate="Mon Jun 22 12:03:20 2009" >
+
+	<comment>GME Meta Paradigm</comment>
+
+	<author>A. Ledeczi, P. Volgyesi, J. Sprinkle, T. Paka, Z. Molnar</author>
+
+	<folder name = "RootFolder" metaref = "1000"  subfolders = "SheetFolder" rootobjects = "ParadigmSheet" >
+		<constraint name="ObjectInRootFolder" eventmask = "0x0" depth = "0" priority = "2">
+			<![CDATA[let mFlags = project.allInstancesOf( Model ) -> exists( m : Model | m.InRootFolder ) in
+let fFlags = project.allInstancesOf( Folder ) -> exists( f : Folder | f.InRootFolder ) in
+mFlags or fFlags]]>
+			<dispname>RootFolder has to contain at least either a Model or a Folder.</dispname>
+		</constraint>
+		<constraint type="function" name="allAscendants">
+			<![CDATA[method;gme::FCO;inhType : ocl::Integer;ocl::Set;
+			let kinds = Set{ "Model", "Atom", "Set", "Reference", "Connection", "FCO" } in
+if ( kinds.includes( self.kindName )) then
+   self.ascendantEndsRecursive( Set{}, inhType )
+else
+   Set{ }
+endif]]>
+		</constraint>
+		<constraint type="function" name="allAspects">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			self.allAscendants( 1 ) -> iterate( fco : gme::FCO ; accu = Set{} | accu + fco.memberOfSets() )]]>
+		</constraint>
+		<constraint type="function" name="allDescendants">
+			<![CDATA[method;gme::FCO;inhType : ocl::Integer;ocl::Set;
+			let kinds = Set{ "Model", "Atom", "Set", "Reference", "Connection", "FCO" } in
+if ( kinds.includes( self.kindName )) then
+   self.descendantEndsRecursive( Set{}, inhType )
+else
+   Set{ }
+endif]]>
+		</constraint>
+		<constraint type="function" name="allEquivalences">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			let kinds = Set{ "Model", "Atom", "Set", "Reference", "Connection", "FCO" } in
+if ( kinds.includes( self.kindName )) then
+   self.equivalenceEndsRecursive( Set{} )
+else
+   Set{ }
+endif]]>
+		</constraint>
+		<constraint type="function" name="allFolders">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			self.allAscendants(1) -> iterate( asc : gme::FCO ; accu = Set{} | accu + asc.connectedFCOs( "dst", FolderContainment ) )]]>
+		</constraint>
+		<constraint type="function" name="allParents">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			self.allAscendants(1) -> iterate( asc : gme::FCO ; accu = Set{ } | accu + asc.connectedFCOs( "dst", Containment ) )]]>
+		</constraint>
+		<constraint type="function" name="ascendantEnds">
+			<![CDATA[method;gme::FCO;inhType : ocl::Integer;ocl::Set;
+			let standards = ( if ( inhType >= -1 and inhType <= 1 ) then self.ascendantTypeEnds( 0 ) else Set{ } endif ) in
+let implementations = ( if ( inhType < 0 ) then self.ascendantTypeEnds( -1 ) else Set{ } endif ) in
+let interfaces = ( if ( inhType > 0 ) then self.ascendantTypeEnds( 1 ) else Set{ } endif ) in
+standards + implementations + interfaces]]>
+		</constraint>
+		<constraint type="function" name="ascendantEndsRecursive">
+			<![CDATA[method;gme::FCO;visitedInput : ocl::Set, inhType : ocl::Integer;ocl::Set;
+			if ( visitedInput.includes( self ) ) then
+   	visitedInput
+else(
+	let same = self.equivalenceEnds() in
+	let refd = self.referencedBy() in
+	let asce = self.ascendantEnds( inhType ) in
+	let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+		(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+	let all = same + refd + asce + fcos - Set{self} in
+
+   	all->iterate( item : gme::FCO ; newVisitedInput = visitedInput.union( Set{self} ) |
+      	if ( newVisitedInput.includes( item ) ) then
+         	newVisitedInput
+      	else
+         	newVisitedInput.union( item.ascendantEndsRecursive( newVisitedInput, inhType ) )
+      	endif)
+)endif
+
+
+
+]]>
+		</constraint>
+		<constraint type="function" name="ascendantTypeEnds">
+			<![CDATA[method;gme::FCO;inhType : ocl::Integer;ocl::Set;
+			if ( inhType < 0 ) then
+   self.connectedFCOs( "src", DerivedImpInheritance ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "src", BaseImpInheritance ) )
+else
+   if ( inhType > 0 ) then
+      self.connectedFCOs( "src", DerivedIntInheritance ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "src", BaseIntInheritance ) )
+   else
+      self.connectedFCOs( "src", DerivedInheritance ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "src", BaseInheritance ) )
+   endif
+endif]]>
+		</constraint>
+		<constraint type="function" name="aspectHasMember">
+			<![CDATA[method;gme::FCO;visited:ocl::Set;ocl::Boolean;
+			if (visited.includes(self)) 
+then
+	false
+else (
+	if (self.oclIsTypeOf(Aspect) && self.oclAsType(Aspect).members()->size > 0)
+	then
+		true
+	else (
+		let newVisited = visited.union(Set{self}) in 
+		let same = self.sameAspectEnds() in
+		let refd = self.referencedBy() in
+		let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+			(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+		let all = same + refd + fcos - Set{self} in
+		all->select(s | s.oclAsType(gme::FCO).aspectHasMember(newVisited))->size > 0
+	)endif 
+)endif 
+]]>
+		</constraint>
+		<constraint type="function" name="cropProxy">
+			<![CDATA[method;gme::Project;kind : string;string;
+			if ( kind.size <= 5 ) then
+   kind
+else
+   if ( kind.substring( kind.size - 5 ) = "Proxy" ) then
+      kind.substring( 0, kind.size - 5 )
+   else
+      kind
+   endif
+endif]]>
+		</constraint>
+		<constraint type="function" name="deRef">
+			<![CDATA[method;gme::FCO;;gme::FCO;
+			if ( self.oclIsKindOf( gme::Reference ) ) then
+   self.oclAsType( gme::Reference ).refersTo()
+else
+   self
+endif]]>
+		</constraint>
+		<constraint type="function" name="descendantEnds">
+			<![CDATA[method;gme::FCO;inhType : ocl::Integer;ocl::Set;
+			let standards = ( if ( inhType >= -1 and inhType <= 1 ) then self.descendantTypeEnds( 0 ) else Set{ } endif ) in
+let implementations = ( if ( inhType < 0 ) then self.descendantTypeEnds( -1 ) else Set{ } endif ) in
+let interfaces = ( if ( inhType > 0 ) then self.descendantTypeEnds( 1 ) else Set{ } endif ) in
+standards + implementations + interfaces]]>
+		</constraint>
+		<constraint type="function" name="descendantEndsRecursive">
+			<![CDATA[method;gme::FCO;visitedInput : ocl::Set, inhType : ocl::Integer;ocl::Set;
+			if ( visitedInput.includes( self ) ) then
+   	visitedInput
+else(
+	let same = self.equivalenceEnds() in
+	let refd = self.referencedBy() in
+	let asce = self.ascendantEnds( inhType ) in
+	let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+		(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+	let all = same + refd + asce + fcos - Set{self} in
+
+   	all->iterate( item : gme::FCO ; newVisitedInput = visitedInput.union( Set{self} ) |
+      	if ( newVisitedInput.includes( item ) ) then
+         	newVisitedInput
+      	else
+         	newVisitedInput.union( item.descendantEndsRecursive( newVisitedInput, inhType ) )
+      	endif)
+)endif
+
+]]>
+		</constraint>
+		<constraint type="function" name="descendantTypeEnds">
+			<![CDATA[method;gme::FCO;inhType : ocl::Integer;ocl::Set;
+			if ( inhType < 0 ) then
+   self.connectedFCOs( "dst", BaseImpInheritance ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "dst", DerivedImpInheritance ) )
+else
+   if ( inhType > 0 ) then
+      self.connectedFCOs( "dst", BaseIntInheritance ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "dst", DerivedIntInheritance ) )
+   else
+      self.connectedFCOs( "dst", BaseInheritance ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "dst", DerivedInheritance ) )
+   endif
+endif]]>
+		</constraint>
+		<constraint type="function" name="equivalenceEnds">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			let right = self.connectedFCOs( "src", EquivLeft ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "src", EquivRight ) ) in
+let left = self.connectedFCOs( "dst", EquivRight ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "dst", EquivLeft ) ) in
+left + right
+]]>
+		</constraint>
+		<constraint type="function" name="equivalenceEndsRecursive">
+			<![CDATA[method;gme::FCO;visitedInput : ocl::Set;ocl::Set;
+			if ( visitedInput.includes( self ) ) then
+   	visitedInput
+else(
+	let same = self.equivalenceEnds() in
+	let refd = self.referencedBy() in
+	let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+		(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+	let all = same + refd + fcos - Set{self} in
+
+   	all->iterate( item : gme::FCO ; newVisitedInput = visitedInput.union( Set{self} ) |
+      	if ( newVisitedInput.includes( item ) ) then
+         	newVisitedInput
+      	else
+         	newVisitedInput.union( item.equivalenceEndsRecursive( newVisitedInput ) )
+      	endif)
+)endif
+
+
+]]>
+		</constraint>
+		<constraint type="function" name="folderHasChild">
+			<![CDATA[method;gme::FCO;visited:ocl::Set;ocl::Boolean;
+			if (visited.includes(self)) 
+then
+	false
+else (
+	if (self.connectedFCOs("src", FolderContainment)->size > 0)
+	then
+		true
+	else (
+		let newVisited = visited.union(Set{self}) in 
+		let same = self.sameFolderEnds() in
+		let refd = self.referencedBy() in
+		let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+			(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+		let all = same + refd + fcos - Set{self} in
+		all->select(s | 
+			if (s.oclIsTypeOf(Folder)  ||  
+					s.oclIsTypeOf(FolderProxy))
+			then 
+				s.oclAsType(gme::FCO).folderHasChild(newVisited)
+			else
+				false
+			endif)->size > 0
+	)endif 
+)endif 
+]]>
+		</constraint>
+		<constraint type="function" name="folderInFolderGen">
+			<![CDATA[method;gme::FCO;visited:ocl::Set;ocl::Boolean;
+			if (visited.includes(self)) 
+then
+	false
+else (
+	if (self.oclIsTypeOf(Folder) && 
+			self.oclAsType(Folder).InRootFolder)
+	then
+		true
+	else (
+		let newVisited = visited.union(Set{self}) in 
+		let conn = self.connectedFCOs( "dst", FolderContainment) in 
+		let same = self.sameFolderEnds() in
+		let refd = self.referencedBy() in
+		let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+			(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+		let all = same + refd + conn + fcos - Set{self} in
+		all->select(s | 
+			if (s.oclIsTypeOf(Folder)  ||  
+					s.oclIsTypeOf(FolderProxy))
+			then 
+				s.oclAsType(gme::FCO).folderInFolderGen(newVisited) 
+			else 
+				false 
+			endif )->size > 0
+	)endif 
+)endif 
+]]>
+		</constraint>
+		<constraint type="function" name="hasEquivalences">
+			<![CDATA[method;gme::FCO;;ocl::Boolean;
+			let sameself = self.sameFolderEnds() in
+let refd = self.referencedBy() in
+let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+	(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+let ref = refd + fcos in
+let sameproxy = ref->iterate( s:gme::FCO; accu : ocl::Set = Set{} | accu.union(s.sameFolderEnds())) in
+let same = sameself + sameproxy - Set{self} - refd - fcos in
+same->size > 0]]>
+		</constraint>
+		<constraint type="function" name="isAbstract">
+			<![CDATA[method;gme::FCO;;ocl::Boolean;
+			--let id = self.identity() in
+--if ( id.isNull() ) then
+--   true
+--else
+--   id.kindName = "FCO" or id.attribute( "IsAbstract" ).oclAsType( ocl::Boolean )
+--endif
+
+-- not self.isNotAbstractGroup(Set{})
+
+let set = self.setOfNotByDefault(Set{}) in
+set->size() > 0  &&  
+                                set->forAll(s | let fco = s.oclAsType(gme::FCO) in 
+			  fco.kindName = "FCO" or fco.attribute( "IsAbstract" ).oclAsType( ocl::Boolean ))]]>
+		</constraint>
+		<constraint type="function" name="isItemsValid">
+			<![CDATA[method;EnumAttribute;;bool;
+			let items = self.MenuItems.trim() in
+let disp = "[_a-zA-Z0-9][_a-zA-Z0-9]*" in
+let num = "[0-9][0-9]*" in
+let ws = "[\t ]*" in
+let item = "(" + ws + disp + ws + "," + ws + "(" + disp + "|" + num + ")" + ws + "|" + ws + num + ws+ ")" in
+let lend = "[\r\n][\r\n\t ]*" in
+items <> "" implies items.match( "^" + item + "(" + lend + item + ")*$" )]]>
+		</constraint>
+		<constraint type="function" name="isNameUnique">
+			<![CDATA[method;Project;name : string;bool;
+			if ( name = "" ) then
+   true
+else (
+	let sAspect = project.allInstancesOf( Aspect )->select( s | not s.oclAsType(gme::FCO).hasEquivalences()) in
+	let sFolder = project.allInstancesOf( Folder )->select( s | not s.oclAsType(gme::FCO).hasEquivalences()) in
+	let sFCO = project.allInstancesOf( FCO )->select( s | not s.oclAsType(gme::FCO).hasEquivalences()) in
+	let sAtom = project.allInstancesOf( Atom )->select( s | not s.oclAsType(gme::FCO).hasEquivalences())  in
+	let sModel = project.allInstancesOf( Model )->select( s | not s.oclAsType(gme::FCO).hasEquivalences())  in
+	let sSet = project.allInstancesOf( Set )->select( s | not s.oclAsType(gme::FCO).hasEquivalences())  in
+	let sReference = project.allInstancesOf( Reference )->select( s | not s.oclAsType(gme::FCO).hasEquivalences())  in
+	let sConnection = project.allInstancesOf( Connection )->select( s | not s.oclAsType(gme::FCO).hasEquivalences())  in
+	let all = sAspect + sFolder + sFCO + sAtom + sModel + sSet + sReference + sConnection in
+	all->select( o | o.name.trim() = name )->size <= 1
+) endif
+
+
+]]>
+		</constraint>
+		<constraint type="function" name="isOperandsValidA">
+			<![CDATA[method;SameAspect;;Sequence;
+			let left = self.connectedFCOs( "dst", SameAspectLeft ) in
+let right = self.connectedFCOs( "src", SameAspectRight ) in
+if ( left->size <> 1 or right->size <> 1 ) then
+   Sequence{ 0 }
+else
+   let seq = Sequence{ left.theOnly() , right.theOnly() } in
+   if ( project.cropProxy( seq.at( 0 ).kindName ) <> project.cropProxy( seq.at( 1 ).kindName ) ) then
+      Sequence{}
+   else
+      seq
+   endif
+endif]]>
+		</constraint>
+		<constraint type="function" name="isOperandsValidE">
+			<![CDATA[method;Equivalence;;Sequence;
+			let left = self.connectedFCOs( "dst", EquivLeft ) in
+let right = self.connectedFCOs( "src", EquivRight ) in
+if ( left->size <> 1 or right->size <> 1 ) then
+   Sequence{ 0 }
+else
+   let seq = Sequence{ left.theOnly() , right.theOnly() } in
+   if ( project.cropProxy( seq.at( 0 ).kindName ) <> project.cropProxy( seq.at( 1 ).kindName ) ) then
+      Sequence{}
+   else
+      seq
+   endif
+endif]]>
+		</constraint>
+		<constraint type="function" name="isOperandsValidF">
+			<![CDATA[method;SameFolder;;Sequence;
+			let left = self.connectedFCOs( "dst", SameFolderLeft ) in
+let right = self.connectedFCOs( "src", SameFolderRight ) in
+if ( left->size <> 1 or right->size <> 1 ) then
+   Sequence{ 0 }
+else
+   let seq = Sequence{ left.theOnly() , right.theOnly() } in
+   if ( project.cropProxy( seq.at( 0 ).kindName ) <> project.cropProxy( seq.at( 1 ).kindName ) ) then
+      Sequence{}
+   else
+      seq
+   endif
+endif]]>
+		</constraint>
+		<constraint type="function" name="onlyInFolder">
+			<![CDATA[method;gme::FCO;;ocl::Boolean;
+			(self.allFolders() -> size > 0  and  self.allParents() -> size = 0)]]>
+		</constraint>
+		<constraint type="function" name="sameAspectEnds">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			let right = self.connectedFCOs( "src", SameAspectLeft ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "src", SameAspectRight ) ) in
+let left = self.connectedFCOs( "dst", SameAspectRight ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "dst", SameAspectLeft ) ) in
+left + right]]>
+		</constraint>
+		<constraint type="function" name="sameFolderEnds">
+			<![CDATA[method;gme::FCO;;ocl::Set;
+			let right = self.connectedFCOs( "src", SameFolderLeft ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "src", SameFolderRight ) ) in
+let left = self.connectedFCOs( "dst", SameFolderRight ) -> iterate( op ; accu = Set{ } | accu + op.connectedFCOs( "dst", SameFolderLeft ) ) in
+left + right]]>
+		</constraint>
+		<constraint type="function" name="setOfNotByDefault">
+			<![CDATA[method;gme::FCO;visited : ocl::Set;ocl::Set;
+			if (visited.includes(self)) 
+then
+	Set{}
+else (
+
+	let newcoll = (if (self.oclAsType(gme::FCO).kindName = "FCO" or 
+					not self.oclAsType(gme::FCO).attrByDefault( "IsAbstract" ))
+		      then
+				Set{self}
+		      else
+				Set{}
+		      endif) in
+	let newVisited = visited.union(Set{self}) in 
+	let same = self.equivalenceEnds() in
+	let refd = self.referencedBy() in
+	let fcos = (if (self.oclIsKindOf(gme::Reference)) then 
+			(let fco = self.oclAsType(gme::Reference).refersTo() in  Set{fco}) else Set{} endif) in
+	let all = same + refd + fcos - Set{self} in
+	all->iterate(s ; acc = newcoll | 
+			acc.union(s.oclAsType(gme::FCO).setOfNotByDefault(newVisited)))
+)endif 
+]]>
+		</constraint>
+		<attrdef name="AddSetEvent" metaref = "1001" valuetype = "boolean" defvalue = "false">
+			<dispname>On include in set</dispname>
+		</attrdef>
+		<attrdef name="AutoRouterPref" metaref = "1563" valuetype = "string" defvalue = "">
+			<dispname>Auto router default directions</dispname>
+			<regnode name="help" value = "Possible values: &quot;NSWEnswe&quot;, upper case: source, lower case: destination"></regnode>
+		</attrdef>
+		<attrdef name="BooleanDefault" metaref = "1003" valuetype = "boolean" defvalue = "false">
+			<dispname>Default = &apos;True&apos;?</dispname>
+		</attrdef>
+		<attrdef name="CFuncContext" metaref = "1004" valuetype = "string" defvalue = "">
+			<dispname>Context:</dispname>
+		</attrdef>
+		<attrdef name="CFuncDefinition" metaref = "1005" valuetype = "string" defvalue = "">
+			<dispname>Definition:</dispname>
+			<regnode name="multiLine" value = "12"></regnode>
+		</attrdef>
+		<attrdef name="CFuncParamList" metaref = "1006" valuetype = "string" defvalue = "">
+			<dispname>Parameter list:</dispname>
+		</attrdef>
+		<attrdef name="CFuncReturnType" metaref = "1007" valuetype = "string" defvalue = "">
+			<dispname>Return type:</dispname>
+		</attrdef>
+		<attrdef name="CFuncStereotype" metaref = "1008" valuetype = "enum" defvalue = "method">
+			<dispname>Stereotype:</dispname>
+			<enumitem dispname = "method" value = "method"></enumitem>
+			<enumitem dispname = "attribute" value = "attribute"></enumitem>
+		</attrdef>
+		<attrdef name="ChangeAttributeEvent" metaref = "1009" valuetype = "boolean" defvalue = "false">
+			<dispname>On change attribute</dispname>
+		</attrdef>
+		<attrdef name="ChangePropertyEvent" metaref = "1010" valuetype = "boolean" defvalue = "false">
+			<dispname>On change property</dispname>
+		</attrdef>
+		<attrdef name="ChangeRelationEvent" metaref = "1011" valuetype = "boolean" defvalue = "false">
+			<dispname>On change assoc.</dispname>
+		</attrdef>
+		<attrdef name="CloseEvent" metaref = "1012" valuetype = "boolean" defvalue = "false">
+			<dispname>On close model</dispname>
+		</attrdef>
+		<attrdef name="Color" metaref = "1013" valuetype = "string" defvalue = "0x000000">
+			<dispname>Color:</dispname>
+		</attrdef>
+		<attrdef name="ConnLineEnd" metaref = "1014" valuetype = "enum" defvalue = "butt">
+			<dispname>Line end:</dispname>
+			<enumitem dispname = "Butt" value = "butt"></enumitem>
+			<enumitem dispname = "Arrow" value = "arrow"></enumitem>
+			<enumitem dispname = "Diamond" value = "diamond"></enumitem>
+			<enumitem dispname = "Apex" value = "apex"></enumitem>
+			<enumitem dispname = "Bullet" value = "bullet"></enumitem>
+			<enumitem dispname = "Empty Diamond" value = "empty diamond"></enumitem>
+			<enumitem dispname = "Empty Apex" value = "empty apex"></enumitem>
+			<enumitem dispname = "Empty Bullet" value = "empty bullet"></enumitem>
+			<enumitem dispname = "Left Half-Arrow" value = "left half arrow"></enumitem>
+			<enumitem dispname = "Right Half-Arrow" value = "right half arrow"></enumitem>
+		</attrdef>
+		<attrdef name="ConnLineStart" metaref = "1015" valuetype = "enum" defvalue = "butt">
+			<dispname>Line start:</dispname>
+			<enumitem dispname = "Butt" value = "butt"></enumitem>
+			<enumitem dispname = "Arrow" value = "arrow"></enumitem>
+			<enumitem dispname = "Diamond" value = "diamond"></enumitem>
+			<enumitem dispname = "Apex" value = "apex"></enumitem>
+			<enumitem dispname = "Bullet" value = "bullet"></enumitem>
+			<enumitem dispname = "Empty Diamond" value = "empty diamond"></enumitem>
+			<enumitem dispname = "Empty Apex" value = "empty apex"></enumitem>
+			<enumitem dispname = "Empty Bullet" value = "empty bullet"></enumitem>
+			<enumitem dispname = "Left Half-Arrow" value = "left half arrow"></enumitem>
+			<enumitem dispname = "Right Half-Arrow" value = "right half arrow"></enumitem>
+		</attrdef>
+		<attrdef name="ConnLineType" metaref = "1016" valuetype = "enum" defvalue = "solid">
+			<dispname>Line type:</dispname>
+			<enumitem dispname = "Solid" value = "solid"></enumitem>
+			<enumitem dispname = "Dash" value = "dash"></enumitem>
+		</attrdef>
+		<attrdef name="ConnectEvent" metaref = "1017" valuetype = "boolean" defvalue = "false">
+			<dispname>On connect</dispname>
+		</attrdef>
+		<attrdef name="ConstraintDescription" metaref = "1018" valuetype = "string" defvalue = "">
+			<dispname>Description:</dispname>
+		</attrdef>
+		<attrdef name="ConstraintEqn" metaref = "1019" valuetype = "string" defvalue = "">
+			<dispname>Equation:</dispname>
+			<regnode name="multiLine" value = "12"></regnode>
+		</attrdef>
+		<attrdef name="ConstraintParam" metaref = "1020" valuetype = "string" defvalue = "">
+			<dispname>Default parameters:</dispname>
+		</attrdef>
+		<attrdef name="ConstraintPriority" metaref = "1021" valuetype = "enum" defvalue = "2">
+			<dispname>Priority (1=High):</dispname>
+			<enumitem dispname = "1" value = "1"></enumitem>
+			<enumitem dispname = "2" value = "2"></enumitem>
+			<enumitem dispname = "3" value = "3"></enumitem>
+			<enumitem dispname = "4" value = "4"></enumitem>
+			<enumitem dispname = "5" value = "5"></enumitem>
+			<enumitem dispname = "6" value = "6"></enumitem>
+			<enumitem dispname = "7" value = "7"></enumitem>
+			<enumitem dispname = "8" value = "8"></enumitem>
+			<enumitem dispname = "9" value = "9"></enumitem>
+			<enumitem dispname = "10" value = "10"></enumitem>
+		</attrdef>
+		<attrdef name="ContentType" metaref = "1357" valuetype = "string" defvalue = "">
+			<dispname>Content-Type:</dispname>
+		</attrdef>
+		<attrdef name="CreateEvent" metaref = "1022" valuetype = "boolean" defvalue = "false">
+			<dispname>On create</dispname>
+		</attrdef>
+		<attrdef name="DataType" metaref = "1023" valuetype = "enum" defvalue = "string">
+			<dispname>Data type:</dispname>
+			<enumitem dispname = "String" value = "string"></enumitem>
+			<enumitem dispname = "Integer" value = "integer"></enumitem>
+			<enumitem dispname = "Double" value = "double"></enumitem>
+		</attrdef>
+		<attrdef name="Decorator" metaref = "1024" valuetype = "string" defvalue = "">
+			<dispname>Decorator:</dispname>
+		</attrdef>
+		<attrdef name="DefaultItem" metaref = "1025" valuetype = "string" defvalue = "">
+			<dispname>DefaultMenuItem</dispname>
+		</attrdef>
+		<attrdef name="DeleteEvent" metaref = "1026" valuetype = "boolean" defvalue = "false">
+			<dispname>On delete</dispname>
+		</attrdef>
+		<attrdef name="Depth" metaref = "1027" valuetype = "enum" defvalue = "1">
+			<dispname>Depth:</dispname>
+			<enumitem dispname = "0" value = "0"></enumitem>
+			<enumitem dispname = "1" value = "1"></enumitem>
+			<enumitem dispname = "Any" value = "any"></enumitem>
+		</attrdef>
+		<attrdef name="DeriveEvent" metaref = "1028" valuetype = "boolean" defvalue = "false">
+			<dispname>On derive</dispname>
+		</attrdef>
+		<attrdef name="DisconnectEvent" metaref = "1029" valuetype = "boolean" defvalue = "false">
+			<dispname>On disconnect</dispname>
+		</attrdef>
+		<attrdef name="DisplayedName" metaref = "1030" valuetype = "string" defvalue = "">
+			<dispname>Displayed name:</dispname>
+		</attrdef>
+		<attrdef name="DstAttrLabel1" metaref = "1031" valuetype = "string" defvalue = "">
+			<dispname>1st destination label:</dispname>
+			<regnode name="help" value = "Destination primary attribute"></regnode>
+		</attrdef>
+		<attrdef name="DstAttrLabel2" metaref = "1032" valuetype = "string" defvalue = "">
+			<dispname>2nd destination label:</dispname>
+			<regnode name="help" value = "Destination secondary attribute"></regnode>
+		</attrdef>
+		<attrdef name="FieldDefault" metaref = "1033" valuetype = "string" defvalue = "">
+			<dispname>Default:</dispname>
+		</attrdef>
+		<attrdef name="GeneralPreferences" metaref = "1034" valuetype = "string" defvalue = "">
+			<dispname>General preferences:</dispname>
+			<regnode name="multiLine" value = "8"></regnode>
+		</attrdef>
+		<attrdef name="GlobalScope" metaref = "1035" valuetype = "boolean" defvalue = "true">
+			<dispname>Global Scope?</dispname>
+		</attrdef>
+		<attrdef name="GradientFillColor" metaref = "1504" valuetype = "string" defvalue = "">
+			<dispname>Gradient fill color:</dispname>
+			<regnode name="help" value = "This is the 2nd color used for the gradient fill, the 1st is the FillColor"></regnode>
+		</attrdef>
+		<attrdef name="GradientFillDirection" metaref = "1505" valuetype = "string" defvalue = "">
+			<dispname>Gradient fill direction:</dispname>
+			<regnode name="help" value = "Angle from 0-90 degree where the gradient points"></regnode>
+		</attrdef>
+		<attrdef name="Help" metaref = "1036" valuetype = "string" defvalue = "">
+			<dispname>Help:</dispname>
+			<regnode name="help" value = "The help text which for e.g. appears at the bottom of ObjectInspector Panel"></regnode>
+		</attrdef>
+		<attrdef name="HelpURL" metaref = "1564" valuetype = "string" defvalue = "">
+			<dispname>Help URL:</dispname>
+			<regnode name="help" value = "This webpage comes up for e.g. by the activation of the element&apos;s context menu&apos;s Help item"></regnode>
+		</attrdef>
+		<attrdef name="Icon" metaref = "1037" valuetype = "string" defvalue = "">
+			<dispname>Icon name:</dispname>
+		</attrdef>
+		<attrdef name="InstanceIcon" metaref = "1038" valuetype = "string" defvalue = "">
+			<dispname>Instance icon name:</dispname>
+		</attrdef>
+		<attrdef name="IsAbstract" metaref = "1039" valuetype = "boolean" defvalue = "false">
+			<dispname>Abstract?</dispname>
+		</attrdef>
+		<attrdef name="IsAutoRouted" metaref = "1567" valuetype = "boolean" defvalue = "true">
+			<dispname>Is auto routed</dispname>
+			<regnode name="help" value = "Is the connection treated by the auto router."></regnode>
+		</attrdef>
+		<attrdef name="IsGradientFillEnabled" metaref = "1506" valuetype = "boolean" defvalue = "false">
+			<dispname>Is gradient fill enabled?</dispname>
+		</attrdef>
+		<attrdef name="IsHotspotEnabled" metaref = "1040" valuetype = "boolean" defvalue = "true">
+			<dispname>Hotspots Enabled:</dispname>
+		</attrdef>
+		<attrdef name="IsModelAutoRouted" metaref = "1568" valuetype = "boolean" defvalue = "true">
+			<dispname>Is auto routed</dispname>
+			<regnode name="help" value = "Are the models&apos; connections treated by the auto router by default."></regnode>
+		</attrdef>
+		<attrdef name="IsNameEnabled" metaref = "1041" valuetype = "boolean" defvalue = "true">
+			<dispname>Is Name enabled?</dispname>
+		</attrdef>
+		<attrdef name="IsPort" metaref = "1042" valuetype = "boolean" defvalue = "false">
+			<dispname>Object is a port?</dispname>
+		</attrdef>
+		<attrdef name="IsResizable" metaref = "1566" valuetype = "boolean" defvalue = "false">
+			<dispname>Is Resizable?</dispname>
+		</attrdef>
+		<attrdef name="IsRoundRectangleEnabled" metaref = "1507" valuetype = "boolean" defvalue = "false">
+			<dispname>Corners of the rectangle are rounded?</dispname>
+		</attrdef>
+		<attrdef name="IsShadowCastEnabled" metaref = "1508" valuetype = "boolean" defvalue = "false">
+			<dispname>Is shadow casting enabled?</dispname>
+		</attrdef>
+		<attrdef name="IsTypeInfoShown" metaref = "1043" valuetype = "boolean" defvalue = "true">
+			<dispname>Typeinfo displayed</dispname>
+		</attrdef>
+		<attrdef name="IsTypeShown" metaref = "1044" valuetype = "boolean" defvalue = "false">
+			<dispname>Is type shown?</dispname>
+		</attrdef>
+		<attrdef name="IsViewable" metaref = "1045" valuetype = "boolean" defvalue = "true">
+			<dispname>Viewable?</dispname>
+		</attrdef>
+		<attrdef name="LabelFormatStr" metaref = "1565" valuetype = "string" defvalue = "">
+			<dispname>Main label:</dispname>
+			<regnode name="help" value = "for e.g.: text+%name%"></regnode>
+		</attrdef>
+		<attrdef name="LostChildEvent" metaref = "1046" valuetype = "boolean" defvalue = "false">
+			<dispname>On lost child</dispname>
+		</attrdef>
+		<attrdef name="MenuItems" metaref = "1047" valuetype = "string" defvalue = "">
+			<dispname>Menu items:</dispname>
+			<regnode name="multiLine" value = "8"></regnode>
+		</attrdef>
+		<attrdef name="MoveEvent" metaref = "1048" valuetype = "boolean" defvalue = "false">
+			<dispname>On move</dispname>
+		</attrdef>
+		<attrdef name="Multiline" metaref = "1049" valuetype = "string" defvalue = "1">
+			<dispname>Number of lines:</dispname>
+		</attrdef>
+		<attrdef name="NamePosition" metaref = "1050" valuetype = "enum" defvalue = "4">
+			<dispname>Name position:</dispname>
+			<enumitem dispname = "North" value = "0"></enumitem>
+			<enumitem dispname = "Northeast" value = "1"></enumitem>
+			<enumitem dispname = "East" value = "2"></enumitem>
+			<enumitem dispname = "Southeast" value = "3"></enumitem>
+			<enumitem dispname = "South" value = "4"></enumitem>
+			<enumitem dispname = "Southwest" value = "5"></enumitem>
+			<enumitem dispname = "West" value = "6"></enumitem>
+			<enumitem dispname = "Northwest" value = "7"></enumitem>
+			<enumitem dispname = "Center" value = "8"></enumitem>
+		</attrdef>
+		<attrdef name="NameWrapNum" metaref = "1051" valuetype = "integer" defvalue = "0">
+			<dispname>Name wrapping:</dispname>
+		</attrdef>
+		<attrdef name="NewChildEvent" metaref = "1052" valuetype = "boolean" defvalue = "false">
+			<dispname>On new child</dispname>
+		</attrdef>
+		<attrdef name="Prompt" metaref = "1053" valuetype = "string" defvalue = "">
+			<dispname>Prompt:</dispname>
+			<regnode name="help" value = "Displayed name"></regnode>
+		</attrdef>
+		<attrdef name="ReferenceEvent" metaref = "1054" valuetype = "boolean" defvalue = "false">
+			<dispname>On refer</dispname>
+		</attrdef>
+		<attrdef name="RemoveSetEvent" metaref = "1055" valuetype = "boolean" defvalue = "false">
+			<dispname>On exclude from set</dispname>
+		</attrdef>
+		<attrdef name="Rolename" metaref = "1056" valuetype = "string" defvalue = "">
+			<dispname>CompositionRole</dispname>
+		</attrdef>
+		<attrdef name="RoundRectangleRadius" metaref = "1509" valuetype = "string" defvalue = "">
+			<dispname>Radius of the recangle corners</dispname>
+		</attrdef>
+		<attrdef name="ShadowColor" metaref = "1510" valuetype = "string" defvalue = "">
+			<dispname>Color of the shadow</dispname>
+		</attrdef>
+		<attrdef name="ShadowDirection" metaref = "1511" valuetype = "string" defvalue = "">
+			<dispname>Direction of the shadow</dispname>
+			<regnode name="help" value = "0-360 degree, special: minus degree means a glow around the element"></regnode>
+		</attrdef>
+		<attrdef name="ShadowThickness" metaref = "1512" valuetype = "string" defvalue = "">
+			<dispname>Displacement/offset of the shadow</dispname>
+		</attrdef>
+		<attrdef name="SrcAttrLabel1" metaref = "1057" valuetype = "string" defvalue = "">
+			<dispname>1st source label:</dispname>
+			<regnode name="help" value = "Source primary attribute"></regnode>
+		</attrdef>
+		<attrdef name="SrcAttrLabel2" metaref = "1058" valuetype = "string" defvalue = "">
+			<dispname>2nd source label:</dispname>
+			<regnode name="help" value = "Source secondary attribute"></regnode>
+		</attrdef>
+		<attrdef name="SubTypeIcon" metaref = "1059" valuetype = "string" defvalue = "">
+			<dispname>Subtype icon name:</dispname>
+		</attrdef>
+		<attrdef name="UnReferenceEvent" metaref = "1060" valuetype = "boolean" defvalue = "false">
+			<dispname>On unrefer</dispname>
+		</attrdef>
+		<attrdef name="dstRolename" metaref = "1062" valuetype = "string" defvalue = "dst">
+			<dispname>Rolename:</dispname>
+		</attrdef>
+		<attrdef name="srcRolename" metaref = "1063" valuetype = "string" defvalue = "src">
+			<dispname>Rolename:</dispname>
+		</attrdef>
+		<atom name = "Atom" metaref = "1064"  attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="HasAspect" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[not self.isAbstract() and not self.InRootFolder implies (self.onlyInFolder()  ||  self.allAspects() -> size > 0)]]>
+				<dispname>Object has to be the member of at least one Aspect unless it is Abstract or in the RootFolder or in any Folder.</dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.isAbstract() implies not self.InRootFolder implies (self.allModels() -> size + self.allFolders() -> size) > 0
+not self.isAbstract() implies not self.InRootFolder implies 
+                       (self.allEquivalences()->exists(s | s.oclAsType(gme::FCO).attribute( "InRootFolder").oclAsType( ocl::Boolean ))  
+                                                or  (self.allParents() -> size + self.allFolders() -> size) > 0)]]>
+				<dispname>Objects must have at least one parent ( Folder or Model ).</dispname>
+			</constraint>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1065" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1066" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1067" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+				<regnode name = "icon" value ="atom.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "BooleanAttribute" metaref = "1068"  attributes = "GlobalScope Help IsViewable Prompt BooleanDefault">
+				<regnode name = "namePosition" value ="4"></regnode>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty</dispname>
+			</constraint>
+			<constraint name="UniqueAttribute" eventmask = "0x810" depth = "0" priority = "1">
+				<![CDATA[-- collects objects having self as attribute
+let associateds = self.connectedFCOs( "dst", HasAttribute ) -> iterate( obj ; accu = Set{} | 
+   let id = obj.deRef() in
+   if ( id.isNull() ) then accu else accu.including( id ) endif
+) in
+
+-- collects all of the attributes of the objects collected above
+associateds->forAll( obj : gme::FCO | 
+   let attributes = obj.allAscendants( -1 ) -> iterate ( class : gme::FCO ; accu = Bag{} | 
+      accu + class.bagConnectedFCOs( "src", HasAttribute )->select( a | a.name = self.name )
+   ) in
+   attributes->size <= 1
+)
+]]>
+				<dispname>Attribute has to be unique in any class</dispname>
+			</constraint>
+			<constraint name="UniqueGlobalAttribute" eventmask = "0x10" depth = "1" priority = "1">
+				<![CDATA[if ( not self.GlobalScope ) then
+   true
+else
+   let attributes = project.allInstancesOf( FieldAttribute ) + project.allInstancesOf( EnumAttribute ) + project.allInstancesOf( BooleanAttribute ) in
+   attributes->select( a : gme::FCO | a.attribute( "GlobalScope" ).oclAsType( ocl::Boolean ) and a.name = self.name )->size <= 1
+endif]]>
+				<dispname>Global attributes must have unique names</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+				<regnode name = "icon" value ="booleanattribute.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Connection" metaref = "1069"  attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName Color NamePosition ConnLineType ConnLineStart ConnLineEnd LabelFormatStr SrcAttrLabel1 SrcAttrLabel2 DstAttrLabel1 DstAttrLabel2 IsAutoRouted">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="HasAspect" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[not self.isAbstract() and not self.InRootFolder implies (self.onlyInFolder()  ||  self.allAspects() -> size > 0)]]>
+				<dispname>Object has to be the member of at least one Aspect unless it is Abstract or in the RootFolder or in any Folder.</dispname>
+			</constraint>
+			<constraint name="HasConnector" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.isAbstract() implies 
+	self.allAscendants( 1 )->exists( conn : gme::FCO | 
+		conn.connectedFCOs( AssociationClass )->notEmpty() ) 
+	or 
+	self.allAscendants( -1 )->exists( conn : gme::FCO | 
+		conn.connectedFCOs( AssociationClass )->notEmpty() )]]>
+				<dispname>Connection has to be connected to at least one Connector</dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.isAbstract() implies not self.InRootFolder implies (self.allModels() -> size + self.allFolders() -> size) > 0
+not self.isAbstract() implies not self.InRootFolder implies 
+                       (self.allEquivalences()->exists(s | s.oclAsType(gme::FCO).attribute( "InRootFolder").oclAsType( ocl::Boolean ))  
+                                                or  (self.allParents() -> size + self.allFolders() -> size) > 0)]]>
+				<dispname>Objects must have at least one parent ( Folder or Model ).</dispname>
+			</constraint>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidColor" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let num = "[0-9a-fA-F]" in
+let color = self.Color.trim() in
+color <> "" implies color.match( "^0x" + num + num + num + num + num + num + "$" )]]>
+				<dispname>Format of Color is invalid.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1070" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1071" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="NamePosition" metaref = "1072" valuetype = "enum" defvalue = "4">
+				<dispname>Name position:</dispname>
+				<enumitem dispname = "North" value = "0"></enumitem>
+				<enumitem dispname = "Northeast" value = "1"></enumitem>
+				<enumitem dispname = "East" value = "2"></enumitem>
+				<enumitem dispname = "Southeast" value = "3"></enumitem>
+				<enumitem dispname = "South" value = "4"></enumitem>
+				<enumitem dispname = "Southwest" value = "5"></enumitem>
+				<enumitem dispname = "West" value = "6"></enumitem>
+				<enumitem dispname = "Northwest" value = "7"></enumitem>
+				<enumitem dispname = "Center" value = "8"></enumitem>
+			</attrdef>
+				<regnode name = "icon" value ="connection.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Connector" metaref = "1073" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "autorouterPref" value ="SEn"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="HasOneAssocClass" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.attachingConnections( AssociationClass ) -> size = 1]]>
+				<dispname>Connector is superfluous or invalid. It does not have Connection as AssociationClass.</dispname>
+			</constraint>
+			<constraint name="HasOneDestination" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", ConnectorToDestination ) -> size = 1]]>
+				<dispname>Connector is superfluous or invalid. It does not have Destination.</dispname>
+			</constraint>
+			<constraint name="HasOneSource" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", SourceToConnector ) -> size = 1]]>
+				<dispname>Connector is superfluous or invalid. It does not have Source.</dispname>
+			</constraint>
+			<constraint name="OnlyOneAssocClass" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let assocCount = self.attachingConnections( AssociationClass ) -> size in
+assocCount <> 0 implies assocCount = 1]]>
+				<dispname>Connector must have exactly one Connection as Association Class.</dispname>
+			</constraint>
+			<constraint name="OnlyOneDestination" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let dstCount = self.attachingConnections( "src", ConnectorToDestination ) -> size in
+dstCount <> 0 implies dstCount = 1]]>
+				<dispname>Connector must have exactly one Destination.</dispname>
+			</constraint>
+			<constraint name="OnlyOneSource" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let srcCount = self.attachingConnections( "dst", SourceToConnector ) -> size in
+srcCount <> 0 implies srcCount = 1]]>
+				<dispname>Connector must have exactly one Source.</dispname>
+			</constraint>
+			<constraint name="OnlySrcDst" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let srcs = self.attachingConnections( "dst", SourceToConnector ) in
+let dsts = self.attachingConnections( "src", ConnectorToDestination ) in
+let srcRole = ( if ( srcs -> size <> 1 ) then "" else srcs.theOnly().oclAsType( SourceToConnector ).srcRolename.trim().toLower() endif ) in
+let dstRole = ( if ( dsts -> size <> 1 ) then "" else dsts.theOnly().oclAsType( ConnectorToDestination ).dstRolename.trim().toLower() endif ) in
+srcRole = "" and dstRole = "" or srcRole = "src" and dstRole = "dst"]]>
+				<dispname>Role of Source and role of Destination can be only in order: either &quot;src&quot; and &quot;dst&quot; or &quot;&quot; and &quot;&quot;.</dispname>
+			</constraint>
+				<regnode name = "icon" value ="connector.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Constraint" metaref = "1074"  attributes = "ConstraintDescription ConstraintParam ConstraintEqn ConstraintPriority CloseEvent Depth CreateEvent DeleteEvent NewChildEvent LostChildEvent MoveEvent DeriveEvent ConnectEvent DisconnectEvent ChangeAttributeEvent ChangePropertyEvent ChangeRelationEvent ReferenceEvent UnReferenceEvent AddSetEvent RemoveSetEvent">
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="DescNotEmpty" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.ConstraintDescription.trim() <> ""]]>
+				<dispname>Description of Constraint cannot be empty</dispname>
+			</constraint>
+			<constraint name="EquationNotEmpty" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.ConstraintEqn.trim() <> ""]]>
+				<dispname>Equation of Constraint cannot be empty</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty</dispname>
+			</constraint>
+			<constraint name="UniqueContexts" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- associateds : set of objects that has this constraint
+let directs = self.connectedFCOs( "dst", HasConstraint ) in
+if ( directs.notEmpty() ) then
+
+   let associateds = directs -> iterate( obj ; accu = Set{} | 
+      let id = obj.deRef() in
+      if ( id.isNull() ) then accu else accu.including( id ) endif
+   ) in
+
+-- non of these objects's ascendents can have a constraint with the same name as self
+   associateds->forAll( obj : gme::FCO | 
+      let classes = obj.allAscendants( -1 ) in
+      let constraints = classes -> iterate ( class : gme::FCO ; accu = Bag{} | 
+         accu + class.bagConnectedFCOs( "src", HasConstraint )->select( c | c.name = self.name )
+      ) in
+      constraints->size <= 1
+   )
+
+else
+-- if the constraint is not bound to an object
+-- non of the global constraints can share the sam name
+   let constraints = project.allInstancesOf( Constraint )->select( c | c.name = self.name ) in
+   let globals = constraints->select( c : gme::FCO | c.connectedFCOs( "dst", HasConstraint ).isEmpty() ) in
+   globals->size <= 1
+
+endif
+]]>
+				<dispname>Non of the constraint&apos;s owners&apos; implementation inheritance ascendents can have a constraint with the same name as this one.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+				<regnode name = "icon" value ="constraint.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "ConstraintFunc" metaref = "1075"  attributes = "CFuncParamList CFuncDefinition CFuncContext CFuncReturnType CFuncStereotype">
+				<regnode name = "namePosition" value ="4"></regnode>
+			<constraint name="ContextNotEmpty" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.CFuncContext.trim() <> ""]]>
+				<dispname>Context of Constraint Function cannot be empty</dispname>
+			</constraint>
+			<constraint name="DefinitionNotEmpty" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.CFuncDefinition.trim() <> ""]]>
+				<dispname>Definition ( i.e. equation ) of Constraint Function cannot be empty</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty</dispname>
+			</constraint>
+			<constraint name="ReturnTypeNotEmpty" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.CFuncReturnType.trim() <> ""]]>
+				<dispname>Return type of Constraint Function cannot be empty</dispname>
+			</constraint>
+			<constraint name="ValidContext" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let id = "[_a-zA-Z][_a-zA-Z0-9]*" in
+let ctx = self.CFuncContext.trim() in
+ctx <> "" implies ctx.match( "^" + id + "(::" + id + ")*$" )]]>
+				<dispname>Format of Context of Constraint Function is invalid </dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<constraint name="ValidParameterList" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let ws = "[\t ]*" in
+let id = "[_a-zA-Z][_a-zA-Z0-9]*" in
+let tn = id + "(::" + id + ")*" in
+let pm = id + ws + ":" + ws + tn in
+let pml = self.CFuncParamList.trim() in
+pml <> "" implies pml.match( "^" + pm + "(" + ws + "," + ws + pm + ")*$" )]]>
+				<dispname>Format of Parameter List of Constraint Function is invalid</dispname>
+			</constraint>
+			<constraint name="ValidReturnType" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let id = "[_a-zA-Z][_a-zA-Z0-9]*" in
+let tr = self.CFuncReturnType.trim() in
+tr <> "" implies tr.match( "^" + id + "(::" + id + ")*$" )]]>
+				<dispname>Format of Return type of Constraint Function is invalid</dispname>
+			</constraint>
+				<regnode name = "icon" value ="constraintfunc.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "EnumAttribute" metaref = "1076"  attributes = "GlobalScope Help IsViewable Prompt DefaultItem MenuItems">
+				<regnode name = "namePosition" value ="8"></regnode>
+			<constraint name="NotEmptyMenuItems" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.MenuItems.trim() <> ""]]>
+				<dispname>EnumAttribute is invalid. MenuItems cannot be empty</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty</dispname>
+			</constraint>
+			<constraint name="UniqueAttribute" eventmask = "0x810" depth = "0" priority = "1">
+				<![CDATA[-- collects objects having self as attribute
+let associateds = self.connectedFCOs( "dst", HasAttribute ) -> iterate( obj ; accu = Set{} | 
+   let id = obj.deRef() in
+   if ( id.isNull() ) then accu else accu.including( id ) endif
+) in
+
+-- collects all of the attributes of the objects collected above
+associateds->forAll( obj : gme::FCO | 
+   let attributes = obj.allAscendants( -1 ) -> iterate ( class : gme::FCO ; accu = Bag{} | 
+      accu + class.bagConnectedFCOs( "src", HasAttribute )->select( a | a.name = self.name )
+   ) in
+   attributes->size <= 1
+)
+]]>
+				<dispname>Attribute has to be unique in any class</dispname>
+			</constraint>
+			<constraint name="UniqueGlobalAttribute" eventmask = "0x10" depth = "1" priority = "1">
+				<![CDATA[if ( not self.GlobalScope ) then
+   true
+else
+   let attributes = project.allInstancesOf( FieldAttribute ) + project.allInstancesOf( EnumAttribute ) + project.allInstancesOf( BooleanAttribute ) in
+   attributes->select( a : gme::FCO | a.attribute( "GlobalScope" ).oclAsType( ocl::Boolean ) and a.name = self.name )->size <= 1
+endif]]>
+				<dispname>Global attributes must have unique names</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+				<regnode name = "icon" value ="enumattribute.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Equivalence" metaref = "1077" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "autorouterPref" value ="Ew"></regnode>
+			<constraint name="ChooseNameForEquivalence" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ops = self.isOperandsValidE() in
+if ( ops->size <> 2 ) then
+   true
+else
+   let objLeft : gme::FCO = ops.at( 0 ) in
+   let objRight : gme::FCO = ops.at( 1 ) in
+   let absLeft = objLeft.attribute( "IsAbstract" ).oclAsType( bool ) in
+   let absRight = objLeft.attribute( "IsAbstract" ).oclAsType( bool ) in
+-- both of them are abstract or none of them are abstract
+   if ( absLeft and absRight or not absLeft and not absRight ) then
+      let refLeft = objLeft.oclIsKindOf( gme::Reference ) in
+      let refRight = objRight.oclIsKindOf( gme::Reference ) in
+-- both of them are proxy or none of them are proxy 
+      if ( refLeft and refRight or not refLeft and not refRight ) then 
+-- the name of the Equivalence will be choosen
+         let nameSelf = self.name.trim() in
+         nameSelf <> "" and nameSelf <> "Equivalence"
+      else
+         true
+      endif
+   else
+      true
+   endif
+endif
+]]>
+				<dispname>The name of the Equivalence will be used to create a new class. </dispname>
+			</constraint>
+			<constraint name="HasLeft" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", EquivLeft ) -> size <> 0
+]]>
+				<dispname>Equivalence operator is superfluous or invalid. It has to have an FCO on the left-side.</dispname>
+			</constraint>
+			<constraint name="HasRight" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", EquivRight ) -> size <> 0]]>
+				<dispname>Equivalence operator is superfluous or invalid. It has to have an FCO on the right-side.</dispname>
+			</constraint>
+			<constraint name="OnlyOneLeft" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let leftCount = self.attachingConnections( "src", EquivLeft ) -> size in
+leftCount <> 0 implies leftCount = 1]]>
+				<dispname>Equivalence operator is invalid. It has to have exaclty one FCO on the left-side.</dispname>
+			</constraint>
+			<constraint name="OnlyOneRight" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let rightCount = self.attachingConnections( "dst", EquivRight ) -> size in
+rightCount <> 0 implies rightCount = 1]]>
+				<dispname>Equivalence operator is invalid. It has to have exaclty one FCO on the right-side.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<constraint name="ValidOperands" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[self.isOperandsValidE().notEmpty()]]>
+				<dispname>Operands of Equivalence can be neither the same class nor classes with different types</dispname>
+			</constraint>
+				<regnode name = "icon" value ="equiv.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "FCO" metaref = "1078"  attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="Abstract" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.IsAbstract ]]>
+				<dispname>FCO has to be abstract.</dispname>
+			</constraint>
+			<constraint name="HasAspect" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[not self.isAbstract() and not self.InRootFolder implies (self.onlyInFolder()  ||  self.allAspects() -> size > 0)]]>
+				<dispname>Object has to be the member of at least one Aspect unless it is Abstract or in the RootFolder or in any Folder.</dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.isAbstract() implies not self.InRootFolder implies (self.allModels() -> size + self.allFolders() -> size) > 0
+not self.isAbstract() implies not self.InRootFolder implies 
+                       (self.allEquivalences()->exists(s | s.oclAsType(gme::FCO).attribute( "InRootFolder").oclAsType( ocl::Boolean ))  
+                                                or  (self.allParents() -> size + self.allFolders() -> size) > 0)]]>
+				<dispname>Objects must have at least one parent ( Folder or Model ).</dispname>
+			</constraint>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1079" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1080" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1081" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+				<regnode name = "icon" value ="fco.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "FieldAttribute" metaref = "1082"  attributes = "GlobalScope Help IsViewable Prompt DataType FieldDefault Multiline ContentType">
+				<regnode name = "namePosition" value ="8"></regnode>
+			<constraint name="DefaultTypeMatch" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let default = self.FieldDefault.trim() in
+if ( self.DataType = #integer ) then
+   default <> "" implies not default.toInteger().isUndefined()
+else
+   if ( self.DataType = #double ) then
+      default <> "" implies not default.toReal().isUndefined()
+   else
+      true
+   endif
+endif]]>
+				<dispname>Type of default value has to match to type of the Attribute. (Integer, Double)</dispname>
+			</constraint>
+			<constraint name="NotEmptyMultiline" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.Multiline.trim() <> ""]]>
+				<dispname>Multiline cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty</dispname>
+			</constraint>
+			<constraint name="UniqueAttribute" eventmask = "0x810" depth = "0" priority = "1">
+				<![CDATA[-- collects objects having self as attribute
+let associateds = self.connectedFCOs( "dst", HasAttribute ) -> iterate( obj ; accu = Set{} | 
+   let id = obj.deRef() in
+   if ( id.isNull() ) then accu else accu.including( id ) endif
+) in
+
+-- collects all of the attributes of the objects collected above
+associateds->forAll( obj : gme::FCO | 
+   let attributes = obj.allAscendants( -1 ) -> iterate ( class : gme::FCO ; accu = Bag{} | 
+      accu + class.bagConnectedFCOs( "src", HasAttribute )->select( a | a.name = self.name )
+   ) in
+   attributes->size <= 1
+)
+]]>
+				<dispname>Attribute has to be unique in any class</dispname>
+			</constraint>
+			<constraint name="UniqueGlobalAttribute" eventmask = "0x10" depth = "1" priority = "1">
+				<![CDATA[if ( not self.GlobalScope ) then
+   true
+else
+   let attributes = project.allInstancesOf( FieldAttribute ) + project.allInstancesOf( EnumAttribute ) + project.allInstancesOf( BooleanAttribute ) in
+   attributes->select( a : gme::FCO | a.attribute( "GlobalScope" ).oclAsType( ocl::Boolean ) and a.name = self.name )->size <= 1
+endif]]>
+				<dispname>Global attributes must have unique names</dispname>
+			</constraint>
+			<constraint name="ValidMultiline" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let lines = self.Multiline.trim() in
+lines <> "" implies lines.toInteger() > 0 and lines.toInteger() < 100]]>
+				<dispname>Line number must be greater than 0 and less than 100.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+				<regnode name = "icon" value ="fieldattribute.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Folder" metaref = "1083"  attributes = "InRootFolder DisplayedName">
+				<regnode name = "namePosition" value ="8"></regnode>
+			<constraint name="HasChild" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.connectedFCOs( "src", FolderContainment ) -> size > 0
+self.folderHasChild(Set{})]]>
+				<dispname>Folder or its proxies or its equivalences have to contain at least one Object ( Folder or FCO ). </dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.InRootFolder implies self.allFolders() -> size > 0
+self.folderInFolderGen(Set{})]]>
+				<dispname>Folder, or its proxies, or its equivalences have to have at least one parent. </dispname>
+			</constraint>
+			<constraint name="NotEmpyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="InRootFolder" metaref = "1084" valuetype = "boolean" defvalue = "true">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+				<regnode name = "icon" value ="folder.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "ImplementationInheritance" metaref = "1085" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "autorouterPref" value ="Sn"></regnode>
+			<constraint name="HasDerived" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", DerivedImpInheritance ) -> size > 0]]>
+				<dispname>Implementation inheritance operator is superfluous or invalid. It must have at least one derived class</dispname>
+			</constraint>
+			<constraint name="HasOneBase" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", BaseImpInheritance ) -> size = 1]]>
+				<dispname>Implementation inheritance operator is superfluous or invalid. It must have exactly one base class</dispname>
+			</constraint>
+			<constraint name="OnlyOneBase" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let baseCount = self.attachingConnections( "dst", BaseImpInheritance ) -> size in
+baseCount <> 0 implies baseCount = 1]]>
+				<dispname>Implementation inheritance operator has exactly one base class</dispname>
+			</constraint>
+				<regnode name = "icon" value ="impinheritance.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Inheritance" metaref = "1086" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "autorouterPref" value ="Sn"></regnode>
+			<constraint name="HasDerived" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", DerivedInheritance ) -> size > 0]]>
+				<dispname>Inheritance operator is superfluous or invalid. It must have at least one derived class</dispname>
+			</constraint>
+			<constraint name="HasOneBase" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", BaseInheritance ) -> size = 1]]>
+				<dispname>Inheritance operator is superfluous or invalid. It must have exactly one base class</dispname>
+			</constraint>
+			<constraint name="OnlyOneBase" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let baseCount = self.attachingConnections( "dst", BaseInheritance ) -> size in
+baseCount <> 0 implies baseCount = 1]]>
+				<dispname>Inheritance operator has exactly one base class.</dispname>
+			</constraint>
+				<regnode name = "icon" value ="inheritance.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "InterfaceInheritance" metaref = "1087" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "autorouterPref" value ="Sn"></regnode>
+			<constraint name="HasDerived" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", DerivedIntInheritance ) -> size > 0]]>
+				<dispname>Interface inheritance operator is superfluous or invalid. It must have at least one derived class</dispname>
+			</constraint>
+			<constraint name="HasOneBase" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", BaseIntInheritance ) -> size = 1]]>
+				<dispname>Interface inheritance operator is superfluous or invalid. It must have exactly one base class</dispname>
+			</constraint>
+			<constraint name="OnlyOneBase" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let baseCount = self.attachingConnections( "dst", BaseIntInheritance ) -> size in
+baseCount <> 0 implies baseCount = 1]]>
+				<dispname>Interface inheritance operator have exactly one base class</dispname>
+			</constraint>
+				<regnode name = "icon" value ="intinheritance.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Model" metaref = "1088"  attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius IsTypeInfoShown IsModelAutoRouted">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="HasAspect" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[not self.isAbstract() and not self.InRootFolder implies (self.onlyInFolder()  ||  self.allAspects() -> size > 0)]]>
+				<dispname>Object has to be the member of at least one Aspect unless it is Abstract or in the RootFolder or in any Folder.</dispname>
+			</constraint>
+			<constraint name="HasOpenAspect" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.isAbstract() implies self.allAscendants( -1 )  -> exists( model : gme::FCO | model.connectedFCOs( "src", HasAspect ) ->size > 0)]]>
+				<dispname>Model must have at least one aspect in which its contents is visible</dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.isAbstract() implies not self.InRootFolder implies (self.allModels() -> size + self.allFolders() -> size) > 0
+not self.isAbstract() implies not self.InRootFolder implies 
+                       (self.allEquivalences()->exists(s | s.oclAsType(gme::FCO).attribute( "InRootFolder").oclAsType( ocl::Boolean ))  
+                                                or  (self.allParents() -> size + self.allFolders() -> size) > 0)]]>
+				<dispname>Objects must have at least one parent ( Folder or Model ).</dispname>
+			</constraint>
+			<constraint name="HasPart" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.isAbstract() implies self.allAscendants( -1 ) -> exists( model : gme::FCO | model.connectedFCOs( "src", Containment ) -> notEmpty() )]]>
+				<dispname>Model has to have at least one kind to contain</dispname>
+			</constraint>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1089" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1090" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1091" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+				<regnode name = "icon" value ="model.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+				<regnode name = "itemResizable" value ="true"></regnode>
+		</atom>
+		<atom name = "Reference" metaref = "1092"  attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="HasAspect" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[not self.isAbstract() and not self.InRootFolder implies (self.onlyInFolder()  ||  self.allAspects() -> size > 0)]]>
+				<dispname>Object has to be the member of at least one Aspect unless it is Abstract or in the RootFolder or in any Folder.</dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.isAbstract() implies not self.InRootFolder implies (self.allModels() -> size + self.allFolders() -> size) > 0
+not self.isAbstract() implies not self.InRootFolder implies 
+                       (self.allEquivalences()->exists(s | s.oclAsType(gme::FCO).attribute( "InRootFolder").oclAsType( ocl::Boolean ))  
+                                                or  (self.allParents() -> size + self.allFolders() -> size) > 0)]]>
+				<dispname>Objects must have at least one parent ( Folder or Model ).</dispname>
+			</constraint>
+			<constraint name="HasReferred" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.isAbstract() implies self.allAscendants( -1 )  -> exists( ref : gme::FCO | ref.connectedFCOs( "dst", ReferTo ) -> notEmpty() )]]>
+				<dispname>Reference has to refer at least one kind. Implementation inheritance interpreted on references.</dispname>
+			</constraint>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1093" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1094" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1095" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+				<regnode name = "icon" value ="reference.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "SameAspect" metaref = "1096" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "autorouterPref" value ="Ew"></regnode>
+			<constraint name="ChooseNameForEquivalence" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ops = self.isOperandsValidA() in
+if ( ops->size <> 2 ) then
+   true
+else
+   let refLeft = ops.at( 0 ).oclIsKindOf( gme::Reference ) in
+   let refRight = ops.at( 1 ).oclIsKindOf( gme::Reference ) in
+-- both of them are proxy or none of them are proxy 
+   if ( refLeft and refRight or not refLeft and not refRight ) then 
+      let nameSelf = self.name.trim() in
+      nameSelf <> "" and nameSelf <> "SameAspect"
+   else
+      true
+   endif
+endif]]>
+				<dispname>The name of the SameAspect will be used to create a new Aspect. </dispname>
+			</constraint>
+			<constraint name="HasLeft" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", SameAspectLeft ) -> size <> 0]]>
+				<dispname>SameAspect operator is superfluous or invalid. It has to have an Aspect on the left-side.</dispname>
+			</constraint>
+			<constraint name="HasRight" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", SameAspectRight ) -> size <> 0]]>
+				<dispname>SameAspect operator is superfluous or invalid. It has to have an Aspect on the right-side.</dispname>
+			</constraint>
+			<constraint name="OnlyOneLeft" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let leftCount = self.attachingConnections( "src", SameAspectLeft ) -> size in
+leftCount <> 0 implies leftCount = 1]]>
+				<dispname>SameAspect operator is invalid. It has to have exaclty one Aspect on the left-side.</dispname>
+			</constraint>
+			<constraint name="OnlyOneRight" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let rightCount = self.attachingConnections( "dst", SameAspectRight ) -> size in
+rightCount <> 0 implies rightCount = 1]]>
+				<dispname>SameAspect operator is invalid. It has to have exaclty one Aspect on the right-side.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<constraint name="ValidOperands" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[self.isOperandsValidA().notEmpty()]]>
+				<dispname>Operands of SameAspect cannot be the same aspect.</dispname>
+			</constraint>
+				<regnode name = "icon" value ="equiv.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "SameFolder" metaref = "1097" >
+				<regnode name = "namePosition" value ="4"></regnode>
+				<regnode name = "autorouterPref" value ="Ew"></regnode>
+			<constraint name="ChooseNameForEquivalence" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ops = self.isOperandsValidF() in
+if ( ops.isEmpty() ) then
+   true
+else
+   let refLeft = ops.at( 0 ).oclIsKindOf( gme::Reference ) in
+   let refRight = ops.at( 1 ).oclIsKindOf( gme::Reference ) in
+-- both of them are proxy or none of them are proxy 
+   if ( refLeft and refRight or not refLeft and not refRight ) then 
+-- the name of the Equivalence will be choosen
+      let nameSelf = self.name.trim() in
+      nameSelf <> "" and nameSelf <> "SameFolder"
+   else
+      true
+   endif
+endif]]>
+				<dispname>The name of the SameFolder will be used to create a new Folder. </dispname>
+			</constraint>
+			<constraint name="HasLeft" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "dst", SameFolderLeft ) -> size <> 0]]>
+				<dispname>SameFolder operator is superfluous or invalid. It has to have an FCO on the left-side.</dispname>
+			</constraint>
+			<constraint name="HasRight" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.connectedFCOs( "src", SameFolderRight ) -> size <> 0]]>
+				<dispname>SameFolder operator is superfluous or invalid. It has to have an FCO on the right-side.</dispname>
+			</constraint>
+			<constraint name="OnlyOneLeft" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let leftCount = self.attachingConnections( "src", SameFolderLeft ) -> size in
+leftCount <> 0 implies leftCount = 1]]>
+				<dispname>SameFolder operator is invalid. It has to have exaclty one FCO on the left-side.</dispname>
+			</constraint>
+			<constraint name="OnlyOneRight" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[let rightCount = self.attachingConnections( "dst", SameFolderRight ) -> size in
+rightCount <> 0 implies rightCount = 1]]>
+				<dispname>SameFolder operator is invalid. It has to have exaclty one FCO on the right-side.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<constraint name="ValidOperands" eventmask = "0x800" depth = "0" priority = "1">
+				<![CDATA[self.isOperandsValidF().notEmpty()]]>
+				<dispname>Operands of SameFolder cannot be the same folder.</dispname>
+			</constraint>
+				<regnode name = "icon" value ="equiv.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<atom name = "Set" metaref = "1098"  attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+			<constraint name="HasAspect" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[not self.isAbstract() and not self.InRootFolder implies (self.onlyInFolder()  ||  self.allAspects() -> size > 0)]]>
+				<dispname>Object has to be the member of at least one Aspect unless it is Abstract or in the RootFolder or in any Folder.</dispname>
+			</constraint>
+			<constraint name="HasMember" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.isAbstract() implies self.allAscendants( -1 ) -> exists( set : gme::FCO | set.connectedFCOs( "src", SetMembership ) -> notEmpty() )]]>
+				<dispname>Set is superfluous. Set has to contain at least one FCO as member. Set content inherited by Implementation inheritance.</dispname>
+			</constraint>
+			<constraint name="HasParent" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- not self.isAbstract() implies not self.InRootFolder implies (self.allModels() -> size + self.allFolders() -> size) > 0
+not self.isAbstract() implies not self.InRootFolder implies 
+                       (self.allEquivalences()->exists(s | s.oclAsType(gme::FCO).attribute( "InRootFolder").oclAsType( ocl::Boolean ))  
+                                                or  (self.allParents() -> size + self.allFolders() -> size) > 0)]]>
+				<dispname>Objects must have at least one parent ( Folder or Model ).</dispname>
+			</constraint>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1099" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1100" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1101" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+				<regnode name = "icon" value ="set.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+		</atom>
+		<set name = "Aspect" metaref = "1102" attributes = "DisplayedName" >
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "sName" value ="srcFCO"></regnode>
+				<regnode name = "mName" value ="members"></regnode>
+				<regnode name = "icon" value ="aspect.bmp"></regnode>
+				<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<constraint name="HasMember" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[--self.allSameAspects( 1, true )->iterate( aspect : gme::Set ; accu : ocl::Integer = 0 | accu + aspect.members()->size ) > 0
+self.aspectHasMember(Set{})]]>
+				<dispname>Aspect is superfluous. It does not have any class as member. - TEST</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.sameAspectEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="UniqueName" eventmask = "0x0" depth = "0" priority = "1">
+				<![CDATA[project.isNameUnique( self.name.trim() )]]>
+				<dispname>Object&apos;s name must be unique.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid.</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1103" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<pointerspec name = "set">
+				<pointeritem desc = "Atom"></pointeritem>
+				<pointeritem desc = "AtomProxy"></pointeritem>
+				<pointeritem desc = "Connection"></pointeritem>
+				<pointeritem desc = "ConnectionProxy"></pointeritem>
+				<pointeritem desc = "Containment"></pointeritem>
+				<pointeritem desc = "FCO"></pointeritem>
+				<pointeritem desc = "FCOProxy"></pointeritem>
+				<pointeritem desc = "Model"></pointeritem>
+				<pointeritem desc = "ModelProxy"></pointeritem>
+				<pointeritem desc = "Reference"></pointeritem>
+				<pointeritem desc = "ReferenceProxy"></pointeritem>
+				<pointeritem desc = "Set"></pointeritem>
+				<pointeritem desc = "SetProxy"></pointeritem>
+			</pointerspec>
+		</set>
+		<connection name = "AssociationClass" metaref = "1104" >
+				<regnode name = "sName" value ="srcConnection"></regnode>
+				<regnode name = "dName" value ="dstConnection"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="dash"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Connector"></pointeritem>
+				</pointerspec>
+			</connjoint>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Connector"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "BaseImpInheritance" metaref = "1105" >
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "sName" value ="bimplsrc"></regnode>
+				<regnode name = "dName" value ="bimpldst"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "ImplementationInheritance"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "BaseInheritance" metaref = "1106" >
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "sName" value ="bsrc"></regnode>
+				<regnode name = "dName" value ="bdst"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Inheritance"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "BaseIntInheritance" metaref = "1107" >
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "sName" value ="bintsrc"></regnode>
+				<regnode name = "dName" value ="bintdst"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "InterfaceInheritance"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "ConnectorToDestination" metaref = "1108" attributes = "dstRolename Cardinality" >
+				<regnode name = "sName" value ="srcConnector"></regnode>
+				<regnode name = "dName" value ="dstFCO"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+				<regnode name= "dstLabel1" value="%dstRolename%"/>
+				<regnode name= "dstLabel2" value="%Cardinality%"/>
+			<constraint name="ValidCardinality" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let ws = "[\t ]*" in
+let num = "[0-9][0-9]*" in
+let rng = num + ws + ".." + ws + "(" + num + "|\*)" in
+let item = "(" + num +"|" + rng + ")" in
+let car = self.Cardinality.trim() in
+car <> "" implies car.match( "^" + item + "(" + ws + "," + ws + item + ")*$" )]]>
+				<dispname>Format of cardinality is invalid.</dispname>
+			</constraint>
+			<constraint name="ValidRole" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let role = self.dstRolename.trim() in
+role <> "" implies role.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of destination role is invalid.</dispname>
+			</constraint>
+			<attrdef name="Cardinality" metaref = "1109" valuetype = "string" defvalue = "0..*">
+				<dispname>Cardinality:</dispname>
+			</attrdef>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Connector"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "Containment" metaref = "1110" attributes = "IsPort Rolename Cardinality" >
+				<regnode name = "sName" value ="srcContainment"></regnode>
+				<regnode name = "dName" value ="dstContainment"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="diamond"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+				<regnode name= "srcLabel1" value="%Rolename%"/>
+				<regnode name= "srcLabel2" value="%Cardinality%"/>
+			<constraint name="ValidCardinality" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let ws = "[\t ]*" in
+let num = "[0-9][0-9]*" in
+let rng = num + ws + ".." + ws + "(" + num + "|\*)" in
+let item = "(" + num +"|" + rng + ")" in
+let car = self.Cardinality.trim() in
+car <> "" implies car.match( "^" + item + "(" + ws + "," + ws + item + ")*$" )]]>
+				<dispname>Format of cardinality is invalid.</dispname>
+			</constraint>
+			<constraint name="ValidRole" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let role = self.Rolename.trim() in
+role <> "" implies role.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of containment role is invalid.</dispname>
+			</constraint>
+			<attrdef name="Cardinality" metaref = "1111" valuetype = "string" defvalue = "0..*">
+				<dispname>Cardinality:</dispname>
+			</attrdef>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "DerivedImpInheritance" metaref = "1112" >
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "sName" value ="dimplsrc"></regnode>
+				<regnode name = "dName" value ="dimpldst"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "ImplementationInheritance"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "DerivedInheritance" metaref = "1113" >
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "sName" value ="dsrc"></regnode>
+				<regnode name = "dName" value ="ddst"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Inheritance"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "DerivedIntInheritance" metaref = "1114" >
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "sName" value ="dintsrc"></regnode>
+				<regnode name = "dName" value ="dintdst"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "InterfaceInheritance"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "EquivLeft" metaref = "1115" >
+				<regnode name = "sName" value ="srcEquivalence"></regnode>
+				<regnode name = "dName" value ="dstFCO"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Equivalence"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "EquivRight" metaref = "1116" >
+				<regnode name = "sName" value ="srcFCO"></regnode>
+				<regnode name = "dName" value ="dstEquivalence"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Equivalence"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "FolderContainment" metaref = "1117" attributes = "Cardinality" >
+				<regnode name = "sName" value ="dstFolderContainment"></regnode>
+				<regnode name = "dName" value ="srcFolderContainment"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="diamond"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<constraint name="ValidCardinality" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let ws = "[\t ]*" in
+let num = "[0-9][0-9]*" in
+let rng = num + ws + ".." + ws + "(" + num + "|\*)" in
+let item = "(" + num +"|" + rng + ")" in
+let car = self.Cardinality.trim() in
+car <> "" implies car.match( "^" + item + "(" + ws + "," + ws + item + ")*$" )]]>
+				<dispname>Format of cardinality is invalid.</dispname>
+			</constraint>
+			<attrdef name="Cardinality" metaref = "1118" valuetype = "string" defvalue = "0..*">
+				<dispname>Cardinality:</dispname>
+			</attrdef>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Folder"></pointeritem>
+					<pointeritem desc = "FolderProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Folder"></pointeritem>
+					<pointeritem desc = "FolderProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "HasAspect" metaref = "1119" >
+				<regnode name = "sName" value ="srcAspects"></regnode>
+				<regnode name = "dName" value ="dstModels"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="diamond"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Aspect"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "HasAttribute" metaref = "1120" >
+				<regnode name = "sName" value ="srcAttributes"></regnode>
+				<regnode name = "dName" value ="dstObjects"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="diamond"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "BooleanAttribute"></pointeritem>
+					<pointeritem desc = "EnumAttribute"></pointeritem>
+					<pointeritem desc = "FieldAttribute"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "HasConstraint" metaref = "1121" >
+				<regnode name = "sName" value ="srcConstraint"></regnode>
+				<regnode name = "dName" value ="dstFCO"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Constraint"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Folder"></pointeritem>
+					<pointeritem desc = "FolderProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "ReferTo" metaref = "1122" >
+				<regnode name = "sName" value ="srcReferTo"></regnode>
+				<regnode name = "dName" value ="dstReferTo"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="arrow"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "SameAspectLeft" metaref = "1123" >
+				<regnode name = "sName" value ="srcSameAspect"></regnode>
+				<regnode name = "dName" value ="dstAspect"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "SameAspect"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Aspect"></pointeritem>
+					<pointeritem desc = "AspectProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "SameAspectRight" metaref = "1124" >
+				<regnode name = "sName" value ="srcAspect"></regnode>
+				<regnode name = "dName" value ="dstSameAspect"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Aspect"></pointeritem>
+					<pointeritem desc = "AspectProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "SameAspect"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "SameFolderLeft" metaref = "1125" >
+				<regnode name = "sName" value ="srcSameFolder"></regnode>
+				<regnode name = "dName" value ="dstFolder"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "SameFolder"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Folder"></pointeritem>
+					<pointeritem desc = "FolderProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "SameFolderRight" metaref = "1126" >
+				<regnode name = "sName" value ="srcFolder"></regnode>
+				<regnode name = "dName" value ="dstSameFolder"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Folder"></pointeritem>
+					<pointeritem desc = "FolderProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "SameFolder"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "SetMembership" metaref = "1127" >
+				<regnode name = "sName" value ="srcSetMembers"></regnode>
+				<regnode name = "dName" value ="dstSets"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="diamond"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<connection name = "SourceToConnector" metaref = "1128" attributes = "srcRolename Cardinality" >
+				<regnode name = "sName" value ="srcFCO"></regnode>
+				<regnode name = "dName" value ="dstConnector"></regnode>
+				<regnode name = "color" value ="0x000000"></regnode>
+				<regnode name = "dstStyle" value ="butt"></regnode>
+				<regnode name = "srcStyle" value ="butt"></regnode>
+				<regnode name = "lineType" value ="solid"></regnode>
+				<regnode name= "srcLabel1" value="%srcRolename%"/>
+				<regnode name= "srcLabel2" value="%Cardinality%"/>
+			<constraint name="ValidCardinality" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let ws = "[\t ]*" in
+let num = "[0-9][0-9]*" in
+let rng = num + ws + ".." + ws + "(" + num + "|\*)" in
+let item = "(" + num +"|" + rng + ")" in
+let car = self.Cardinality.trim() in
+car <> "" implies car.match( "^" + item + "(" + ws + "," + ws + item + ")*$" )]]>
+				<dispname>Format of cardinality is invalid.</dispname>
+			</constraint>
+			<constraint name="ValidRole" eventmask = "0x1" depth = "0" priority = "1">
+				<![CDATA[let role = self.srcRolename.trim() in
+role <> "" implies role.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of source role is invalid.</dispname>
+			</constraint>
+			<attrdef name="Cardinality" metaref = "1129" valuetype = "string" defvalue = "0..*">
+				<dispname>Cardinality:</dispname>
+			</attrdef>
+			<connjoint>
+				<pointerspec name = "src">
+					<pointeritem desc = "Atom"></pointeritem>
+					<pointeritem desc = "AtomProxy"></pointeritem>
+					<pointeritem desc = "Connection"></pointeritem>
+					<pointeritem desc = "ConnectionProxy"></pointeritem>
+					<pointeritem desc = "FCO"></pointeritem>
+					<pointeritem desc = "FCOProxy"></pointeritem>
+					<pointeritem desc = "Model"></pointeritem>
+					<pointeritem desc = "ModelProxy"></pointeritem>
+					<pointeritem desc = "Reference"></pointeritem>
+					<pointeritem desc = "ReferenceProxy"></pointeritem>
+					<pointeritem desc = "Set"></pointeritem>
+					<pointeritem desc = "SetProxy"></pointeritem>
+				</pointerspec>
+				<pointerspec name = "dst">
+					<pointeritem desc = "Connector"></pointeritem>
+				</pointerspec>
+			</connjoint>
+		</connection>
+		<reference name = "AspectProxy" metaref = "1130">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.sameAspectEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.refersTo().isNull()]]>
+				<dispname>Proxy is superfluous. It refers to null - OK</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid.</dispname>
+			</constraint>
+			<regnode name = "icon" value ="aspectproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Aspect"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "AtomProxy" metaref = "1131" attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.oclAsType( gme::Reference ).refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid. It refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1132" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1133" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1134" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+			<regnode name = "icon" value ="atomproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Atom"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "ConnectionProxy" metaref = "1135" attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.oclAsType( gme::Reference ).refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid. It refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1136" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1137" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<regnode name = "icon" value ="connectionproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Connection"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "FCOProxy" metaref = "1138" attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.oclAsType( gme::Reference ).refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid. It refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1139" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1140" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1141" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+			<regnode name = "icon" value ="fcoproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "FCO"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "FolderProxy" metaref = "1142">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NotEmpyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid if it refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<regnode name = "icon" value ="folderproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Folder"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "ModelProxy" metaref = "1143" attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius IsTypeInfoShown IsModelAutoRouted">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.oclAsType( gme::Reference ).refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid. It refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1144" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1145" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1146" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+			<regnode name = "icon" value ="modelproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Model"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "ReferenceProxy" metaref = "1147" attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.oclAsType( gme::Reference ).refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid. It refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1148" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1149" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1150" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+			<regnode name = "icon" value ="referenceproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Reference"></pointeritem>
+			</pointerspec>
+		</reference>
+		<reference name = "SetProxy" metaref = "1151" attributes = "IsAbstract InRootFolder GeneralPreferences DisplayedName IsTypeShown Icon IsNameEnabled PortIcon SubTypeIcon NamePosition InstanceIcon Decorator NameWrapNum IsHotspotEnabled IsResizable AutoRouterPref HelpURL IsGradientFillEnabled GradientFillColor GradientFillDirection IsShadowCastEnabled ShadowColor ShadowThickness ShadowDirection IsRoundRectangleEnabled RoundRectangleRadius">
+				<regnode name = "namePosition" value ="8"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "color" value ="0x0"></regnode>
+				<regnode name = "rName" value ="ref"></regnode>
+				<regnode name = "rrName" value ="src"></regnode>
+			<constraint name="NoImplementationRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( -1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants(-1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Implementation recursion ( i.e. recursive Implementation and/or Standard inheritance loop ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NoInterfaceRecursion" eventmask = "0xc00" depth = "0" priority = "1">
+				<![CDATA[let directs = self.ascendantEnds( 1 ) in
+let ids = self.allEquivalences() in
+if ( directs.intersection( ids ).notEmpty() ) then
+   false
+else
+   directs.notEmpty() implies not directs->exists( d : gme::FCO | d.allAscendants( 1 ).intersection( ids ).notEmpty() )
+endif
+
+
+
+]]>
+				<dispname>Interface recursion ( i.e. recursive Interface and/or Standard inheritance chain ) is not allowed</dispname>
+			</constraint>
+			<constraint name="NotEmptyName" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[-- self.name.trim() = "" implies self.equivalenceEnds().notEmpty()
+self.name.trim() <> ""]]>
+				<dispname>Name cannot be empty.</dispname>
+			</constraint>
+			<constraint name="NotNull" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[not self.oclAsType( gme::Reference ).refersTo().isNull()]]>
+				<dispname>Proxy is superfulous or invalid. It refers to null.</dispname>
+			</constraint>
+			<constraint name="ValidInheritance" eventmask = "0x0" depth = "0" priority = "2">
+				<![CDATA[let ascs = self.ascendantTypeEnds( -1 ) + self.ascendantTypeEnds( 0 ) + self.ascendantTypeEnds( 1 ) in
+let type = project.cropProxy( self.kindName ) in
+ascs -> forAll( fco : gme::FCO | 
+   let fcoType = project.cropProxy( fco.kindName ) in
+   if ( type = "FCO" ) then
+      fcoType = "FCO"
+   else
+      fcoType = "FCO" or fcoType = type
+   endif
+)]]>
+				<dispname>Invalid inheritance. The types of classes ( i.e. descendant and ascendant ) do not comform.</dispname>
+			</constraint>
+			<constraint name="ValidName" eventmask = "0x10" depth = "0" priority = "1">
+				<![CDATA[let name = self.name.trim() in
+name <> "" implies name.match( "^[_a-zA-Z][_a-zA-Z0-9]*$" )]]>
+				<dispname>Format of Name is invalid</dispname>
+			</constraint>
+			<attrdef name="DisplayedName" metaref = "1152" valuetype = "string" defvalue = "">
+				<dispname>Displayed name:</dispname>
+			</attrdef>
+			<attrdef name="InRootFolder" metaref = "1153" valuetype = "boolean" defvalue = "false">
+				<dispname>In root folder?</dispname>
+			</attrdef>
+			<attrdef name="PortIcon" metaref = "1154" valuetype = "string" defvalue = "">
+				<dispname>Port icon name:</dispname>
+			</attrdef>
+			<regnode name = "icon" value ="setproxy.bmp"></regnode>
+			<regnode name = "decorator" value ="Mga.Decorator.MetaDecorator"></regnode>
+			<pointerspec name = "ref">
+				<pointeritem desc = "Set"></pointeritem>
+			</pointerspec>
+		</reference>
+		<model name = "ParadigmSheet" metaref = "1155" >
+				<regnode name = "namePosition" value ="0"></regnode>
+			<role name = "Aspect" metaref = "1157" kind = "Aspect"></role>
+			<role name = "AspectProxy" metaref = "1158" kind = "AspectProxy"></role>
+			<role name = "AssociationClass" metaref = "1159" kind = "AssociationClass"></role>
+			<role name = "Atom" metaref = "1160" kind = "Atom"></role>
+			<role name = "AtomProxy" metaref = "1161" kind = "AtomProxy"></role>
+			<role name = "BaseImpInheritance" metaref = "1162" kind = "BaseImpInheritance"></role>
+			<role name = "BaseInheritance" metaref = "1163" kind = "BaseInheritance"></role>
+			<role name = "BaseIntInheritance" metaref = "1164" kind = "BaseIntInheritance"></role>
+			<role name = "BooleanAttribute" metaref = "1165" kind = "BooleanAttribute"></role>
+			<role name = "Connection" metaref = "1166" kind = "Connection"></role>
+			<role name = "ConnectionProxy" metaref = "1167" kind = "ConnectionProxy"></role>
+			<role name = "Connector" metaref = "1168" kind = "Connector"></role>
+			<role name = "ConnectorToDestination" metaref = "1169" kind = "ConnectorToDestination"></role>
+			<role name = "Constraint" metaref = "1170" kind = "Constraint"></role>
+			<role name = "ConstraintFunc" metaref = "1171" kind = "ConstraintFunc"></role>
+			<role name = "Containment" metaref = "1172" kind = "Containment"></role>
+			<role name = "DerivedImpInheritance" metaref = "1173" kind = "DerivedImpInheritance"></role>
+			<role name = "DerivedInheritance" metaref = "1174" kind = "DerivedInheritance"></role>
+			<role name = "DerivedIntInheritance" metaref = "1175" kind = "DerivedIntInheritance"></role>
+			<role name = "EnumAttribute" metaref = "1176" kind = "EnumAttribute"></role>
+			<role name = "EquivLeft" metaref = "1177" kind = "EquivLeft"></role>
+			<role name = "EquivRight" metaref = "1178" kind = "EquivRight"></role>
+			<role name = "Equivalence" metaref = "1179" kind = "Equivalence"></role>
+			<role name = "FCO" metaref = "1180" kind = "FCO"></role>
+			<role name = "FCOProxy" metaref = "1181" kind = "FCOProxy"></role>
+			<role name = "FieldAttribute" metaref = "1182" kind = "FieldAttribute"></role>
+			<role name = "Folder" metaref = "1183" kind = "Folder"></role>
+			<role name = "FolderContainment" metaref = "1184" kind = "FolderContainment"></role>
+			<role name = "FolderProxy" metaref = "1185" kind = "FolderProxy"></role>
+			<role name = "HasAspect" metaref = "1186" kind = "HasAspect"></role>
+			<role name = "HasAttribute" metaref = "1187" kind = "HasAttribute"></role>
+			<role name = "HasConstraint" metaref = "1188" kind = "HasConstraint"></role>
+			<role name = "ImplementationInheritance" metaref = "1189" kind = "ImplementationInheritance"></role>
+			<role name = "Inheritance" metaref = "1190" kind = "Inheritance"></role>
+			<role name = "InterfaceInheritance" metaref = "1191" kind = "InterfaceInheritance"></role>
+			<role name = "Model" metaref = "1192" kind = "Model"></role>
+			<role name = "ModelProxy" metaref = "1193" kind = "ModelProxy"></role>
+			<role name = "ReferTo" metaref = "1194" kind = "ReferTo"></role>
+			<role name = "Reference" metaref = "1195" kind = "Reference"></role>
+			<role name = "ReferenceProxy" metaref = "1196" kind = "ReferenceProxy"></role>
+			<role name = "SameAspect" metaref = "1197" kind = "SameAspect"></role>
+			<role name = "SameAspectLeft" metaref = "1198" kind = "SameAspectLeft"></role>
+			<role name = "SameAspectRight" metaref = "1199" kind = "SameAspectRight"></role>
+			<role name = "SameFolder" metaref = "1200" kind = "SameFolder"></role>
+			<role name = "SameFolderLeft" metaref = "1201" kind = "SameFolderLeft"></role>
+			<role name = "SameFolderRight" metaref = "1202" kind = "SameFolderRight"></role>
+			<role name = "Set" metaref = "1203" kind = "Set"></role>
+			<role name = "SetMembership" metaref = "1204" kind = "SetMembership"></role>
+			<role name = "SetProxy" metaref = "1205" kind = "SetProxy"></role>
+			<role name = "SourceToConnector" metaref = "1206" kind = "SourceToConnector"></role>
+			<aspect name = "ClassDiagram" metaref = "1207" >
+				<part metaref = "1208" role = "AssociationClass" primary = "yes" linked = "no"></part>
+				<part metaref = "1209" role = "Atom" primary = "yes" linked = "no"></part>
+				<part metaref = "1210" role = "AtomProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1211" role = "BaseImpInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1212" role = "BaseInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1213" role = "BaseIntInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1214" role = "Connection" primary = "yes" linked = "no"></part>
+				<part metaref = "1215" role = "ConnectionProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1216" role = "Connector" primary = "yes" linked = "no"></part>
+				<part metaref = "1217" role = "ConnectorToDestination" primary = "yes" linked = "no"></part>
+				<part metaref = "1218" role = "Containment" primary = "yes" linked = "no"></part>
+				<part metaref = "1219" role = "DerivedImpInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1220" role = "DerivedInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1221" role = "DerivedIntInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1222" role = "EquivLeft" primary = "yes" linked = "no"></part>
+				<part metaref = "1223" role = "EquivRight" primary = "yes" linked = "no"></part>
+				<part metaref = "1224" role = "Equivalence" primary = "yes" linked = "no"></part>
+				<part metaref = "1225" role = "FCO" primary = "yes" linked = "no"></part>
+				<part metaref = "1226" role = "FCOProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1227" role = "Folder" primary = "yes" linked = "no"></part>
+				<part metaref = "1228" role = "FolderContainment" primary = "yes" linked = "no"></part>
+				<part metaref = "1229" role = "FolderProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1230" role = "ImplementationInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1231" role = "Inheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1232" role = "InterfaceInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1233" role = "Model" primary = "yes" linked = "no"></part>
+				<part metaref = "1234" role = "ModelProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1235" role = "ReferTo" primary = "yes" linked = "no"></part>
+				<part metaref = "1236" role = "Reference" primary = "yes" linked = "no"></part>
+				<part metaref = "1237" role = "ReferenceProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1238" role = "SameFolder" primary = "yes" linked = "no"></part>
+				<part metaref = "1239" role = "SameFolderLeft" primary = "yes" linked = "no"></part>
+				<part metaref = "1240" role = "SameFolderRight" primary = "yes" linked = "no"></part>
+				<part metaref = "1241" role = "Set" primary = "yes" linked = "no"></part>
+				<part metaref = "1242" role = "SetMembership" primary = "yes" linked = "no"></part>
+				<part metaref = "1243" role = "SetProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1244" role = "SourceToConnector" primary = "yes" linked = "no"></part>
+			</aspect>
+			<aspect name = "Visualization" metaref = "1245" >
+				<part metaref = "1246" role = "Aspect" primary = "yes" linked = "no"></part>
+				<part metaref = "1247" role = "AspectProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1248" role = "AssociationClass" primary = "no" linked = "no"></part>
+				<part metaref = "1249" role = "Atom" primary = "no" linked = "no"></part>
+				<part metaref = "1250" role = "AtomProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1251" role = "BaseImpInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1252" role = "BaseInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1253" role = "BaseIntInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1254" role = "Connection" primary = "no" linked = "no"></part>
+				<part metaref = "1255" role = "ConnectionProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1256" role = "Connector" primary = "no" linked = "no"></part>
+				<part metaref = "1257" role = "ConnectorToDestination" primary = "no" linked = "no"></part>
+				<part metaref = "1258" role = "Containment" primary = "no" linked = "no"></part>
+				<part metaref = "1259" role = "DerivedImpInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1260" role = "DerivedInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1261" role = "DerivedIntInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1262" role = "EquivLeft" primary = "no" linked = "no"></part>
+				<part metaref = "1263" role = "EquivRight" primary = "no" linked = "no"></part>
+				<part metaref = "1264" role = "Equivalence" primary = "no" linked = "no"></part>
+				<part metaref = "1265" role = "FCO" primary = "no" linked = "no"></part>
+				<part metaref = "1266" role = "FCOProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1267" role = "Folder" primary = "no" linked = "no"></part>
+				<part metaref = "1268" role = "FolderContainment" primary = "no" linked = "no"></part>
+				<part metaref = "1269" role = "FolderProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1270" role = "HasAspect" primary = "yes" linked = "no"></part>
+				<part metaref = "1271" role = "ImplementationInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1272" role = "Inheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1273" role = "InterfaceInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1274" role = "Model" primary = "no" linked = "no"></part>
+				<part metaref = "1275" role = "ModelProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1276" role = "ReferTo" primary = "no" linked = "no"></part>
+				<part metaref = "1277" role = "Reference" primary = "no" linked = "no"></part>
+				<part metaref = "1278" role = "ReferenceProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1279" role = "SameAspect" primary = "yes" linked = "no"></part>
+				<part metaref = "1280" role = "SameAspectLeft" primary = "yes" linked = "no"></part>
+				<part metaref = "1281" role = "SameAspectRight" primary = "yes" linked = "no"></part>
+				<part metaref = "1282" role = "SameFolder" primary = "no" linked = "no"></part>
+				<part metaref = "1283" role = "SameFolderLeft" primary = "no" linked = "no"></part>
+				<part metaref = "1284" role = "SameFolderRight" primary = "no" linked = "no"></part>
+				<part metaref = "1285" role = "Set" primary = "no" linked = "no"></part>
+				<part metaref = "1286" role = "SetMembership" primary = "no" linked = "no"></part>
+				<part metaref = "1287" role = "SetProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1288" role = "SourceToConnector" primary = "no" linked = "no"></part>
+			</aspect>
+			<aspect name = "Constraints" metaref = "1289" >
+				<part metaref = "1290" role = "Atom" primary = "no" linked = "no"></part>
+				<part metaref = "1291" role = "AtomProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1292" role = "BaseImpInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1293" role = "BaseInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1294" role = "BaseIntInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1295" role = "Connection" primary = "no" linked = "no"></part>
+				<part metaref = "1296" role = "ConnectionProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1297" role = "Constraint" primary = "yes" linked = "no"></part>
+				<part metaref = "1298" role = "ConstraintFunc" primary = "yes" linked = "no"></part>
+				<part metaref = "1299" role = "DerivedImpInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1300" role = "DerivedInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1301" role = "DerivedIntInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1302" role = "EquivLeft" primary = "no" linked = "no"></part>
+				<part metaref = "1303" role = "EquivRight" primary = "no" linked = "no"></part>
+				<part metaref = "1304" role = "Equivalence" primary = "no" linked = "no"></part>
+				<part metaref = "1305" role = "FCO" primary = "no" linked = "no"></part>
+				<part metaref = "1306" role = "FCOProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1307" role = "Folder" primary = "no" linked = "no"></part>
+				<part metaref = "1308" role = "FolderProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1309" role = "HasConstraint" primary = "yes" linked = "no"></part>
+				<part metaref = "1310" role = "ImplementationInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1311" role = "Inheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1312" role = "InterfaceInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1313" role = "Model" primary = "no" linked = "no"></part>
+				<part metaref = "1314" role = "ModelProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1315" role = "Reference" primary = "no" linked = "no"></part>
+				<part metaref = "1316" role = "ReferenceProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1317" role = "SameFolder" primary = "no" linked = "no"></part>
+				<part metaref = "1318" role = "SameFolderLeft" primary = "no" linked = "no"></part>
+				<part metaref = "1319" role = "SameFolderRight" primary = "no" linked = "no"></part>
+				<part metaref = "1320" role = "Set" primary = "no" linked = "no"></part>
+				<part metaref = "1321" role = "SetProxy" primary = "no" linked = "no"></part>
+			</aspect>
+			<aspect name = "Attributes" metaref = "1322" >
+				<part metaref = "1323" role = "Atom" primary = "no" linked = "no"></part>
+				<part metaref = "1324" role = "AtomProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1325" role = "BaseImpInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1326" role = "BaseInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1327" role = "BaseIntInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1328" role = "BooleanAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1329" role = "Connection" primary = "no" linked = "no"></part>
+				<part metaref = "1330" role = "ConnectionProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1331" role = "DerivedImpInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1332" role = "DerivedInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1333" role = "DerivedIntInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1334" role = "EnumAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1335" role = "EquivLeft" primary = "no" linked = "no"></part>
+				<part metaref = "1336" role = "EquivRight" primary = "no" linked = "no"></part>
+				<part metaref = "1337" role = "Equivalence" primary = "no" linked = "no"></part>
+				<part metaref = "1338" role = "FCO" primary = "no" linked = "no"></part>
+				<part metaref = "1339" role = "FCOProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1340" role = "FieldAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1341" role = "Folder" primary = "no" linked = "no"></part>
+				<part metaref = "1342" role = "FolderProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1343" role = "HasAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1344" role = "ImplementationInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1345" role = "Inheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1346" role = "InterfaceInheritance" primary = "no" linked = "no"></part>
+				<part metaref = "1347" role = "Model" primary = "no" linked = "no"></part>
+				<part metaref = "1348" role = "ModelProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1349" role = "Reference" primary = "no" linked = "no"></part>
+				<part metaref = "1350" role = "ReferenceProxy" primary = "no" linked = "no"></part>
+				<part metaref = "1351" role = "SameFolder" primary = "no" linked = "no"></part>
+				<part metaref = "1352" role = "SameFolderLeft" primary = "no" linked = "no"></part>
+				<part metaref = "1353" role = "SameFolderRight" primary = "no" linked = "no"></part>
+				<part metaref = "1354" role = "Set" primary = "no" linked = "no"></part>
+				<part metaref = "1355" role = "SetProxy" primary = "no" linked = "no"></part>
+			</aspect>
+			<aspect name = "All" metaref = "1503" >
+				<part metaref = "1513" role = "Aspect" primary = "yes" linked = "no"></part>
+				<part metaref = "1514" role = "AspectProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1515" role = "AssociationClass" primary = "yes" linked = "no"></part>
+				<part metaref = "1516" role = "Atom" primary = "yes" linked = "no"></part>
+				<part metaref = "1517" role = "AtomProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1518" role = "BaseImpInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1519" role = "BaseInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1520" role = "BaseIntInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1521" role = "BooleanAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1522" role = "Connection" primary = "yes" linked = "no"></part>
+				<part metaref = "1523" role = "ConnectionProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1524" role = "Connector" primary = "yes" linked = "no"></part>
+				<part metaref = "1525" role = "ConnectorToDestination" primary = "yes" linked = "no"></part>
+				<part metaref = "1526" role = "Constraint" primary = "yes" linked = "no"></part>
+				<part metaref = "1527" role = "ConstraintFunc" primary = "yes" linked = "no"></part>
+				<part metaref = "1528" role = "Containment" primary = "yes" linked = "no"></part>
+				<part metaref = "1529" role = "DerivedImpInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1530" role = "DerivedInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1531" role = "DerivedIntInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1532" role = "EnumAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1533" role = "EquivLeft" primary = "yes" linked = "no"></part>
+				<part metaref = "1534" role = "EquivRight" primary = "yes" linked = "no"></part>
+				<part metaref = "1535" role = "Equivalence" primary = "yes" linked = "no"></part>
+				<part metaref = "1536" role = "FCO" primary = "yes" linked = "no"></part>
+				<part metaref = "1537" role = "FCOProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1538" role = "FieldAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1539" role = "Folder" primary = "yes" linked = "no"></part>
+				<part metaref = "1540" role = "FolderContainment" primary = "yes" linked = "no"></part>
+				<part metaref = "1541" role = "FolderProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1542" role = "HasAspect" primary = "yes" linked = "no"></part>
+				<part metaref = "1543" role = "HasAttribute" primary = "yes" linked = "no"></part>
+				<part metaref = "1544" role = "HasConstraint" primary = "yes" linked = "no"></part>
+				<part metaref = "1545" role = "ImplementationInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1546" role = "Inheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1547" role = "InterfaceInheritance" primary = "yes" linked = "no"></part>
+				<part metaref = "1548" role = "Model" primary = "yes" linked = "no"></part>
+				<part metaref = "1549" role = "ModelProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1550" role = "ReferTo" primary = "yes" linked = "no"></part>
+				<part metaref = "1551" role = "Reference" primary = "yes" linked = "no"></part>
+				<part metaref = "1552" role = "ReferenceProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1553" role = "SameAspect" primary = "yes" linked = "no"></part>
+				<part metaref = "1554" role = "SameAspectLeft" primary = "yes" linked = "no"></part>
+				<part metaref = "1555" role = "SameAspectRight" primary = "yes" linked = "no"></part>
+				<part metaref = "1556" role = "SameFolder" primary = "yes" linked = "no"></part>
+				<part metaref = "1557" role = "SameFolderLeft" primary = "yes" linked = "no"></part>
+				<part metaref = "1558" role = "SameFolderRight" primary = "yes" linked = "no"></part>
+				<part metaref = "1559" role = "Set" primary = "yes" linked = "no"></part>
+				<part metaref = "1560" role = "SetMembership" primary = "yes" linked = "no"></part>
+				<part metaref = "1561" role = "SetProxy" primary = "yes" linked = "no"></part>
+				<part metaref = "1562" role = "SourceToConnector" primary = "yes" linked = "no"></part>
+			</aspect>
+		</model>
+		<folder name = "SheetFolder" metaref = "1356"  rootobjects = "ParadigmSheet" >
+		</folder>
+	</folder>
+</paradigm>
