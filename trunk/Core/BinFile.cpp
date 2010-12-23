@@ -36,15 +36,15 @@ static void _Read(std::fstream &ifs, std::vector<unsigned char> &value)
 		ifs.read( (char *) &value[0], len);
 }
 
-static void _Read(std::fstream &ifs, UUID &value)
+static void _Read(std::fstream &ifs, Uuid &value)
 {
 	// Make sure the file is open
 	ASSERT( ifs.is_open() );
-	// Get the length of the UUID (must be 16)
+	// Get the length of the Uuid (must be 16)
 	uint32_t len;
 	_Read(ifs, len);
 	ASSERT( len == 16 );
-	// Read data into the UUID
+	// Read data into the Uuid
 	ifs.read( (char *) &value, len);
 }
 
@@ -104,11 +104,11 @@ static void _Write(std::fstream &ofs, const std::vector<unsigned char> &value) {
 		ofs.write( (char*)&value[0], len);
 }
 
-static void _Write(std::fstream &ofs, UUID &value) {
+static void _Write(std::fstream &ofs, Uuid &value) {
 	// Make sure the file is open
 	ASSERT( ofs.is_open() );
-	// Write the length of the UUID (always 16)
-	uint32_t len = sizeof(UUID);
+	// Write the length of the Uuid (always 16)
+	uint32_t len = sizeof(Uuid);
 	ASSERT( len == 16 );
 	_Write(ofs, len);
 	// Write the actual the UUID
@@ -455,7 +455,7 @@ BinAttribute* BinObject::Attribute(const AttrID_t &attrID)
 
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
-	_filename(filename), _isV3(false), _metaProjectUUID(), _inputFile(), _scratchFile(), _metaIDHash(),
+	_filename(filename), _isV3(false), _metaProjectUuid(), _inputFile(), _scratchFile(), _metaIDHash(),
 	_inputHash(), _scratchHash(), _cacheHash(), _cacheQueue(), _maxCacheSize(COREBIN_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects()
 {
@@ -565,11 +565,11 @@ const Result_t BinFile::Load(void)
 		return E_FILEOPEN;
 	}
 
-	// Read the project UUID from the file
-	UUID uuid;
+	// Read the project Uuid from the file
+	Uuid uuid;
 	_Read(this->_inputFile, uuid);
-	// Make sure the UUID matches 
-	if( !(uuid == this->_metaProjectUUID) ) {
+	// Make sure the Uuid matches 
+	if( !(uuid == this->_metaProjectUuid) ) {
 		// Close the files
 		this->_inputFile.close();
 		this->_scratchFile.close();
@@ -607,7 +607,7 @@ void BinFile::OpenMetaProject(void)
 {
 	ASSERT( this->_metaProject != NULL );
 	// Get the metaProject uuid
-	ASSERT( this->_metaProject->GetUUID(this->_metaProjectUUID) == S_OK );
+	ASSERT( this->_metaProject->GetUuid(this->_metaProjectUuid) == S_OK );
 	// Initialize the metaIDHash
 	this->_metaIDHash.clear();
 	// Get the coreMetaObjects from the project
@@ -1016,7 +1016,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 	
 //	std::cout << "Pre-Save State (Cache: " << this->_cacheHash.size() << ", Input: " << this->_inputHash.size() << ", Scratch: " << this->_scratchHash.size() << ").\n";
 	// Write out the metaProjectID
-	_Write(outputFile, this->_metaProjectUUID);
+	_Write(outputFile, this->_metaProjectUuid);
 	// Move streampos to end of what will be the index
 	int indexSizeB = this->_inputHash.size() + this->_scratchHash.size() + this->_cacheHash.size();
 	indexSizeB = indexSizeB * 14;//(sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));	// Index entry size = 14B (MetaID + ObjID + 64-bit pos)

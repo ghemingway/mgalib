@@ -226,7 +226,7 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 
 static const Result_t _CreateMetaCoreMetaProjectv3(CoreMetaProject* &metaProject)
 {
-	UUID uuid = "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}";
+	Uuid uuid = "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}";
 	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", uuid);
 	ASSERT( metaProject != NULL );
 
