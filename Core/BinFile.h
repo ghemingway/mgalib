@@ -120,7 +120,7 @@ private:
 	// Base State Variables
 	std::string							_filename;					//!< Primary file name (opened as read-only)
 	bool								_isV3;						//!< Is primary input file (see above) v3 format?
-	UUID								_metaProjectUUID;			//!< MetaProject UUID
+	Uuid								_metaProjectUuid;			//!< MetaProject Uuid
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
 	MetaObjIDHash						_metaIDHash;				//!< Hash of allowed metaIDs (from metaProject)

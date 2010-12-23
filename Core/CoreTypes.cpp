@@ -137,7 +137,7 @@ std::string GUID_t::ToString(const std::vector<unsigned char> &guid)
 // --------------------------- UUID --------------------------- //
 
 
-UUID::UUID()
+Uuid::Uuid()
 {
 #ifdef __APPLE__
 	// Let Apple's implementation create the unique identifier
@@ -157,21 +157,21 @@ UUID::UUID()
 }
 
 
-UUID::UUID(const GUID_t &guid)
+Uuid::Uuid(const GUID_t &guid)
 {
 	// Just copy the bytes in
 	memcpy(this->_data, &guid, sizeof(GUID_t));
 }
 
 
-UUID::UUID(const std::vector<unsigned char> &vector)
+Uuid::Uuid(const std::vector<unsigned char> &vector)
 {
 	// Just use the equals operator
 	*this = vector;
 }
 
 
-UUID::UUID(const char* string)
+Uuid::Uuid(const char* string)
 {
 	// Convert the char* into a std::string
 	std::string strValue(string);
@@ -179,31 +179,31 @@ UUID::UUID(const char* string)
 }
 
 
-UUID::UUID(const std::string &string)
+Uuid::Uuid(const std::string &string)
 {
 	// Just use the equals operator
 	*this = string;
 }
 
 
-UUID& UUID::operator=(const UUID &uuid)
+Uuid& Uuid::operator=(const Uuid &uuid)
 {
-	// Copy all 16 bytes into the UUID data structure
-	memcpy(this, &uuid, sizeof(UUID));
+	// Copy all 16 bytes into the Uuid data structure
+	memcpy(this, &uuid, sizeof(Uuid));
 	return *this;
 }
 
 
-UUID& UUID::operator=(const std::vector<unsigned char> &vector)
+Uuid& Uuid::operator=(const std::vector<unsigned char> &vector)
 {
-	if (vector.size() != sizeof(UUID)) return *this;
-	// Copy all 16 bytes into the UUID data structure
-	memcpy(this, &(vector[0]), sizeof(UUID));
+	if (vector.size() != sizeof(Uuid)) return *this;
+	// Copy all 16 bytes into the Uuid data structure
+	memcpy(this, &(vector[0]), sizeof(Uuid));
 	return *this;
 }
 
 
-UUID& UUID::operator=(const std::string &string)
+Uuid& Uuid::operator=(const std::string &string)
 {
 	std::string tmpStr = string;
 	// Remove all braces and dashes
@@ -272,7 +272,7 @@ UUID& UUID::operator=(const std::string &string)
 }
 
 
-UUID::operator std::vector<unsigned char>() const
+Uuid::operator std::vector<unsigned char>() const
 {
 	// Create a vector of the correct size
 	std::vector<unsigned char> value;
@@ -283,7 +283,7 @@ UUID::operator std::vector<unsigned char>() const
 }
 
 
-UUID::operator std::string() const
+Uuid::operator std::string() const
 {
 	std::stringstream ss(std::stringstream::in | std::stringstream::out);
 	ss << std::uppercase << std::hex << std::setfill('0');
@@ -319,57 +319,57 @@ UUID::operator std::string() const
 }
 
 
-std::vector<unsigned char> UUID::ToVector(const std::string &string)
+std::vector<unsigned char> Uuid::ToVector(const std::string &string)
 {
 	// First convert the string to a GUID_t
-	UUID uuid = string;
-	// Finally, conver the UUID to a vector
+	Uuid uuid = string;
+	// Finally, conver the Uuid to a vector
 	std::vector<unsigned char> vector = uuid;
 	return vector;
 }
 
 
-std::string UUID::ToString(const std::vector<unsigned char> &vector)
+std::string Uuid::ToString(const std::vector<unsigned char> &vector)
 {
-	// First convert the vector to a UUID
-	UUID uuid = vector;
-	// Finally, convert the UUID to a string
+	// First convert the vector to a Uuid
+	Uuid uuid = vector;
+	// Finally, convert the Uuid to a string
 	std::string string = uuid;
 	return string;
 }
 
 
-bool UUID::operator==(const UUID &uuid) const
+bool Uuid::operator==(const Uuid &uuid) const
 {
 	// Just compare the memory
-	return (memcmp(this, &uuid, sizeof(UUID)) == 0);
+	return (memcmp(this, &uuid, sizeof(Uuid)) == 0);
 }
 
 
-bool UUID::operator!=(const UUID &uuid) const
+bool Uuid::operator!=(const Uuid &uuid) const
 {
 	// Just compare the memory
-	return (memcmp(this, &uuid, sizeof(UUID)) != 0);
+	return (memcmp(this, &uuid, sizeof(Uuid)) != 0);
 }
 
 
-bool UUID::operator>(const UUID &uuid) const
+bool Uuid::operator>(const Uuid &uuid) const
 {
 	// Just compare the memory
 	return (memcmp(this, &uuid, sizeof(UUID)) > 0);
 }
 
 
-bool UUID::operator<(const UUID &uuid) const
+bool Uuid::operator<(const Uuid &uuid) const
 {
 	// Just compare the memory
-	return (memcmp(this, &uuid, sizeof(UUID)) < 0);
+	return (memcmp(this, &uuid, sizeof(Uuid)) < 0);
 }
 
 
-std::ostream& MGA::operator<<(std::ostream& out, const UUID &uuid)
+std::ostream& MGA::operator<<(std::ostream& out, const Uuid &uuid)
 {
-	// Get a string version of the UUID
+	// Get a string version of the Uuid
 	std::string stringVersion = uuid;
 	// Print it
 	out << stringVersion;

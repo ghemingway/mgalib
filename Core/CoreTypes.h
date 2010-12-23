@@ -98,30 +98,30 @@ typedef struct GUID_t {
 } GUID_t;
 
 
-class UUID {
+class Uuid {
 private:
 	uint8_t		_data[16];								//!< Just 16 bytes of data - that is all
 public:
-	UUID();												//!< Default constructor creates new unique UUID
-	UUID(const GUID_t &guid);							//!< To be removed
-	UUID(const std::vector<unsigned char> &vector);		//!< Binary vector constructor
-	UUID(const char* string);							//!< Char string constructor
-	UUID(const std::string &string);					//!< Std::string constructor
+	Uuid();												//!< Default constructor creates new unique Uuid
+	Uuid(const GUID_t &guid);							//!< To be removed
+	Uuid(const std::vector<unsigned char> &vector);		//!< Binary vector constructor
+	Uuid(const char* string);							//!< Char string constructor
+	Uuid(const std::string &string);					//!< Std::string constructor
 	// Coversions
-	UUID& operator=(const UUID &uuid);
-	UUID& operator=(const std::vector<unsigned char> &vector);
-	UUID& operator=(const std::string &string);
+	Uuid& operator=(const Uuid &uuid);
+	Uuid& operator=(const std::vector<unsigned char> &vector);
+	Uuid& operator=(const std::string &string);
 	operator std::vector<unsigned char>() const;
 	operator std::string() const;
 	static std::vector<unsigned char> ToVector(const std::string &string);
 	static std::string ToString(const std::vector<unsigned char> &vector);
 	// Operators
-	bool operator==(const UUID &uuid) const;
-	bool operator!=(const UUID &uuid) const;
-	bool operator>(const UUID &uuid) const;
-	bool operator<(const UUID &uuid) const;
+	bool operator==(const Uuid &uuid) const;
+	bool operator!=(const Uuid &uuid) const;
+	bool operator>(const Uuid &uuid) const;
+	bool operator<(const Uuid &uuid) const;
 	// Friends
-	friend std::ostream& operator<<(std::ostream& out, const UUID &uuid);
+	friend std::ostream& operator<<(std::ostream& out, const Uuid &uuid);
 };
 
 
