@@ -276,9 +276,9 @@ Uuid::operator std::vector<unsigned char>() const
 {
 	// Create a vector of the correct size
 	std::vector<unsigned char> value;
-	value.resize(sizeof(UUID));
+	value.resize(sizeof(Uuid));
 	// Copy the memory in and be done
-	memcpy(&(value[0]), this, sizeof(UUID));
+	memcpy(&(value[0]), this, sizeof(Uuid));
 	return value;
 }
 
@@ -356,7 +356,7 @@ bool Uuid::operator!=(const Uuid &uuid) const
 bool Uuid::operator>(const Uuid &uuid) const
 {
 	// Just compare the memory
-	return (memcmp(this, &uuid, sizeof(UUID)) > 0);
+	return (memcmp(this, &uuid, sizeof(Uuid)) > 0);
 }
 
 
