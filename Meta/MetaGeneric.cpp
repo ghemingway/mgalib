@@ -230,6 +230,23 @@ static const Result_t _CreateMetaCoreMetaProjectv3(CoreMetaProject* &metaProject
 	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", uuid);
 	ASSERT( metaProject != NULL );
 
+	Result_t result;
+	CoreMetaObject* object;
+	CoreMetaAttribute* attribute;
+
+	// ------- Project
+	
+	CREATE_OBJECT(METAID_METAPROJECT, "MetaProject", "Meta Project");
+	DECLARE_FOLDER();
+	CREATE_ATTRIBUTE(ATTRID_PARNAME, "ParName", "Paradigm Name", ValueType::String());
+	CREATE_ATTRIBUTE(ATTRID_PARDISPNAME, "ParDispName", "Displayed Name", ValueType::String());
+	CREATE_ATTRIBUTE(ATTRID_GUID, "ParGUID", "Paradigm GUID", ValueType::Binary());
+	CREATE_ATTRIBUTE(ATTRID_VERSION, "Version", "Paradigm Version", ValueType::String());
+	CREATE_ATTRIBUTE(ATTRID_AUTHOR, "Author", "Paradigm Author", ValueType::String());
+	CREATE_ATTRIBUTE(ATTRID_COMMENT, "Comment", "Comment", ValueType::String());
+	CREATE_ATTRIBUTE(ATTRID_CDATE, "CDate", "Create Date", VALTYPE_DATE);
+	CREATE_ATTRIBUTE(ATTRID_MDATE, "MDate", "Modification Date", VALTYPE_DATE);
+
 	return S_OK;
 }
 

@@ -109,11 +109,13 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	if (connection == "") return E_INVALID_USAGE;
 	// Try to create a CoreProject
 	CoreMetaProject* coreMetaProject;
-	ASSERT( CreateMetaCoreMetaProject(true, coreMetaProject) == S_OK );
+	ASSERT( CreateMetaCoreMetaProject(false, coreMetaProject) == S_OK );
+	ASSERT( coreMetaProject != NULL );
 	CoreProject *coreProject;
 	Result_t result = CoreProject::CreateProject(connection, coreMetaProject, coreProject);
 	if (result != S_OK)
 	{
+		std::cout << GetErrorInfo(result);
 		// Clean up and exit
 		delete coreMetaProject;
 		return result;
