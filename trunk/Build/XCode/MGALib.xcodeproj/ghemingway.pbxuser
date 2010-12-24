@@ -9,6 +9,12 @@
 		);
 		breakpoints = (
 			58FBA6D612A4A57900953701 /* MgaRegistrar.cpp:64 */,
+			58E3722F12C4E3E800BA324B /* BinFile.cpp:504 */,
+			58E3723112C4E3E800BA324B /* BinFile.cpp:505 */,
+			58E3723312C4E3E900BA324B /* BinFile.cpp:506 */,
+			58E3723512C4E3EF00BA324B /* BinFile.cpp:509 */,
+			58E3723712C4E3F000BA324B /* BinFile.cpp:510 */,
+			58E3723912C4E3F000BA324B /* BinFile.cpp:511 */,
 		);
 		codeSenseManager = 5883026E124BE8E1009251F4 /* Code sense */;
 		executables = (
@@ -58,7 +64,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					710,
+					711,
 					20,
 					48,
 					43,
@@ -93,7 +99,7 @@
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
 					20,
-					686,
+					687,
 					20,
 					48,
 					43,
@@ -234,6 +240,23 @@
 			58E371E712C3F8F500BA324B /* PBXTextBookmark */ = 58E371E712C3F8F500BA324B /* PBXTextBookmark */;
 			58E371E812C3F8F500BA324B /* PBXTextBookmark */ = 58E371E812C3F8F500BA324B /* PBXTextBookmark */;
 			58E371E912C3F8F500BA324B /* PBXTextBookmark */ = 58E371E912C3F8F500BA324B /* PBXTextBookmark */;
+			58E3721112C4E16600BA324B /* PBXTextBookmark */ = 58E3721112C4E16600BA324B /* PBXTextBookmark */;
+			58E3721212C4E16600BA324B /* PBXTextBookmark */ = 58E3721212C4E16600BA324B /* PBXTextBookmark */;
+			58E3721312C4E16600BA324B /* PBXTextBookmark */ = 58E3721312C4E16600BA324B /* PBXTextBookmark */;
+			58E3721412C4E16600BA324B /* PBXTextBookmark */ = 58E3721412C4E16600BA324B /* PBXTextBookmark */;
+			58E3721512C4E16600BA324B /* PBXTextBookmark */ = 58E3721512C4E16600BA324B /* PBXTextBookmark */;
+			58E3721612C4E16600BA324B /* PBXTextBookmark */ = 58E3721612C4E16600BA324B /* PBXTextBookmark */;
+			58E3721712C4E16600BA324B /* PBXTextBookmark */ = 58E3721712C4E16600BA324B /* PBXTextBookmark */;
+			58E3721812C4E16600BA324B /* PBXTextBookmark */ = 58E3721812C4E16600BA324B /* PBXTextBookmark */;
+			58E3721912C4E16600BA324B /* PBXTextBookmark */ = 58E3721912C4E16600BA324B /* PBXTextBookmark */;
+			58E3722812C4E37D00BA324B /* PBXTextBookmark */ = 58E3722812C4E37D00BA324B /* PBXTextBookmark */;
+			58E3722912C4E37D00BA324B /* PBXTextBookmark */ = 58E3722912C4E37D00BA324B /* PBXTextBookmark */;
+			58E3722A12C4E37D00BA324B /* PBXTextBookmark */ = 58E3722A12C4E37D00BA324B /* PBXTextBookmark */;
+			58E3727212C4E59C00BA324B /* PBXTextBookmark */ = 58E3727212C4E59C00BA324B /* PBXTextBookmark */;
+			58E3727312C4E59C00BA324B /* PBXTextBookmark */ = 58E3727312C4E59C00BA324B /* PBXTextBookmark */;
+			58E3727412C4E59C00BA324B /* PBXTextBookmark */ = 58E3727412C4E59C00BA324B /* PBXTextBookmark */;
+			58E3727512C4E59C00BA324B /* PBXTextBookmark */ = 58E3727512C4E59C00BA324B /* PBXTextBookmark */;
+			58E3727612C4E59C00BA324B /* PBXTextBookmark */ = 58E3727612C4E59C00BA324B /* PBXTextBookmark */;
 			58E90A5F124CF67900B8E3CF = 58E90A5F124CF67900B8E3CF /* PBXTextBookmark */;
 			58E90A88124CF84200B8E3CF = 58E90A88124CF84200B8E3CF /* PBXTextBookmark */;
 			58E90B4E124D45F000B8E3CF = 58E90B4E124D45F000B8E3CF /* PBXTextBookmark */;
@@ -262,6 +285,11 @@
 		name = stl_list.h;
 		path = "/Developer/SDKs/MacOSX10.6.sdk/usr/include/c++/4.2.1/bits/stl_list.h";
 		sourceTree = "<absolute>";
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {888, 16263}}";
+			sepNavSelRange = "{20723, 0}";
+			sepNavVisRange = "{19068, 3129}";
+		};
 	};
 	5811B94C125D60430087AF5B /* hashtable.h */ = {
 		isa = PBXFileReference;
@@ -292,7 +320,7 @@
 		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
 		name = "BinFile.cpp: 696";
 		rLen = 0;
-		rLoc = 25071;
+		rLoc = 25123;
 		rType = 0;
 		vrLen = 3989;
 		vrLoc = 22585;
@@ -496,7 +524,7 @@
 			"MGA=ESMoLv3.mga",
 		);
 		autoAttachOnCrash = 1;
-		breakpointsEnabled = 0;
+		breakpointsEnabled = 1;
 		configStateDict = {
 			"PBXLSLaunchAction-0" = {
 				PBXLSLaunchAction = 0;
@@ -555,7 +583,7 @@
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1167, 4160}}";
 			sepNavSelRange = "{15445, 33}";
-			sepNavVisRange = "{10703, 4803}";
+			sepNavVisRange = "{4052, 6476}";
 		};
 	};
 	5843906212B9701900F4AB58 /* CoreAttribute.h */ = {
@@ -623,16 +651,16 @@
 	};
 	5843906B12B9701900F4AB58 /* CoreTypes.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {992, 4199}}";
-			sepNavSelRange = "{1357, 47}";
-			sepNavVisRange = "{0, 2593}";
+			sepNavIntBoundsRect = "{{0, 0}, {889, 4134}}";
+			sepNavSelRange = "{1625, 32}";
+			sepNavVisRange = "{52, 2748}";
 		};
 	};
 	5843907712B9703300F4AB58 /* BinFile.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1195, 20956}}";
-			sepNavSelRange = "{25071, 0}";
-			sepNavVisRange = "{22585, 3989}";
+			sepNavIntBoundsRect = "{{0, 0}, {1006, 21008}}";
+			sepNavSelRange = "{48017, 0}";
+			sepNavVisRange = "{46059, 3700}";
 		};
 	};
 	5843907812B9703300F4AB58 /* CoreAttribute.cpp */ = {
@@ -651,16 +679,23 @@
 	};
 	5843907B12B9703300F4AB58 /* CoreMetaObject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1144, 1014}}";
-			sepNavSelRange = "{2250, 0}";
-			sepNavVisRange = "{1124, 1245}";
+			sepNavIntBoundsRect = "{{0, 0}, {838, 1014}}";
+			sepNavSelRange = "{374, 0}";
+			sepNavVisRange = "{62, 823}";
 		};
 	};
 	5843907C12B9703300F4AB58 /* CoreMetaProject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {888, 1286}}";
+			sepNavIntBoundsRect = "{{0, 0}, {677, 845}}";
 			sepNavSelRange = "{343, 0}";
-			sepNavVisRange = "{0, 1754}";
+			sepNavVisRange = "{0, 678}";
+		};
+	};
+	5843907E12B9703300F4AB58 /* CoreProject.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {971, 9711}}";
+			sepNavSelRange = "{3783, 114}";
+			sepNavVisRange = "{3475, 3109}";
 		};
 	};
 	5843908912B9707200F4AB58 /* MGALib.i */ = {
@@ -728,9 +763,9 @@
 	};
 	5843909212B9708D00F4AB58 /* MetaGeneric.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {925, 1638}}";
-			sepNavSelRange = "{3723, 0}";
-			sepNavVisRange = "{2266, 1526}";
+			sepNavIntBoundsRect = "{{0, 0}, {889, 1599}}";
+			sepNavSelRange = "{873, 11}";
+			sepNavVisRange = "{0, 3164}";
 		};
 	};
 	5843909312B9708D00F4AB58 /* MetaModel.h */ = {
@@ -812,9 +847,9 @@
 	};
 	584390B712B970A300F4AB58 /* MetaGeneric.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {925, 3263}}";
-			sepNavSelRange = "{9736, 0}";
-			sepNavVisRange = "{7848, 2087}";
+			sepNavIntBoundsRect = "{{0, 0}, {889, 3380}}";
+			sepNavSelRange = "{9771, 0}";
+			sepNavVisRange = "{6545, 4184}";
 		};
 	};
 	584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */ = {
@@ -826,16 +861,16 @@
 	};
 	584390BB12B970A300F4AB58 /* MetaProject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {684, 5655}}";
-			sepNavSelRange = "{2657, 0}";
-			sepNavVisRange = "{2205, 947}";
+			sepNavIntBoundsRect = "{{0, 0}, {705, 5577}}";
+			sepNavSelRange = "{3688, 0}";
+			sepNavVisRange = "{2992, 869}";
 		};
 	};
 	584390BC12B970A300F4AB58 /* MetaReference.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {657, 468}}";
+			sepNavIntBoundsRect = "{{0, 0}, {888, 1309}}";
 			sepNavSelRange = "{403, 0}";
-			sepNavVisRange = "{0, 672}";
+			sepNavVisRange = "{0, 949}";
 		};
 	};
 	584390CE12B970BF00F4AB58 /* MgaAttribute.h */ = {
@@ -1669,7 +1704,7 @@
 		fRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */;
 		name = "MetaGeneric.cpp: 237";
 		rLen = 0;
-		rLoc = 9736;
+		rLoc = 10592;
 		rType = 0;
 		vrLen = 2087;
 		vrLoc = 7848;
@@ -1693,7 +1728,7 @@
 	};
 	58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {888, 1286}}";
+			sepNavIntBoundsRect = "{{0, 0}, {888, 1309}}";
 			sepNavSelRange = "{134, 0}";
 			sepNavVisRange = "{0, 314}";
 		};
@@ -1891,6 +1926,284 @@
 		rType = 0;
 		vrLen = 1847;
 		vrLoc = 0;
+	};
+	58E3721112C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390F412B970E200F4AB58 /* TestingHarness.cpp */;
+		name = "TestingHarness.cpp: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1847;
+		vrLoc = 0;
+	};
+	58E3721212C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */;
+		name = "MetaProjectTesting.cpp: 6";
+		rLen = 0;
+		rLoc = 134;
+		rType = 0;
+		vrLen = 314;
+		vrLoc = 0;
+	};
+	58E3721312C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 580DD51D1263A3E40029294B /* stl_list.h */;
+		name = "stl_list.h: 655";
+		rLen = 0;
+		rLoc = 20723;
+		rType = 0;
+		vrLen = 3129;
+		vrLoc = 19068;
+	};
+	58E3721412C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390BC12B970A300F4AB58 /* MetaReference.cpp */;
+		name = "MetaReference.cpp: 15";
+		rLen = 0;
+		rLoc = 403;
+		rType = 0;
+		vrLen = 949;
+		vrLoc = 0;
+	};
+	58E3721512C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
+		name = "MetaProject.cpp: 112";
+		rLen = 0;
+		rLoc = 3414;
+		rType = 0;
+		vrLen = 3556;
+		vrLoc = 2042;
+	};
+	58E3721612C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */;
+		name = "MetaGeneric.cpp: 237";
+		rLen = 0;
+		rLoc = 10592;
+		rType = 0;
+		vrLen = 3927;
+		vrLoc = 6008;
+	};
+	58E3721712C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
+		name = "CoreProject.cpp: 127";
+		rLen = 114;
+		rLoc = 3783;
+		rType = 0;
+		vrLen = 3109;
+		vrLoc = 3475;
+	};
+	58E3721812C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		name = "BinFile.cpp: 468";
+		rLen = 102;
+		rLoc = 16416;
+		rType = 0;
+		vrLen = 4034;
+		vrLoc = 15884;
+	};
+	58E3721912C4E16600BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		name = "BinFile.cpp: 468";
+		rLen = 102;
+		rLoc = 16416;
+		rType = 0;
+		vrLen = 3952;
+		vrLoc = 15884;
+	};
+	58E3722812C4E37D00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906112B9701900F4AB58 /* BinFile.h */;
+		name = "BinFile.h: 316";
+		rLen = 33;
+		rLoc = 15445;
+		rType = 0;
+		vrLen = 6476;
+		vrLoc = 4052;
+	};
+	58E3722912C4E37D00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		name = "BinFile.cpp: 457";
+		rLen = 79;
+		rLoc = 15884;
+		rType = 0;
+		vrLen = 3861;
+		vrLoc = 15512;
+	};
+	58E3722A12C4E37D00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		name = "BinFile.cpp: 457";
+		rLen = 79;
+		rLoc = 15884;
+		rType = 0;
+		vrLen = 4026;
+		vrLoc = 15796;
+	};
+	58E3722F12C4E3E800BA324B /* BinFile.cpp:504 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		functionName = "BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)";
+		hitCount = 1;
+		ignoreCount = 0;
+		lineNumber = 504;
+		location = MGALib;
+		modificationTime = 314893683.244071;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	58E3723112C4E3E800BA324B /* BinFile.cpp:505 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		functionName = "BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 505;
+		location = MGALib;
+		modificationTime = 314893681.700111;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	58E3723312C4E3E900BA324B /* BinFile.cpp:506 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		functionName = "BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 506;
+		location = MGALib;
+		modificationTime = 314893681.741679;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	58E3723512C4E3EF00BA324B /* BinFile.cpp:509 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		functionName = "BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 509;
+		location = MGALib;
+		modificationTime = 314893681.760858;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	58E3723712C4E3F000BA324B /* BinFile.cpp:510 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		functionName = "BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 510;
+		location = MGALib;
+		modificationTime = 314893681.801067;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	58E3723912C4E3F000BA324B /* BinFile.cpp:511 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		functionName = "BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 511;
+		location = MGALib;
+		modificationTime = 314893681.82192;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	58E3727212C4E59C00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
+		name = "CoreTypes.h: 74";
+		rLen = 32;
+		rLoc = 1625;
+		rType = 0;
+		vrLen = 2748;
+		vrLoc = 52;
+	};
+	58E3727312C4E59C00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843909212B9708D00F4AB58 /* MetaGeneric.h */;
+		name = "MetaGeneric.h: 40";
+		rLen = 11;
+		rLoc = 873;
+		rType = 0;
+		vrLen = 3164;
+		vrLoc = 0;
+	};
+	58E3727412C4E59C00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		name = "BinFile.cpp: 1304";
+		rLen = 0;
+		rLoc = 48017;
+		rType = 0;
+		vrLen = 3700;
+		vrLoc = 46059;
+	};
+	58E3727512C4E59C00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */;
+		name = "MetaGeneric.cpp: 236";
+		rLen = 0;
+		rLoc = 9771;
+		rType = 0;
+		vrLen = 4184;
+		vrLoc = 6545;
+	};
+	58E3727612C4E59C00BA324B /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */;
+		name = "MetaGeneric.cpp: 236";
+		rLen = 0;
+		rLoc = 9771;
+		rType = 0;
+		vrLen = 4184;
+		vrLoc = 6545;
 	};
 	58E90A1E124CEFFF00B8E3CF /* MGALib */ = {
 		activeExec = 0;
@@ -2102,7 +2415,7 @@
 		ignoreCount = 0;
 		lineNumber = 64;
 		location = MGALib;
-		modificationTime = 314300699.7923261;
+		modificationTime = 314893681.593438;
 		originalNumberOfMultipleMatches = 1;
 		state = 1;
 	};

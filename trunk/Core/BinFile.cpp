@@ -475,8 +475,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	binFile->OpenMetaProject();
 
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
-	binFile->_inputFile.open(binFile->_filename.c_str(), std::ios::in | std::ios::binary);
-	if( binFile->_inputFile.fail() || binFile->_inputFile.is_open() ) {
+	binFile->_inputFile.open(binFile->_filename.c_str(), std::ios::in | std::ios::out | std::ios::binary | std::ios_base::trunc );
+	if( binFile->_inputFile.fail() || !binFile->_inputFile.is_open() ) {
 		delete binFile;
 		return E_FILEOPEN;
 	}
@@ -485,25 +485,25 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	std::string tmpFileName, directory;
 	_SplitPath(binFile->_filename, directory, tmpFileName);
 	std::string scratchFileName = directory + std::string("~") + filename;
-	binFile->_scratchFile.open(scratchFileName.c_str(), std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios_base::app);
-	if( binFile->_scratchFile.fail() || binFile->_scratchFile.is_open() ) {
+	binFile->_scratchFile.open(scratchFileName.c_str(), std::ios_base::in | std::ios_base::out | std::ios::binary | std::ios_base::trunc);
+	if( binFile->_scratchFile.fail() || !binFile->_scratchFile.is_open() ) {
 		// Close the input file
 		binFile->_inputFile.close();
 		delete binFile;
 		return E_FILEOPEN;
 	}
 	
-	// Initialize the metaObjID hash and make sure METAID_ROOT has OBJID_NONE
-	MetaObjIDHashIterator metaHashIter = binFile->_metaIDHash.find(METAID_ROOT);
-	ASSERT( metaHashIter != binFile->_metaIDHash.end() );
-	metaHashIter->second = OBJID_NONE;
+//	// Initialize the metaObjID hash and make sure METAID_ROOT has OBJID_NONE
+//	MetaObjIDHashIterator metaHashIter = binFile->_metaIDHash.find(METAID_ROOT);
+//	ASSERT( metaHashIter != binFile->_metaIDHash.end() );
+//	metaHashIter->second = OBJID_NONE;
 	
 	// Now just create the actual METAID_ROOT object (using a nice transaction of course)
 	ObjID_t rootObjID = OBJID_NONE;
-	ASSERT( binFile->BeginTransaction() != S_OK );
-	ASSERT( binFile->CreateObject(METAID_ROOT, rootObjID) != S_OK );
+	ASSERT( binFile->BeginTransaction() == S_OK );
+	ASSERT( binFile->CreateObject(METAID_ROOT, rootObjID) == S_OK );
 	ASSERT( rootObjID == OBJID_ROOT );
-	ASSERT( binFile->CommitTransaction() != S_OK );
+	ASSERT( binFile->CommitTransaction() == S_OK );
 	
 	// Return the new BinFile
 	binFile->_openedObject = binFile->_cacheHash.end();
