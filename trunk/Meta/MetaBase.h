@@ -30,14 +30,13 @@ private:
 protected:
 	CoreObject					*_coreObject;					//!< Pointer to wrapped core object
 	MetaProject					*_metaProject;					//!< Pointer to parent project
-	MetaRef_t					_metaRef;						//!< Int index value
 
 	static void TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject);
 
 	template <class T>
 	const Result_t ObjectFromAttribute(const AttrID_t &attrID, T &obj) const throw()
 	{
-		MetaObjIDPair idPair;
+/*		MetaObjIDPair idPair;
 		Result_t result = this->_coreObject->GetAttributeValue(attrID, idPair);
 		if ( result != S_OK ) return result;
 		// Get a coreObject for the idPair
@@ -56,14 +55,14 @@ protected:
 		MetaBase* metaBase;
 		result = this->_metaProject->FindObject(metaRef, metaBase);
 		if (result != S_OK) return result;
-		obj = (T)metaBase;
+		obj = (T)metaBase; */
 		return S_OK;
 	}
 
 	template <class T>
 	const Result_t CollectionFromAttribute(const AttrID_t &attrID, std::list<T> &objList) const throw()
 	{
-		objList.clear();
+/*		objList.clear();
 		std::list<MetaObjIDPair> pairList;
 		Result_t result = this->_coreObject->GetAttributeValue(attrID, pairList);
 		if ( result != S_OK ) return result;
@@ -91,18 +90,18 @@ protected:
 			objList.push_back( (T)metaBase );
 			// Move to the next pair
 			++listIter;
-		}
+		} */
 		return S_OK;
 	}
 
 public:
-	MetaBase(CoreObject* &coreObject, MetaProject* &metaProject, const MetaRef_t &metaRef);
+	MetaBase(CoreObject* &coreObject, MetaProject* &metaProject);
 	virtual ~MetaBase();
 
 	static void TraverseCollection(MetaProject* &metaProject, CoreObject* &coreObject, const AttrID_t &attrID);
 	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
 
-	virtual const Result_t GetMetaRef(MetaRef_t &metaRef) const throw();
+	virtual const Result_t GetUuid(Uuid &uuid) const throw();
 	virtual const Result_t GetMetaProject(MetaProject* &project) const throw();
 	virtual const Result_t GetName(std::string &name) const throw();
 	virtual const Result_t GetDisplayedName(std::string &name) const throw();

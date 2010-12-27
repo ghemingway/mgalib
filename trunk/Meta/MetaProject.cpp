@@ -21,7 +21,7 @@ static std::string _CurrentTime(void)
 // --------------------------- Private MetaProject Methods --------------------------- //
 
 
-MetaProject::MetaProject(CoreProject* &coreProject) : _maxMetaRef(1000), _coreProject(coreProject),
+MetaProject::MetaProject(CoreProject* &coreProject) : _coreProject(coreProject),
 	_rootObject(NULL), _namespace("")
 {
 	ASSERT( this->_coreProject != NULL );
@@ -32,26 +32,24 @@ MetaProject::MetaProject(CoreProject* &coreProject) : _maxMetaRef(1000), _corePr
 }
 
 
-const Result_t MetaProject::RegisterMetaBase(const MetaRef_t &metaRef, MetaBase* obj)
+const Result_t MetaProject::RegisterMetaBase(const Uuid &uuid, MetaBase* obj)
 {
 	ASSERT( obj != NULL );
-	// Try to find metaRef in the hash
-	if( this->_metaObjectHash.find(metaRef) != this->_metaObjectHash.end() )
+	// Try to find uuid in the hash
+	if( this->_metaObjectHash.find(uuid) != this->_metaObjectHash.end() )
 		return E_METAREF;
-	// Make sure to check against the max MetaRef
-	if( metaRef > this->_maxMetaRef ) this->_maxMetaRef = metaRef;
 	// Update the value in the hash
-	this->_metaObjectHash[metaRef] = obj;
+	this->_metaObjectHash[uuid] = obj;
 	return S_OK;
 }
 
 
-const Result_t MetaProject::UnregisterMetaBase(const MetaRef_t &metaRef, MetaBase* obj)
+const Result_t MetaProject::UnregisterMetaBase(const Uuid &uuid, MetaBase* obj)
 {
 	ASSERT( obj != NULL );
-	ASSERT( this->_metaObjectHash.find(metaRef) != this->_metaObjectHash.end() );
-	ASSERT( this->_metaObjectHash[metaRef] == obj );
-	this->_metaObjectHash.erase(metaRef);
+	ASSERT( this->_metaObjectHash.find(uuid) != this->_metaObjectHash.end() );
+	ASSERT( this->_metaObjectHash[uuid] == obj );
+	this->_metaObjectHash.erase(uuid);
 	return S_OK;
 }
 
@@ -82,7 +80,7 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 	if (connection == "") return E_INVALID_USAGE;
 	// Try to open the project
 	CoreMetaProject* coreMetaProject;
-	ASSERT( CreateMetaCoreMetaProject(true, coreMetaProject) == S_OK );
+	ASSERT( CreateMetaCoreMetaProject(coreMetaProject) == S_OK );
 	CoreProject *coreProject;
 	Result_t result = CoreProject::OpenProject(connection, coreMetaProject, coreProject);
 	if (result != S_OK)
@@ -109,7 +107,7 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	if (connection == "") return E_INVALID_USAGE;
 	// Try to create a CoreProject
 	CoreMetaProject* coreMetaProject;
-	ASSERT( CreateMetaCoreMetaProject(false, coreMetaProject) == S_OK );
+	ASSERT( CreateMetaCoreMetaProject(coreMetaProject) == S_OK );
 	ASSERT( coreMetaProject != NULL );
 	CoreProject *coreProject;
 	Result_t result = CoreProject::CreateProject(connection, coreMetaProject, coreProject);
@@ -166,16 +164,16 @@ const Result_t MetaProject::AbortTransaction(void) throw()
 }
 
 
-const Result_t MetaProject::GetGUID(GUID_t &guid) const throw()
+const Result_t MetaProject::GetUuid(Uuid &uuid) const throw()
 {
-	std::vector<unsigned char> value;
+	Uuid value = Uuid::Null();
 	// Get the value from the root object
 	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_GUID, value);
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	if (result != S_OK) return result;
 	// Convert GUID from bin value to GUID_t
-	guid = value;
+	uuid = value;
 	return S_OK;
 }
 
@@ -330,9 +328,9 @@ const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 }
 */
 
-const Result_t MetaProject::FindObject(const MetaRef_t &metaRef, MetaBase* &metaBase) throw()
+const Result_t MetaProject::FindObject(const Uuid &uuid, MetaBase* &metaBase) throw()
 {
-	MetaObjHashIterator metaHashIter = this->_metaObjectHash.find(metaRef);
+	MetaObjectHashIterator metaHashIter = this->_metaObjectHash.find(uuid);
 	if( metaHashIter == this->_metaObjectHash.end() ) return E_NOTFOUND;
 	metaBase = metaHashIter->second;
 	ASSERT( metaBase != NULL );

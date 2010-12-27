@@ -5,6 +5,7 @@
 /*** Included Header Files ***/
 #include "CoreTypes.h"
 #include "CoreAttribute.h"
+#include "CoreMetaObject.h"
 
 
 /*** Namespace Declaration ***/
@@ -13,7 +14,6 @@ namespace MGA {
 
 /*** Class Predefinitions ***/
 class CoreProject;
-class CoreMetaObject;
 class CoreObject;
 class CoreObjectBase;
 class ICoreStorage;
@@ -59,6 +59,7 @@ public:
 	inline const Result_t Project(CoreProject* &project) const	throw()	{ project = this->_project; return S_OK; }
 	inline const Result_t MetaObject(CoreMetaObject* &coreMetaObject) const throw()	{ coreMetaObject = this->_metaObject; return S_OK; }
 	inline const Result_t GetUuid(Uuid &uuid) const throw()				{ uuid = this->_uuid; return S_OK; }
+	inline const Result_t GetMetaID(MetaID_t &metaID) const throw()		{ return this->_metaObject->GetMetaID(metaID); }
 	inline const Result_t IsDirty(bool &flag) const throw()				{ flag = this->_isDirty; return S_OK; }
 	inline const Result_t MarkDirty(void) throw()						{ this->_isDirty = true; return S_OK; }
 	const Result_t InTransaction(bool &flag) const throw();
@@ -148,6 +149,7 @@ public:
 	inline const Result_t Project(CoreProject* &project) const	throw()		{ return this->_base->Project(project); }
 	inline const Result_t MetaObject(CoreMetaObject* obj) const throw()		{ return this->_base->MetaObject(obj); }
 	inline const Result_t GetUuid(Uuid &uuid) const throw()					{ return this->_base->GetUuid(uuid); }
+	inline const Result_t GetMetaID(MetaID_t &metaID) const throw()			{ return this->_base->GetMetaID(metaID); }
 	inline const Result_t IsDirty(bool &flag) const throw()					{ return this->_base->IsDirty(flag); }
 	inline const Result_t MarkDirty(void) throw()							{ return this->_base->MarkDirty(); }
 	inline const Result_t InTransaction(bool &flag) const throw()			{ return this->_base->InTransaction(flag); }

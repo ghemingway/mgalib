@@ -22,15 +22,15 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject* &coreObject, const std:
 		std::string name(path, 0, pos);
 		// Get the collection of backpointers to registry nodes
 		CoreObject* node = NULL;
-		std::list<MetaObjIDPair> coreObjectPairs;
-		coreObject->GetAttributeValue(ATTRID_REGNODES_COLL, coreObjectPairs);
+		std::list<Uuid> coreObjectIDs;
+		coreObject->GetAttributeValue(ATTRID_REGNODES_COLL, coreObjectIDs);
 		
-		std::list<MetaObjIDPair>::iterator pairIter = coreObjectPairs.begin();
-		while( pairIter != coreObjectPairs.end() )
+		std::list<Uuid>::iterator idIter = coreObjectIDs.begin();
+		while( idIter != coreObjectIDs.end() )
 		{
 			std::string tmpName;
 			CoreObject* tmpObject;
-			coreProject->Object(*pairIter, tmpObject);
+			coreProject->Object(*idIter, tmpObject);
 			ASSERT(tmpObject != NULL);
 			tmpObject->GetAttributeValue(ATTRID_NAME, tmpName);
 			if( name == tmpName )
@@ -41,7 +41,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject* &coreObject, const std:
 			// Make sure to delete the tmpObject
 			delete tmpObject;
 			// Move on to the next object
-			++pairIter;
+			++idIter;
 		}
 		// Did we find the node we were looking for
 		if( node == NULL )

@@ -28,6 +28,38 @@
 		582BD67D12C8F2C900B18A19 /* MetaGeneric.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909212B9708D00F4AB58 /* MetaGeneric.h */; };
 		582BD67E12C8F2CD00B18A19 /* MgaGeneric.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D312B970BF00F4AB58 /* MgaGeneric.h */; };
 		582BD68912C8F36300B18A19 /* CoreStorageTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F812B970F400F4AB58 /* CoreStorageTesting.cpp */; };
+		582BD69012C8F47200B18A19 /* MetaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */; };
+		582BD69412C8F48E00B18A19 /* MetaProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */; };
+		582BD6A112C8F50100B18A19 /* MgaTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D712B970BF00F4AB58 /* MgaTypes.h */; };
+		582BD6C212C8F7BE00B18A19 /* MetaFolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B612B970A300F4AB58 /* MetaFolder.cpp */; };
+		582BD6C312C8F7C100B18A19 /* MetaFolder.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */; };
+		582BD6C812C8F7D100B18A19 /* MetaAspect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B012B970A300F4AB58 /* MetaAspect.cpp */; };
+		582BD6C912C8F7D200B18A19 /* MetaAttribute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B112B970A300F4AB58 /* MetaAttribute.cpp */; };
+		582BD6CA12C8F7D200B18A19 /* MetaBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B212B970A300F4AB58 /* MetaBase.cpp */; };
+		582BD6CB12C8F7D300B18A19 /* MetaConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B312B970A300F4AB58 /* MetaConnection.cpp */; };
+		582BD6CC12C8F7D300B18A19 /* MetaConstraint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B412B970A300F4AB58 /* MetaConstraint.cpp */; };
+		582BD6CD12C8F7D400B18A19 /* MetaFCO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B512B970A300F4AB58 /* MetaFCO.cpp */; };
+		582BD6CE12C8F7D400B18A19 /* MetaModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B812B970A300F4AB58 /* MetaModel.cpp */; };
+		582BD6CF12C8F7D500B18A19 /* MetaPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B912B970A300F4AB58 /* MetaPart.cpp */; };
+		582BD6D012C8F7D500B18A19 /* MetaPointerSpec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */; };
+		582BD6D112C8F7D600B18A19 /* MetaReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BC12B970A300F4AB58 /* MetaReference.cpp */; };
+		582BD6D212C8F7D700B18A19 /* MetaRegNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BD12B970A300F4AB58 /* MetaRegNode.cpp */; };
+		582BD6D312C8F7D700B18A19 /* MetaSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */; };
+		582BD6D412C8F7DB00B18A19 /* MetaAspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908A12B9708D00F4AB58 /* MetaAspect.h */; };
+		582BD6D512C8F7DB00B18A19 /* MetaAttribute.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908B12B9708D00F4AB58 /* MetaAttribute.h */; };
+		582BD6D612C8F7DC00B18A19 /* MetaBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */; };
+		582BD6D712C8F7DD00B18A19 /* MetaConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908D12B9708D00F4AB58 /* MetaConnection.h */; };
+		582BD6D812C8F7DD00B18A19 /* MetaConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908E12B9708D00F4AB58 /* MetaConstraint.h */; };
+		582BD6D912C8F7DE00B18A19 /* MetaEnumItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908F12B9708D00F4AB58 /* MetaEnumItem.h */; };
+		582BD6DA12C8F7DE00B18A19 /* MetaFCO.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909012B9708D00F4AB58 /* MetaFCO.h */; };
+		582BD6DB12C8F7DF00B18A19 /* MetaModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909312B9708D00F4AB58 /* MetaModel.h */; };
+		582BD6DC12C8F7E000B18A19 /* MetaPart.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909412B9708D00F4AB58 /* MetaPart.h */; };
+		582BD6DD12C8F7E000B18A19 /* MetaPointerSpec.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909512B9708D00F4AB58 /* MetaPointerSpec.h */; };
+		582BD6DE12C8F7E100B18A19 /* MetaProject.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909612B9708D00F4AB58 /* MetaProject.h */; };
+		582BD6DF12C8F7E200B18A19 /* MetaReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909712B9708D00F4AB58 /* MetaReference.h */; };
+		582BD6E012C8F7E200B18A19 /* MetaRegNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909812B9708D00F4AB58 /* MetaRegNode.h */; };
+		582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909912B9708D00F4AB58 /* MetaRole.h */; };
+		582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909A12B9708D00F4AB58 /* MetaSet.h */; };
 		5843399C125B8B5400DD904D /* MGALib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58E90A1F124CEFFF00B8E3CF /* MGALib.framework */; };
 		5843905812B96FD900F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
 		5843905A12B96FEB00F4AB58 /* highres_timing.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843905912B96FEB00F4AB58 /* highres_timing.h */; };
@@ -539,6 +571,23 @@
 				5843907612B9701900F4AB58 /* CoreTypes.h in Headers */,
 				582BD67D12C8F2C900B18A19 /* MetaGeneric.h in Headers */,
 				582BD67E12C8F2CD00B18A19 /* MgaGeneric.h in Headers */,
+				582BD6A112C8F50100B18A19 /* MgaTypes.h in Headers */,
+				582BD6C312C8F7C100B18A19 /* MetaFolder.h in Headers */,
+				582BD6D412C8F7DB00B18A19 /* MetaAspect.h in Headers */,
+				582BD6D512C8F7DB00B18A19 /* MetaAttribute.h in Headers */,
+				582BD6D612C8F7DC00B18A19 /* MetaBase.h in Headers */,
+				582BD6D712C8F7DD00B18A19 /* MetaConnection.h in Headers */,
+				582BD6D812C8F7DD00B18A19 /* MetaConstraint.h in Headers */,
+				582BD6D912C8F7DE00B18A19 /* MetaEnumItem.h in Headers */,
+				582BD6DA12C8F7DE00B18A19 /* MetaFCO.h in Headers */,
+				582BD6DB12C8F7DF00B18A19 /* MetaModel.h in Headers */,
+				582BD6DC12C8F7E000B18A19 /* MetaPart.h in Headers */,
+				582BD6DD12C8F7E000B18A19 /* MetaPointerSpec.h in Headers */,
+				582BD6DE12C8F7E100B18A19 /* MetaProject.h in Headers */,
+				582BD6DF12C8F7E200B18A19 /* MetaReference.h in Headers */,
+				582BD6E012C8F7E200B18A19 /* MetaRegNode.h in Headers */,
+				582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */,
+				582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,6 +692,7 @@
 				584390FC12B970F400F4AB58 /* CoreMetaTesting.cpp in Sources */,
 				582BD65E12C8F07B00B18A19 /* TestingHarness.cpp in Sources */,
 				582BD68912C8F36300B18A19 /* CoreStorageTesting.cpp in Sources */,
+				582BD69012C8F47200B18A19 /* MetaProjectTesting.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -664,6 +714,20 @@
 				587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */,
 				582BD66712C8F10600B18A19 /* MgaGeneric.cpp in Sources */,
 				582BD67C12C8F2C500B18A19 /* MetaGeneric.cpp in Sources */,
+				582BD69412C8F48E00B18A19 /* MetaProject.cpp in Sources */,
+				582BD6C212C8F7BE00B18A19 /* MetaFolder.cpp in Sources */,
+				582BD6C812C8F7D100B18A19 /* MetaAspect.cpp in Sources */,
+				582BD6C912C8F7D200B18A19 /* MetaAttribute.cpp in Sources */,
+				582BD6CA12C8F7D200B18A19 /* MetaBase.cpp in Sources */,
+				582BD6CB12C8F7D300B18A19 /* MetaConnection.cpp in Sources */,
+				582BD6CC12C8F7D300B18A19 /* MetaConstraint.cpp in Sources */,
+				582BD6CD12C8F7D400B18A19 /* MetaFCO.cpp in Sources */,
+				582BD6CE12C8F7D400B18A19 /* MetaModel.cpp in Sources */,
+				582BD6CF12C8F7D500B18A19 /* MetaPart.cpp in Sources */,
+				582BD6D012C8F7D500B18A19 /* MetaPointerSpec.cpp in Sources */,
+				582BD6D112C8F7D600B18A19 /* MetaReference.cpp in Sources */,
+				582BD6D212C8F7D700B18A19 /* MetaRegNode.cpp in Sources */,
+				582BD6D312C8F7D700B18A19 /* MetaSet.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

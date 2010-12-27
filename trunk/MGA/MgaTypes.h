@@ -10,7 +10,7 @@
 namespace MGA {
 	
 
-typedef int32_t MetaRef_t;
+//typedef int32_t MetaRef_t;
 
 typedef enum ObjType_t
 {

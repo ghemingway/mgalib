@@ -62,7 +62,7 @@ namespace MGA {
 
 //typedef long guid_t;
 typedef int16_t MetaID_t;
-typedef uint32_t ObjID_t;
+//typedef uint32_t ObjID_t;
 typedef int16_t AttrID_t;
 
 
