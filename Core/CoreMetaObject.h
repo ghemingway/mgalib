@@ -38,12 +38,12 @@ protected:
 public:
 	~CoreMetaObject();
 
-	inline const Result_t Project(CoreMetaProject* &project) const throw()	{ project = this->_project; return S_OK; }
-	inline const Result_t MetaID(MetaID_t &metaID) const throw()			{ metaID = this->_metaID; return S_OK; }
-	inline const Result_t Token(std::string &token) const throw()			{ token = this->_token; return S_OK; }
-	inline const Result_t Name(std::string &name) const throw()				{ name = this->_name; return S_OK; }
-	inline const Result_t Attributes(std::list<CoreMetaAttribute*> &attrList) const	throw()	{ attrList = this->_attributes; return S_OK; }
-	const Result_t Attribute(const AttrID_t &attrID, CoreMetaAttribute* &attribute) const throw();
+	inline const Result_t GetProject(CoreMetaProject* &project) const throw()	{ project = this->_project; return S_OK; }
+	inline const Result_t GetMetaID(MetaID_t &metaID) const throw()			{ metaID = this->_metaID; return S_OK; }
+	inline const Result_t GetToken(std::string &token) const throw()			{ token = this->_token; return S_OK; }
+	inline const Result_t GetName(std::string &name) const throw()				{ name = this->_name; return S_OK; }
+	inline const Result_t GetAttributes(std::list<CoreMetaAttribute*> &attrList) const	throw()	{ attrList = this->_attributes; return S_OK; }
+	const Result_t GetAttribute(const AttrID_t &attrID, CoreMetaAttribute* &attribute) const throw();
 	const Result_t AddAttribute(const AttrID_t &attrID, const std::string &token, const std::string &name,
 								const ValueType &valueType, CoreMetaAttribute* &attribute) throw();
 	friend std::ostream& operator<<(std::ostream& out, const CoreMetaObject *object);

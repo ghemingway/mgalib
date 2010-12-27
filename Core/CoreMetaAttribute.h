@@ -37,10 +37,10 @@ protected:
 public:
 	~CoreMetaAttribute()								{ }
 
-	inline const Result_t Object(CoreMetaObject* &metaObject) const throw()	{ metaObject = this->_object; return S_OK; }
-	inline const Result_t AttributeID(AttrID_t &attrID) const throw()		{ attrID = this->_attributeID; return S_OK; }
-	inline const Result_t Token(std::string &token) const throw()			{ token = this->_token; return S_OK; }
-	inline const Result_t Name(std::string &name) const throw()				{ name = this->_name; return S_OK; }
+	inline const Result_t GetObject(CoreMetaObject* &metaObject) const throw()	{ metaObject = this->_object; return S_OK; }
+	inline const Result_t GetAttributeID(AttrID_t &attrID) const throw()		{ attrID = this->_attributeID; return S_OK; }
+	inline const Result_t GetToken(std::string &token) const throw()			{ token = this->_token; return S_OK; }
+	inline const Result_t GetName(std::string &name) const throw()				{ name = this->_name; return S_OK; }
 	inline const Result_t GetValueType(ValueType &valueType) const throw()	{ valueType = this->_valueType; return S_OK; }
 	friend std::ostream& operator<<(std::ostream& out, const CoreMetaAttribute *attrib)
 	{

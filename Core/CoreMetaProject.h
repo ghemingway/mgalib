@@ -34,10 +34,10 @@ public:
 	~CoreMetaProject();
 
 	inline const Result_t GetUuid(Uuid &uuid) const throw()			{ uuid = this->_uuid; return S_OK; }
-	inline const Result_t Token(std::string &token) const throw()	{ token = this->_token; return S_OK; }
-	inline const Result_t Name(std::string &name) const throw()		{ name = this->_name; return S_OK; }
-	inline const Result_t Objects(std::list<CoreMetaObject*> &objectList) const throw()	{ objectList = this->_objects; return S_OK; }
-	const Result_t Object(const MetaID_t &metaID, CoreMetaObject* &object) throw();
+	inline const Result_t GetToken(std::string &token) const throw()	{ token = this->_token; return S_OK; }
+	inline const Result_t GetName(std::string &name) const throw()		{ name = this->_name; return S_OK; }
+	inline const Result_t GetObjects(std::list<CoreMetaObject*> &objectList) const throw()	{ objectList = this->_objects; return S_OK; }
+	const Result_t GetObject(const MetaID_t &metaID, CoreMetaObject* &object) throw();
 	const Result_t AddObject(const MetaID_t &metaID, const std::string &token, const std::string &name,
 							 CoreMetaObject* &object) throw();
 };
