@@ -48,5 +48,5 @@ Files are loaded via the !BinFile::Load() method.  One fstream read is performed
 
 There should be as few limitations as possible with the new v3 file format.  Here are a couple that I know of:
 
-  * Max File Size: 64-bit addressing (16k terabytes - really big)
-  * Max Number of Objects: 32-bit (4,294,967,295 objects)
+  * Max File Size: 64-bit addressing (16 million terabytes - really big)
+  * Max Number of Objects: 32-bit (4.2 billion objects)
