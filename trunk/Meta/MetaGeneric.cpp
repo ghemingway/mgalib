@@ -34,7 +34,6 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 
 #define DECLARE_BASE() \
 	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String()); \
-	CREATE_ATTRIBUTE(ATTRID_METAREF, "MetaRef", "Meta ID",VALTYPE_METAREF); \
 	CREATE_ATTRIBUTE(ATTRID_DISPNAME, "DispName", "Displayed Name", ValueType::String()); \
 	CREATE_COLLECTION(ATTRID_REGNODES_COLL, "RegNodes", "Registry Nodes"); \
 	CREATE_COLLECTION(ATTRID_CONSTRAINT_PTR, "Constraints", "Constraints");
@@ -68,7 +67,7 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 	DECLARE_FOLDER();
 	CREATE_ATTRIBUTE(ATTRID_PARNAME, "ParName", "Paradigm Name", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_PARDISPNAME, "ParDispName", "Displayed Name", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_GUID, "ParGUID", "Paradigm GUID", ValueType::LongPointer());
+	CREATE_ATTRIBUTE(ATTRID_UUID, "ParUUID", "Paradigm UUID", ValueType::LongPointer());
 	CREATE_ATTRIBUTE(ATTRID_VERSION, "Version", "Paradigm Version", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_AUTHOR, "Author", "Paradigm Author", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_COMMENT, "Comment", "Comment", ValueType::String());

@@ -17,7 +17,6 @@ const Result_t CreateMetaCoreMetaProject(CoreMetaProject* &metaProject);
 
 // ------- VALTYPE
 
-#define VALTYPE_METAREF					ValueType::Long()
 #define VALTYPE_DATE					ValueType::String()
 
 // ------- OBJTYPE
@@ -70,13 +69,12 @@ const Result_t CreateMetaCoreMetaProject(CoreMetaProject* &metaProject);
 //		ATTRID_LOCK
 #define ATTRID_PARNAME					201
 #define ATTRID_PARDISPNAME				202
-#define ATTRID_GUID						203
+#define ATTRID_UUID						203
 #define ATTRID_VERSION					204
 #define ATTRID_AUTHOR					205
 #define ATTRID_COMMENT					206
 #define ATTRID_CDATE					207
 #define ATTRID_MDATE					208
-#define ATTRID_METAREF					210
 #define ATTRID_DISPNAME					211
 #define ATTRID_CONSTRAINT_PTR			212
 #define ATTRID_ALIASENABLED				213

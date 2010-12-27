@@ -2,6 +2,7 @@
 #include "BinFile.h"
 #include "CoreMetaObject.h"
 #include "CoreMetaProject.h"
+#include <utf8.h>
 
 
 /*** Internally Defined Symbols ***/
@@ -187,11 +188,23 @@ inline void BinAttributeString::StreamWrite(char* &stream) const
 	_Write(stream, this->_value);
 }
 
-inline uint32_t BinAttributeString::Size(void) const
+
+inline const Result_t BinAttributeString::Set(const std::string &value)
 {
-	// TODO: Need to fix this correctly, even for UTF-8 encoding
-	ASSERT(false);
-	return 0;
+	std::string localValue = value;
+	// Make sure this is a valid UTF-8 encoding
+	std::string::iterator endIter = utf8::find_invalid(localValue.begin(), localValue.end());
+	if (endIter != value.end())
+	{
+		std::cout << "Invalid UTF-8 encoding detected!\n";
+		std::cout << "This part is fine: " << std::string(localValue.begin(), endIter) << "\n";
+		return E_BADUTF8STRING;
+	}
+	
+	// Get the line length (at least for the valid part)
+	this->_value = value;
+	this->_parent->MarkDirty();
+	return S_OK;
 }
 
 inline void BinAttributeLongPointer::StreamRead(char* &stream)
@@ -216,11 +229,6 @@ inline void BinAttributeCollection::StreamWrite(char* &stream) const
 	_Write(stream, ValueType::Collection());
 	_Write(stream, this->_attrID);
 	_Write(stream, this->_value);
-}
-
-inline uint32_t BinAttributeCollection::Size(void) const
-{
-	return (this->_value.size() * sizeof(Uuid));
 }
 
 void BinAttributePointer::StreamRead(char* &stream)
@@ -305,7 +313,7 @@ BinObject::~BinObject()
 }
 
 
-BinObject* BinObject::Read(char* &stream)
+BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &stream, const Uuid &uuid)
 {
 	ASSERT( stream != NULL );
 	// First, read in the metaID
@@ -313,13 +321,12 @@ BinObject* BinObject::Read(char* &stream)
 	_Read(stream, metaID);
 	// We are done if is METAID_NONE
 	if( metaID == METAID_NONE ) return NULL;
+	// Get the metaObject using this metaID
+	CoreMetaObject* metaObject = NULL;
+	ASSERT( metaProject->GetObject(metaID, metaObject) == S_OK );
 	
-	// Second, read in the Uuid
-	Uuid uuid;
-	_Read(stream, uuid);
-	ASSERT( uuid != Uuid::Null() );
 	// Create the binObject
-	BinObject* binObject = new BinObject(uuid);
+	BinObject* binObject = new BinObject(metaObject, uuid);
 	ASSERT( binObject != NULL );
 	BinAttribute *binAttribute = NULL;
 	ValueType valueType;
@@ -341,7 +348,7 @@ BinObject* BinObject::Create(CoreMetaObject *metaObject, const Uuid &uuid)
 	ASSERT( metaObject != NULL );
 	ASSERT( uuid != Uuid::Null() );
 	// Create a new binObject (uuid is determined by BinFile, which should be calling this method)
-	BinObject* binObject = new BinObject(uuid);
+	BinObject* binObject = new BinObject(metaObject, uuid);
 	ASSERT( binObject != NULL);
 	// Add the object's attributes (also marks the object as dirty)
 	binObject->CreateAttributes(metaObject);
@@ -351,18 +358,21 @@ BinObject* BinObject::Create(CoreMetaObject *metaObject, const Uuid &uuid)
 
 uint32_t BinObject::Size(void) const
 {
-	// Remember, objects have a MetaID, Uuid, and ValueType::None in addition to attributes
-	uint32_t size = sizeof(MetaID_t) + sizeof(Uuid) + sizeof(uint8_t);
+	// Remember, objects have a MetaID in addition to attributes
+	uint32_t size = sizeof(MetaID_t);
 	// Go through all attributes
 	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
 	while( attrIter != this->_attributes.end() )
 	{
 		// Sum the size (don't forget the ValueType and AttrID for each attribute)
-		size += (*attrIter)->Size() + sizeof(uint8_t) + sizeof(AttrID_t);
+		size += (*attrIter)->Size();
+		size += sizeof(uint8_t);
+		size += sizeof(AttrID_t);
 		// Move on to the next attribute
 		++attrIter;
 	}
-	// Return the total size
+	// Return the total size, remember the trailing ValueType::None()
+	size += sizeof(uint8_t);
 	return size;
 }
 
@@ -377,13 +387,12 @@ uint32_t BinObject::Write(char* &stream) const
 	MetaID_t metaID;
 	ASSERT( this->_metaObject->GetMetaID(metaID) == S_OK );
 	_Write(stream, metaID);
-	// Write the Uuid
-	_Write(stream, this->_uuid);
 	// Write all of the attributes
 	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
 	while( attrIter != this->_attributes.end() )
 	{
-		(*attrIter)->StreamWrite(stream);
+		BinAttribute* binAttribute = *attrIter;
+		binAttribute->StreamWrite(stream);
 		// Move to the next attribute
 		++attrIter;
 	}
@@ -414,7 +423,7 @@ BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
-	_filename(filename), _metaProjectUuid(), _inputFile(), _scratchFile(),
+	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(),
 	_indexHash(),_cacheQueue(), _maxCacheSize(COREBIN_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects()
 {
@@ -459,6 +468,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	ASSERT( binFile->BeginTransaction() == S_OK );
 	ASSERT( binFile->CreateObject(METAID_ROOT, rootUuid) == S_OK );
 	ASSERT( binFile->CommitTransaction() == S_OK );
+	// Make sure to capture the rootUuid
+	binFile->_rootUuid = rootUuid;
 	// Return the new BinFile
 	binFile->_openedObject = binFile->_indexHash.end();
 	storage = binFile;
@@ -523,10 +534,9 @@ const Result_t BinFile::Load(void)
 	// Read the project Uuid and index object count from the file
 	Uuid uuid;
 	uint32_t objCount;
-	char buffer[sizeof(Uuid) + sizeof(uint32_t)], *stream = buffer;
+	char buffer[sizeof(Uuid) + sizeof(uint32_t) + sizeof(Uuid)], *stream = buffer;
 	this->_inputFile.read(buffer, sizeof(Uuid) + sizeof(uint32_t));
 	_Read(stream, uuid);
-	_Read(stream, objCount);
 	// Make sure the Uuid matches 
 	if( !(uuid == this->_metaProjectUuid) )
 	{
@@ -536,6 +546,7 @@ const Result_t BinFile::Load(void)
 		return E_PROJECT_MISMATCH;
 	}
 	// Read the object index
+	_Read(stream, objCount);
 	Result_t result = this->ReadIndex(this->_inputFile, objCount);
 	// Do we have a good index
 	if (result != S_OK)
@@ -545,6 +556,8 @@ const Result_t BinFile::Load(void)
 		this->_scratchFile.close();
 		return result;
 	}
+	// Finally, read the root object Uuid
+	_Read(stream, this->_rootUuid);
 	// Open went well (make sure to clear the openedObject)
 	this->_openedObject = this->_indexHash.end();
 	return S_OK;
@@ -608,7 +621,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const uint32_t &objCoun
 
 
 IndexHashIterator BinFile::FetchObject(const Uuid &uuid) {
-	std::cout << "Fetching (" << uuid << ").\n";
+//	std::cout << "Fetching (" << uuid << ").\n";
 	// Is the object in index
 	IndexHashIterator indexIter = this->_indexHash.find(uuid);
 	if (indexIter == this->_indexHash.end()) return indexIter;
@@ -620,21 +633,21 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid) {
 		this->_cacheQueue.remove(uuid);
 		// Move the object to the top of the cacheQueue
 		this->_cacheQueue.push_front(uuid);
-		std::cout << "Found Object (" << indexIter->first << ") in cache.\n";
+//		std::cout << "Found Object (" << indexIter->first << ") in cache.\n";
 	}
 	// Next, try the inputFile
 	else if (indexIter->second.location == IndexLocation::Input())
 	{
 		// Move the object from the scratch file to the cache
 		this->CacheObjectFromFile(this->_inputFile, indexIter);
-		std::cout << "Found Object (" << indexIter->first << ") in file.\n";
+//		std::cout << "Found Object (" << indexIter->first << ") in file.\n";
 	}
 	// Lastly, is the object in the scratch file
 	else // if (indexIter->second.location == IndexLocation::Scratch())
 	{
 		// Move the object from the scratch file to the cache
 		this->CacheObjectFromFile(this->_scratchFile, indexIter);
-		std::cout << "Found Object (" << indexIter->first << ") in scratch.\n";
+//		std::cout << "Found Object (" << indexIter->first << ") in scratch.\n";
 		// Since the scratchFile is only for dirty objects, must mark object as dirty
 		indexIter->second.object->MarkDirty();
 	}
@@ -653,7 +666,7 @@ void BinFile::CacheObjectFromFile(std::fstream &stream, IndexHashIterator &hashI
 	buffer.reserve(hashIter->second.sizeB);
 	char *bufferPointer = &buffer[0];
 	stream.read(bufferPointer, hashIter->second.sizeB);
-	BinObject* binObject = BinObject::Read(bufferPointer);
+	BinObject* binObject = BinObject::Read(this->_metaProject, bufferPointer, hashIter->first);
 	ASSERT( binObject != NULL );
 	// Make sure there is space in the cache
 	this->CheckCacheSize();
@@ -805,7 +818,8 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 
 const Result_t BinFile::RootUuid(Uuid &uuid) const throw()
 {
-	uuid = Uuid::Null();
+	// Simply copy the root Uuid through
+	uuid = this->_rootUuid;
 	return S_OK;
 }
 
@@ -834,16 +848,18 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 
 	// Write out the metaProjectID + number of objects in the index
 	std::vector<char> buffer;
-	buffer.reserve(sizeof(Uuid) + sizeof(uint32_t));
+	buffer.reserve(sizeof(Uuid) + sizeof(uint32_t) + sizeof(Uuid));
 	char *bufferPointer = &buffer[0];
 	uint32_t objectCount = this->_indexHash.size();
 	_Write(bufferPointer, this->_metaProjectUuid);
 	_Write(bufferPointer, objectCount);
-	outputFile.write(&buffer[0], sizeof(Uuid) + sizeof(uint32_t));
+	_Write(bufferPointer, this->_rootUuid);
+	outputFile.write(&buffer[0], sizeof(Uuid) + sizeof(uint32_t) + sizeof(Uuid));
 	// Move streampos to end of what will be the index
-	int indexSizeB = sizeof(uint32_t) + objectCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
+	int indexSizeB = objectCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::streampos startOfIndex = outputFile.tellp();
-	for (int i=0; i<indexSizeB; ++i) outputFile.put(0);
+	// Move the write pointer to the end of the index
+	outputFile.seekp(startOfIndex + (std::streampos)indexSizeB);
 
 	// Write out all of the objects
 	IndexHashIterator hashIter = this->_indexHash.begin();
@@ -1101,7 +1117,7 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	ASSERT( binObject != NULL );
 
 	// Put the object into the index and queue
-	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, binObject->Size() };
+	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, 0 };
 	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
 	this->_cacheQueue.push_front(uuid);

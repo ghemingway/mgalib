@@ -256,7 +256,7 @@ void MetaBase::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	ASSERT( metaProject != NULL );
 	Uuid uuid;
 	// Create the metaBase object with this attrID (that will register it with the metaProject)
-	ASSERT( coreObject->GetAttributeValue(ATTRID_METAREF, uuid) == S_OK );
+//	ASSERT( coreObject->GetAttributeValue(ATTRID_METAREF, uuid) == S_OK );
 	MetaBase* metaBase = new MetaBase(coreObject, metaProject);
 	ASSERT( metaBase != NULL );
 	// Traverse all children

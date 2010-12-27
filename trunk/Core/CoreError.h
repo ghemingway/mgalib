@@ -122,9 +122,12 @@ typedef long Result_t;
 //		missing name
 #define E_NAMEMISSING					0x80732012
 
+//		non UTF-8 string encoding
+#define E_BADUTF8STRING					0x80732013
+
 // the description table is in CommonError.cpp
 #define E_CORE_FIRST					E_LOCK_VIOLATION
-#define E_CORE_LAST						E_NAMEMISSING
+#define E_CORE_LAST						E_BADUTF8STRING
 
 // --------------------------- Meta Error Codes
 
