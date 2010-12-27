@@ -36,7 +36,7 @@ const Result_t MetaAttribute::GetEnumItems(std::list<MetaEnumItem*> &enumList) c
 
 const Result_t MetaAttribute::GetUsedIn(std::list<MetaFCO*> &fcoList) const throw()
 {
-	std::list<MetaObjIDPair> attrList;
+	std::list<Uuid> attrList;
 	this->_coreObject->GetAttributeValue(ATTRID_ATTRLINK_ATTR_PTR, attrList);
 //	typedef CCoreCollection<MetaFCOs, std::vector<IMgaMetaFCO*>, IMgaMetaFCO, IMgaMetaFCO> COMTYPE;
 //	CComObjPtr<COMTYPE> coll;

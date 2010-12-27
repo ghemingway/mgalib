@@ -26,11 +26,13 @@ void MetaBase::TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject
 	ASSERT( metaProject != NULL );
 	ASSERT( coreObject != NULL );
 	// Determine the type of object
-	MetaObjIDPair idPair;
+	Uuid uuid;
 	ObjType_t objType;
-	ASSERT( coreObject->IDPair(idPair) == S_OK );
-	if( idPair.metaID == METAID_METAPROJECT ) objType = (ObjType_t)OBJTYPE_FOLDER;
-	else objType = (ObjType_t)(idPair.metaID - METAID_METABASE);
+	ASSERT( coreObject->GetUuid(uuid) == S_OK );
+	MetaID_t metaID;
+	ASSERT( coreObject->GetMetaID(metaID) == S_OK );
+	if( metaID == METAID_METAPROJECT ) objType = (ObjType_t)OBJTYPE_FOLDER;
+	else objType = (ObjType_t)(metaID - METAID_METABASE);
 	switch(objType)
 	{
 		case OBJTYPE_ASPECT:
@@ -94,18 +96,18 @@ void MetaBase::TraverseCollection(MetaProject* &metaProject, CoreObject* &coreOb
 	ASSERT( coreObject->Project(coreProject) == S_OK );
 	ASSERT( coreProject != NULL );
 	// Get the collection from the given attribute (make sure to add ATTRID_COLLECTION)
-	std::list<MetaObjIDPair> pairList;
-	ASSERT( coreObject->GetAttributeValue(attrID+ATTRID_COLLECTION, pairList) == S_OK );
-	std::list<MetaObjIDPair>::iterator pairIter = pairList.begin();
-	while (pairIter != pairList.end())
+	std::list<Uuid> idList;
+	ASSERT( coreObject->GetAttributeValue(attrID+ATTRID_COLLECTION, idList) == S_OK );
+	std::list<Uuid>::iterator idIter = idList.begin();
+	while (idIter != idList.end())
 	{
 		// Create the coreObject from this pointer
 		CoreObject* object = NULL;
-		ASSERT( coreProject->Object(*pairIter, object) == S_OK );
+		ASSERT( coreProject->Object(*idIter, object) == S_OK );
 		ASSERT( object != NULL );
 		MetaBase::TraverseObject(metaProject, object);
 		// Move on to the next pair
-		++pairIter;
+		++idIter;
 	}
 }
 
@@ -113,23 +115,28 @@ void MetaBase::TraverseCollection(MetaProject* &metaProject, CoreObject* &coreOb
 // --------------------------- Public MetaBase Methods --------------------------- //
 
 
-MetaBase::MetaBase(CoreObject* &coreObject, MetaProject* &metaProject, const MetaRef_t &metaRef) :
-_coreObject(coreObject), _metaProject(metaProject), _metaRef(metaRef)
+MetaBase::MetaBase(CoreObject* &coreObject, MetaProject* &metaProject) :
+_coreObject(coreObject), _metaProject(metaProject)
 { 
 	ASSERT(coreObject != NULL);
 	ASSERT(metaProject != NULL);
 	// Register this metaBase object from the metaProject
-	this->_metaProject->RegisterMetaBase(this->_metaRef, this);
+	Uuid uuid = Uuid::Null();
+	ASSERT( coreObject->GetUuid(uuid) == S_OK );
+	this->_metaProject->RegisterMetaBase(uuid, this);
 }
 
 
 MetaBase::~MetaBase()
 {
+	ASSERT( this->_coreObject != NULL );
+	Uuid uuid = Uuid::Null();
+	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
 	// Unregister the metaBase object from the metaProject
 	ASSERT( this->_metaProject != NULL );
-	this->_metaProject->UnregisterMetaBase(this->_metaRef, this);
+	this->_metaProject->UnregisterMetaBase(uuid, this);
 	// Delete the coreObject
-	if (this->_coreObject != NULL ) delete this->_coreObject;
+	delete this->_coreObject;
 }
 
 
@@ -147,10 +154,10 @@ const Result_t MetaBase::PutMetaRef(const MetaRef_t &metaRef) throw()
 }
 */
 
-const Result_t MetaBase::GetMetaRef(MetaRef_t &metaRef) const throw()
+const Result_t MetaBase::GetUuid(Uuid &uuid) const throw()
 {
-	metaRef = this->_metaRef;
-	return S_OK;
+	ASSERT( this->_coreObject != NULL );
+	return this->_coreObject->GetUuid(uuid);
 }
 
 /*
@@ -192,10 +199,11 @@ const Result_t MetaBase::SetDisplayedName(const std::string &name) throw()
 
 const Result_t MetaBase::GetObjType(ObjType_t &objType) const throw()
 {
-	MetaObjIDPair idPair;
-	ASSERT( this->_coreObject->IDPair(idPair) == S_OK );
-	if( idPair.metaID == METAID_METAPROJECT ) objType = (ObjType_t)OBJTYPE_FOLDER;
-	else objType = (ObjType_t)(idPair.metaID - METAID_METABASE);
+	MetaID_t metaID;
+	ASSERT( this->_coreObject != NULL );
+	ASSERT( this->_coreObject->GetMetaID(metaID) == S_OK );
+	if( metaID == METAID_METAPROJECT ) objType = (ObjType_t)OBJTYPE_FOLDER;
+	else objType = (ObjType_t)(metaID - METAID_METABASE);
 	return S_OK;
 }
 
@@ -207,23 +215,23 @@ const Result_t MetaBase::GetConstraints(std::list<MetaConstraint*> &constraintLi
 	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
 	ASSERT( coreProject != NULL );
 	// Get the collection from the attributes
-	std::list<MetaObjIDPair> pairList;
-	ASSERT( this->_coreObject->GetAttributeValue(ATTRID_CONSTRAINT_PTR + ATTRID_COLLECTION, pairList) == S_OK );
-	std::list<MetaObjIDPair>::iterator pairIter = pairList.begin();
+	std::list<Uuid> idList;
+	ASSERT( this->_coreObject->GetAttributeValue(ATTRID_CONSTRAINT_PTR + ATTRID_COLLECTION, idList) == S_OK );
+	std::list<Uuid>::iterator idIter = idList.begin();
 	// Iterate over the list to gather the objects
 	constraintList.clear();
-	while (pairIter != pairList.end())
+	while (idIter != idList.end())
 	{
-		// Get the coreObject from this pair
+		// Get the coreObject from this uuid
 		CoreObject* object = NULL;
-		ASSERT( coreProject->Object(*pairIter, object) == S_OK );
+		ASSERT( coreProject->Object(*idIter, object) == S_OK );
 		ASSERT( object != NULL );
 		// Create the MetaConstraint with the coreObject and metaProject
 		MetaConstraint* metaConstraint = new MetaConstraint(object, this->_metaProject);
 		ASSERT( metaConstraint != NULL );
 		constraintList.push_back(metaConstraint);
-		// Move on to the next pair
-		++pairIter;
+		// Move on to the next uuid
+		++idIter;
 	}
 	return S_OK;
 }
@@ -246,10 +254,10 @@ const Result_t MetaBase::Delete(void) throw()
 void MetaBase::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
-	MetaRef_t metaRef;
+	Uuid uuid;
 	// Create the metaBase object with this attrID (that will register it with the metaProject)
-	ASSERT( coreObject->GetAttributeValue(ATTRID_METAREF, metaRef) == S_OK );
-	MetaBase* metaBase = new MetaBase(coreObject, metaProject, metaRef);
+	ASSERT( coreObject->GetAttributeValue(ATTRID_METAREF, uuid) == S_OK );
+	MetaBase* metaBase = new MetaBase(coreObject, metaProject);
 	ASSERT( metaBase != NULL );
 	// Traverse all children
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_REGNODES_COLL);

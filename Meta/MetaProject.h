@@ -18,8 +18,8 @@ class MetaFolder;
 
 
 /*** Type Definitions ***/
-typedef MGALib_unordered_map<MetaRef_t,MetaBase*> MetaObjHash;
-typedef MetaObjHash::iterator MetaObjHashIterator;
+typedef STDEXT::hash_map<Uuid,MetaBase*,Uuid_HashFunc> MetaObjectHash;
+typedef MetaObjectHash::iterator MetaObjectHashIterator;
 
 
 // --------------------------- MetaProject --------------------------- //
@@ -28,15 +28,14 @@ typedef MetaObjHash::iterator MetaObjHashIterator;
 class MetaProject
 {
 private:
-	MetaObjHash					_metaObjectHash;
-	MetaRef_t					_maxMetaRef;
+	MetaObjectHash				_metaObjectHash;
 	CoreProject					*_coreProject;
 	CoreObject					*_rootObject;
 	std::string					_namespace;
 
 	friend class MetaBase;
-	const Result_t RegisterMetaBase(const MetaRef_t &metaRef, MetaBase* obj);
-	const Result_t UnregisterMetaBase(const MetaRef_t &metaRef, MetaBase* obj);
+	const Result_t RegisterMetaBase(const Uuid &uuid, MetaBase* obj);
+	const Result_t UnregisterMetaBase(const Uuid &uuid, MetaBase* obj);
 
 //	void CreateMetaBase(MetaID_t metaid, CoreObject* &obj);
 //	void CreateMetaObj(MetaID_t metaid, CoreObject* &obj);
@@ -57,8 +56,8 @@ public:
 	const Result_t BeginTransaction(void) throw();
 	const Result_t CommitTransaction(void) throw();
 	const Result_t AbortTransaction(void) throw();
-	const Result_t GetGUID(GUID_t &guid) const throw();
-//	const Result_t SetGUID(const GUID_t &guid) throw();
+	const Result_t GetUuid(Uuid &uuid) const throw();
+//	const Result_t SetUuid(const Uuid &uuid) throw();
 	const Result_t GetName(std::string &name) const throw();
 //	const Result_t SetName(const std::string &name) throw();
 	const Result_t GetDisplayedName(std::string &name) const throw();
@@ -74,7 +73,7 @@ public:
 	const Result_t GetModifiedAt(std::string &dateTime) const throw();
 //	const Result_t SetModifiedAt(const std::string &dateTime) throw();
 	const Result_t RootFolder(MetaFolder* &folder) throw();
-	const Result_t FindObject(const MetaRef_t &metaRef, MetaBase* &metaBase) throw();
+	const Result_t FindObject(const Uuid &uuid, MetaBase* &metaBase) throw();
 	inline const Result_t GetNamespace(std::string &name) const throw()		{ name = this->_namespace; return S_OK; }
 	inline const Result_t SetNamespace(const std::string &name) throw()		{ this->_namespace = name; return S_OK; }
 };

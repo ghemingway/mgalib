@@ -25,7 +25,7 @@ public:
 	virtual ~MetaFCO() { }
 
 	static const Result_t GetAttributeByName(MetaFCO* &metaFCO, const std::string &name, MetaAttribute* &metaAttribute);
-	static const Result_t GetAttributeByRef(MetaFCO *metaFCO, const MetaRef_t &metaRef, MetaAttribute* &metaAttribute);
+	static const Result_t GetAttributeByRef(MetaFCO *metaFCO, const Uuid &uuid, MetaAttribute* &metaAttribute);
 	static const Result_t GetDefinedAttributeByName(MetaFCO *metaFCO, const std::string &name, const bool &inscope, MetaAttribute* &metaAttribute);
 	static const Result_t GetAliasingEnabled(MetaFCO *metaFCO, bool &value);
 	static const Result_t SetAliasingEnabled(MetaFCO *metaFCO, const bool &value);
@@ -38,7 +38,7 @@ public:
 	virtual const Result_t GetUsedInFolders(std::list<MetaFolder*> &folderList) const throw();			//{ return ComGetLinkCollectionValue<IMgaMetaFolder>(GetUnknown(), ATTRID_ROOTOBJLINK_OBJECT_PTR, ATTRID_ROOTOBJLINK_FOLDER_PTR, p); }
 	virtual const Result_t GetAttributes(std::list<MetaAttribute*> &attribList) const throw();			//{ return ComGetSortedLinkCollValue<IMgaMetaAttribute>(GetUnknown(),	ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p); }
 	virtual const Result_t GetAttributeByName(const std::string &name, MetaAttribute* &attrib) const throw();
-	virtual const Result_t GetAttributeByRef(const MetaRef_t &metaRef, MetaAttribute* &attrib) const throw();
+	virtual const Result_t GetAttributeByRef(const Uuid &uuid, MetaAttribute* &attrib) const throw();
 //	virtual const Result_t DefineAttribute(MetaAttribute* &attrib) throw();								//{ return ComDefineBase(this, METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, p); }
 //	virtual const Result_t AddAttribute(MetaAttribute* &attrib) throw();								//{ return ComAddLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p); }
 //	virtual const Result_t RemoveAttribute(MetaAttribute* &attrib) throw();								//{ return ComRemoveLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p); }
