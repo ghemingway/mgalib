@@ -14,7 +14,6 @@ Bytes (all ordered little endian):
 16-19: Size of Index (4 bytes uint32_t)
 
 == Index Entries (Each) ==
-  * MetaID (2 bytes - MetaID_t)
   * Uuid (16 bytes)
   * File Position (8 bytes - uin64_t)
   * Object Size (4 bytes - uint32_t)
