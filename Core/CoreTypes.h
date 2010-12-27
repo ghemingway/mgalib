@@ -12,12 +12,10 @@
 #include <map>
 #include <vector>
 #ifdef _WIN32
-#include <unordered_map>
-#define MGALib_unordered_map std::tr1::unordered_map
+#include <hash_map>
 #include <memory>
 #else
 #include <ext/hash_map>
-#define MGALib_unordered_map  STDEXT::hash_map
 #include <tr1/memory>
 #endif
 #include <assert.h>
@@ -66,36 +64,17 @@ namespace MGA {
 typedef int16_t MetaID_t;
 typedef uint32_t ObjID_t;
 typedef int16_t AttrID_t;
-typedef uint8_t LockingType_t;
-typedef int16_t LockVal_t;
-typedef uint8_t Status_t;
+
 
 const MetaID_t METAID_NONE = 0;
 const MetaID_t METAID_ROOT = 1;
-const ObjID_t OBJID_NONE = 0;
-const ObjID_t OBJID_ROOT = 1;
+//const ObjID_t OBJID_NONE = 0;
+//const ObjID_t OBJID_ROOT = 1;
 const AttrID_t ATTRID_NONE = 0;
-const AttrID_t ATTRID_LOCK = 1;
+//const AttrID_t ATTRID_LOCK = 1;
 const AttrID_t ATTRID_NAME = 2;
 const AttrID_t ATTRID_FATHER = 3;
 const AttrID_t ATTRID_COLLECTION = 10000;
-
-
-typedef struct GUID_t {
-	uint32_t	Data1;
-	uint16_t	Data2;
-	uint16_t	Data3;
-	uint8_t		Data4[8];
-	// Need to do a lot of conversions and comparisons
-	GUID_t& operator=(const std::vector<unsigned char> &bin);
-	GUID_t& operator=(const std::string &str);
-	operator std::string() const;
-	operator std::vector<unsigned char>() const;
-	static std::vector<unsigned char> ToBinary(const std::string &guid);
-	static std::string ToString(const std::vector<unsigned char> &guid);
-	inline bool operator==(const GUID_t &guid) const	{ return (memcmp(this, &guid, sizeof(GUID_t)) == 0); }
-	inline bool operator!=(const GUID_t &guid) const	{ return (memcmp(this, &guid, sizeof(GUID_t)) != 0); }
-} GUID_t;
 
 
 class Uuid {
@@ -103,7 +82,7 @@ private:
 	uint8_t		_data[16];								//!< Just 16 bytes of data - that is all
 public:
 	Uuid();												//!< Default constructor creates new unique Uuid
-	Uuid(const GUID_t &guid);							//!< To be removed
+//	Uuid(const GUID_t &guid);							//!< To be removed
 	Uuid(const std::vector<unsigned char> &vector);		//!< Binary vector constructor
 	Uuid(const char* string);							//!< Char string constructor
 	Uuid(const std::string &string);					//!< Std::string constructor
@@ -122,75 +101,53 @@ public:
 	bool operator<(const Uuid &uuid) const;
 	// Friends
 	friend std::ostream& operator<<(std::ostream& out, const Uuid &uuid);
+	static Uuid Null(void);
 };
 
 
 /******************************************/
 
 
-typedef struct MetaObjIDPair
+struct Uuid_HashFunc
 {
-	MetaID_t metaID;
-	ObjID_t objID;
-	inline MetaObjIDPair() : metaID(METAID_NONE), objID(OBJID_NONE) { }
-	inline MetaObjIDPair(const MetaID_t &metaID, const ObjID_t &objID) : metaID(metaID), objID(objID) { }
-	inline MetaObjIDPair(const MetaObjIDPair &idPair) : metaID(idPair.metaID), objID(idPair.objID) { }
-	inline MetaObjIDPair& operator=(const MetaObjIDPair &idPair) { this->metaID = idPair.metaID; this->objID = idPair.objID; return *this; }
-	// Equality operator
-	inline bool operator==(const MetaObjIDPair &idPair) const	{ return (this->metaID == idPair.metaID && this->objID == idPair.objID); }
-	inline bool operator!=(const MetaObjIDPair &idPair) const	{ return (this->metaID != idPair.metaID || this->objID != idPair.objID); }
-	friend std::ostream& operator<<(std::ostream& out, const MetaObjIDPair &pair) {
-		out << "(" << pair.metaID << ", " << pair.objID << ")";
-		return out;
-	}
-} MetaObjIDPair;
-
-
-struct MetaObjIDPair_HashFunc
-{
-	size_t operator()(const MetaObjIDPair &idPair) const
+	size_t operator()(const Uuid &uuid) const
 	{
-		return (((size_t)idPair.metaID) << 8) + ((size_t)idPair.objID);
+		size_t returnValue;
+		if (sizeof(size_t) == 4)
+		{
+			// Copy over bytes 0, 4, 8, & 12
+			memcpy(&returnValue, &uuid, 1);
+			memcpy(&returnValue+1, &uuid+4, 1);
+			memcpy(&returnValue+2, &uuid+8, 1);
+			memcpy(&returnValue+3, &uuid+12, 1);
+		}
+		if (sizeof(size_t) == 8)
+		{
+			// Copy over bytes 0, 2, 4, 6, 8, 10, 12, 14
+			memcpy(&returnValue, &uuid, 1);
+			memcpy(&returnValue+1, &uuid+2, 1);
+			memcpy(&returnValue+2, &uuid+4, 1);
+			memcpy(&returnValue+3, &uuid+6, 1);
+			memcpy(&returnValue+4, &uuid+8, 1);
+			memcpy(&returnValue+5, &uuid+10, 1);
+			memcpy(&returnValue+6, &uuid+12, 1);
+			memcpy(&returnValue+7, &uuid+14, 1);
+		}
+		else ASSERT(false);
+		return returnValue;
 	}
 };
 
 
-struct MetaObjIDPair_EqualKey
+struct Uuid_EqualKey
 {
-	bool operator()(const MetaObjIDPair &a, const MetaObjIDPair &b) const
-	{
-		return a.objID == b.objID && a.metaID == b.metaID;
-	}
+	bool operator()(const Uuid &a, const Uuid &b) const { return a == b; }
 };
 
 
-struct MetaObjIDPair_Less
+struct Uuid_Less
 {
-	bool operator()(const MetaObjIDPair& a, const MetaObjIDPair& b) const
-	{
-        if( a.metaID < b.metaID )
-            return true;
-        else if( a.metaID > b.metaID )
-            return false;
-        else if( a.objID < b.objID )
-            return true;
-        else
-            return false;
-	}
-};
-
-
-struct MetaObjID2Pair_HashFunc
-{
-	size_t operator()(const MetaObjIDPair &idPair) const
-	{
-		return (((size_t)idPair.metaID) << 8) + ((size_t)idPair.objID);
-	}
-	bool operator()(const MetaObjIDPair &a, const MetaObjIDPair &b) const
-	{
-		// implement < logic here !!!
-		return MetaObjIDPair_Less()(a, b);	
-	}
+	bool operator()(const Uuid &a, const Uuid &b) const { return a < b; }
 };
 
 
@@ -205,11 +162,10 @@ private:
 		VALUETYPE_NONE			= 0,			//!< No value type
 		VALUETYPE_COLLECTION	= 1,			//!< Collection
 		VALUETYPE_POINTER		= 2,			//!< Pointer
-		VALUETYPE_LOCK			= 3,			//!< Lock value type, for access negotiation
+		VALUETYPE_LONGPOINTER	= 3,			//!< Long-Pointer
 		VALUETYPE_LONG			= 4,			//!< Long (32 bit)
 		VALUETYPE_STRING		= 5,			//!< String type
-		VALUETYPE_BINARY		= 6,			//!< Binary type
-		VALUETYPE_REAL			= 7,			//!< Real (64 bit)
+		VALUETYPE_REAL			= 6,			//!< Real (64 bit)
 	} _ValueTypeEnum;
 	_ValueTypeEnum				_type;								//!< Internal type value
 	ValueType(const _ValueTypeEnum &type) : _type(type)		{ }		//!< Hidden primary constructor
@@ -222,62 +178,30 @@ public:
 	inline static ValueType None(void)			{ return ValueType(VALUETYPE_NONE); }		//!< Create a ValueType of type none
 	inline static ValueType Collection(void)	{ return ValueType(VALUETYPE_COLLECTION); }	//!< Create a ValueType of type collection
 	inline static ValueType Pointer(void)		{ return ValueType(VALUETYPE_POINTER); }	//!< Create a ValueType of type pointer
-	inline static ValueType Lock(void)			{ return ValueType(VALUETYPE_LOCK); }		//!< Create a ValueType of type lock
+	inline static ValueType LongPointer(void)	{ return ValueType(VALUETYPE_LONGPOINTER); }//!< Create a ValueType of type long-pointer
 	inline static ValueType Long(void)			{ return ValueType(VALUETYPE_LONG); }		//!< Create a ValueType of type long
 	inline static ValueType String(void)		{ return ValueType(VALUETYPE_STRING); }		//!< Create a ValueType of type string
-	inline static ValueType Binary(void)		{ return ValueType(VALUETYPE_BINARY); }		//!< Create a ValueType of type binary
 	inline static ValueType Real(void)			{ return ValueType(VALUETYPE_REAL); }		//!< Create a ValueType of type real
-	inline static ValueType Read(std::fstream &stream)	{									//!< Create ValueType from IOStream 
-		uint8_t type; stream.read((char*)&type, sizeof(uint8_t)); return ValueType(type); }
+	inline static ValueType Read(char* &stream)	{ uint8_t type; memcpy(&type, stream, sizeof(uint8_t)); stream += sizeof(uint8_t); return ValueType(type); }
 	//Overridden Operators
 	inline ValueType& operator=(const ValueType &type)	{ this->_type = type._type; return *this; }	//!< Equals operator
 	inline bool operator==(const ValueType &type) const	{ return this->_type == type._type; }		//!< Equality operator
 	inline bool operator!=(const ValueType &type) const	{ return this->_type != type._type; }		//!< Inequality operator
-	inline void Write(std::fstream &stream) const		{											//!< Write ValueType to IOStream
-		uint8_t type = (uint8_t)this->_type; stream.write((const char*)&(type), sizeof(uint8_t)); }
+	inline void Write(char* &stream) const	{ uint8_t type=(uint8_t)this->_type; memcpy(stream, &type, sizeof(uint8_t)); stream += sizeof(uint8_t); }
 	//Friend Methods
 	friend std::ostream& operator<<(std::ostream& out, const ValueType &type) {
 		switch (type._type) {
 			case VALUETYPE_NONE:		out << "ValueType::None"; break;
 			case VALUETYPE_COLLECTION:	out << "ValueType::Collection"; break;
 			case VALUETYPE_POINTER:		out << "ValueType::Pointer"; break;
-			case VALUETYPE_LOCK:		out << "ValueType::Lock"; break;
+			case VALUETYPE_LONGPOINTER:	out << "ValueType::LongPointer"; break;
 			case VALUETYPE_LONG:		out << "ValueType::Long"; break;
 			case VALUETYPE_STRING:		out << "ValueType::String"; break;
-			case VALUETYPE_BINARY:		out << "ValueType::Binary"; break;
 			case VALUETYPE_REAL:		out << "ValueType::Real"; break;
 			default:					out << "ValueType::Error!!!"; break;
 		}
 		return out;
 	}
-};
-
-
-// LockType class
-class LockType {
-private:
-	// Hidden Type Enum
-	typedef enum _LockTypeEnum {
-		LOCK_NONE				= 0,			//!< No access, unlimited access for other CoreProjects
-		LOCK_READ				= 1,			//!< Read access, only read access for other CoreProjects
-		LOCK_WRITE				= 2,			//!< Write access, only write access for other CoreProjects
-		LOCK_EXCLUSIVE			= 3				//!< Exclusive access, no access for other CoreProjects
-	} _LockTypeEnum;
-	_LockTypeEnum				_type;			//!< Internal type value
-	inline LockType(const _LockTypeEnum &type) : _type(type)	{ }	//!< Hidden primary constructor
-public:
-	LockType()					{ }				//!< Deny access to default constructor
-	inline LockType(const LockType& type) : _type(type._type)	{ }	//!< Copy constructor
-	~LockType()					{ }				//!< Default destructor
-	//Static Creation Methods
-	inline static LockType	None(void)		{ return LockType(LOCK_NONE); }			//!< Create a LockType of type none
-	inline static LockType	Read(void)		{ return LockType(LOCK_READ); }			//!< Create a LockType of type Read
-	inline static LockType	Write(void)		{ return LockType(LOCK_WRITE); }		//!< Create a LockType of type Write
-	inline static LockType	Exclusive(void)	{ return LockType(LOCK_EXCLUSIVE); }	//!< Create a LockType of type Exclusive
-	//Overridden Operators
-	inline LockType& operator=(const LockType &type)	{ this->_type = type._type; return *this; }	//!< Equals operator
-	inline bool operator==(const LockType &type) const	{ return this->_type == type._type; }	//!< Equality operator
-	inline bool operator!=(const LockType &type) const	{ return this->_type != type._type; }	//!< Inequality operator
 };
 
 

@@ -5,36 +5,12 @@
 // Initialize the static members outside of the class
 CoreProject* ICoreStorageTest::coreProject = NULL;
 ICoreStorage* ICoreStorageTest::storage = NULL;
-CoreMetaProject* ICoreStorageParamTest::metaProject = NULL;
-CoreProject* ICoreStorageParamTest::coreProject = NULL;
-ICoreStorage* ICoreStorageParamTest::storage = NULL;
+//CoreMetaProject* ICoreStorageParamTest::metaProject = NULL;
+//CoreProject* ICoreStorageParamTest::coreProject = NULL;
+//ICoreStorage* ICoreStorageParamTest::storage = NULL;
 
 
 // --------------------------- UtilityTests --------------------------- //
-
-
-TEST(UtilityTests,GUIDConversions)
-{
-	GUID_t guidA = {0x028F7AA4,0x2E51,0x11D3,{0xB3,0x17,0x00,0x62,0x08,0x2D,0xF8,0x85}};
-	// From a GUID_t to binary and string
-	std::vector<unsigned char> vectorGUIDA = guidA;
-	std::string stringGUIDA = guidA;
-
-	GUID_t guidB;
-	// From binary to GUID_t and string
-	guidB = vectorGUIDA;
-	std::string stringGUIDB = GUID_t::ToString(vectorGUIDA);
-
-	GUID_t guidC;
-	// From string to GUID_t and binary
-	guidC = stringGUIDB;
-	std::vector<unsigned char> vectorGUIDC = GUID_t::ToBinary(stringGUIDB);
-	
-	EXPECT_EQ( guidA, guidB );
-	EXPECT_EQ( guidB, guidC );
-	EXPECT_EQ( stringGUIDA, stringGUIDB );
-	EXPECT_EQ( vectorGUIDA, vectorGUIDC );
-}
 
 
 TEST(UtilityTests,UuidConversions)
@@ -114,7 +90,7 @@ TEST(StaticICoreStorageTest,Open)
 
 // --------------------------- ICoreStorage Standard --------------------------- //
 
-
+/*
 TEST_F(ICoreStorageTest,OpenObject)
 {
 	MetaObjIDPair idPair(METAID_NONE, OBJID_NONE);

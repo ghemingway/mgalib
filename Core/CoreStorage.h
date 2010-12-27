@@ -70,7 +70,8 @@ public:
 
 	// --- Project
 
-	virtual const Result_t ObjectVector(std::vector<MetaObjIDPair> &objectVector) throw()=0;//!< Get idPair vector for all objects in project
+	virtual const Result_t ObjectVector(std::vector<Uuid> &objectVector) const throw()=0;	//!< Get idPair vector for all objects in project
+	virtual const Result_t RootUuid(Uuid &uuid) const throw()=0;							//!< Get the root Uuid of the project
 	virtual const Result_t Save(const std::string &filename, const bool &v3=true) throw()=0;//!< Save project to file
 	virtual const Result_t BeginTransaction(void) throw()=0;								//!< Begin transaction on project
 	virtual const Result_t CommitTransaction(void) throw()=0;								//!< Commit transaction on project
@@ -78,25 +79,23 @@ public:
 
 	// --- CoreObject
 
-	virtual const Result_t OpenObject(const MetaObjIDPair &idPair) throw()=0;				//!< Open an object in project
+	virtual const Result_t OpenObject(const Uuid &uuid) throw()=0;							//!< Open an object in project
 	virtual const Result_t CloseObject(void) throw()=0;										//!< Close current object
-	virtual const Result_t CreateObject(const MetaID_t &metaID, ObjID_t &newObjID) throw()=0;//!< Create a new object
+	virtual const Result_t CreateObject(const MetaID_t &metaID, Uuid &newUuid) throw()=0;	//!< Create a new object
 	virtual const Result_t DeleteObject(void) throw()=0;									//!< Delete current object
 
 	// --- CoreAttribute
 
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw()=0;						//!< Get long
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, double &value) throw()=0;						//!< Get real
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw()=0;					//!< Get string
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::vector<unsigned char> &value) throw()=0;	//!< Get binary
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<MetaObjIDPair> &value) throw()=0;	//!< Get collection
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, MetaObjIDPair &value) throw()=0;				//!< Get pointer
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw()=0;			//!< Get long
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, double &value) throw()=0;			//!< Get real
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw()=0;		//!< Get string
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw()=0;	//!< Get collection
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw()=0;			//!< Get pointer (long or regular)
 
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()=0;				//!< Set long
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw()=0;				//!< Set real
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()=0;			//!< Set string
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::vector<unsigned char> &value) throw()=0;//!< Set binary
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const MetaObjIDPair &value) throw()=0;			//!< Set pointer
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()=0;	//!< Set long
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw()=0;	//!< Set real
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()=0;//!< Set string
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()=0;		//!< Set pointer (long or regular)
 };
 
 

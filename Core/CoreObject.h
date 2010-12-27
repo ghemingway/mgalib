@@ -30,20 +30,20 @@ class CoreObjectBase
 {
 private:
 	CoreObjectBase();
-	CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject, const ObjID_t &objID);
+	CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject, const Uuid &uuid);
 	
 protected:
 	CoreProject								*_project;
 	CoreMetaObject							*_metaObject;
-	MetaObjIDPair							_idPair;
+	Uuid									_uuid;
 	std::map<AttrID_t,CoreAttributeBase*>	_attributeMap;
 	bool									_isDirty;
-	uint16_t								_refCount;
+	uint32_t								_refCount;
 
 	void CreateAttributes(void);
 
 public:
-	static const Result_t Create(CoreProject *project, const MetaObjIDPair &idPair, CoreObject* &coreObject) throw();
+	static const Result_t Create(CoreProject *project, const Uuid &uuid, CoreObject* &coreObject) throw();
 	virtual ~CoreObjectBase();
 
 	// ------- Hidden (Core only) Interface ------------ //
@@ -58,7 +58,7 @@ public:
 
 	inline const Result_t Project(CoreProject* &project) const	throw()	{ project = this->_project; return S_OK; }
 	inline const Result_t MetaObject(CoreMetaObject* &coreMetaObject) const throw()	{ coreMetaObject = this->_metaObject; return S_OK; }
-	inline const Result_t IDPair(MetaObjIDPair &idPair) const throw()	{ idPair = this->_idPair; return S_OK; }
+	inline const Result_t GetUuid(Uuid &uuid) const throw()				{ uuid = this->_uuid; return S_OK; }
 	inline const Result_t IsDirty(bool &flag) const throw()				{ flag = this->_isDirty; return S_OK; }
 	inline const Result_t MarkDirty(void) throw()						{ this->_isDirty = true; return S_OK; }
 	const Result_t InTransaction(bool &flag) const throw();
@@ -147,7 +147,7 @@ public:
 		CoreAttribute* attribute; Result_t result = this->_base->Attribute(attrID, attribute); if (result == S_OK) return attribute; else return NULL; }
 	inline const Result_t Project(CoreProject* &project) const	throw()		{ return this->_base->Project(project); }
 	inline const Result_t MetaObject(CoreMetaObject* obj) const throw()		{ return this->_base->MetaObject(obj); }
-	inline const Result_t IDPair(MetaObjIDPair &idPair) const throw()		{ return this->_base->IDPair(idPair); }
+	inline const Result_t GetUuid(Uuid &uuid) const throw()					{ return this->_base->GetUuid(uuid); }
 	inline const Result_t IsDirty(bool &flag) const throw()					{ return this->_base->IsDirty(flag); }
 	inline const Result_t MarkDirty(void) throw()							{ return this->_base->MarkDirty(); }
 	inline const Result_t InTransaction(bool &flag) const throw()			{ return this->_base->InTransaction(flag); }

@@ -1,5 +1,6 @@
 /*** Included Header Files ***/
 #include <gtest/gtest.h>
+#include "Core/CoreStorage.h"
 #include "CoreStorageTesting.h"
 
 
@@ -37,11 +38,11 @@ int main(int argc, char **argv) {
 }
 
 
-std::vector<MetaObjIDPair> GetPairVector(void)
+std::vector<Uuid> GetUuidVector(void)
 {
 	// Open the test file and get the vector of valid MetaObjIDPairs
 	CoreMetaProject *metaProject;
-	Result_t result = CreateMGACoreMetaProject(true, metaProject);
+	Result_t result = CreateMGACoreMetaProject(metaProject);
 	ASSERT( result == S_OK );
 	ASSERT( metaProject != NULL );
 	CoreProject *coreProject;
@@ -52,13 +53,13 @@ std::vector<MetaObjIDPair> GetPairVector(void)
 	ICoreStorage* storage;
 	result = coreProject->Storage(storage);
 	ASSERT( result == S_OK );
-	std::vector<MetaObjIDPair> idPairVector;
-	result = storage->ObjectVector(idPairVector);
+	std::vector<Uuid> uuidVector;
+	result = storage->ObjectVector(uuidVector);
 	// Clean up before running any tests...
 	delete coreProject;
 	ICoreStorage::ClearStorageRegistry();
-	return idPairVector;
+	return uuidVector;
 }
 
 
-INSTANTIATE_TEST_CASE_P(RangeOfMetaObjIDPairs, ICoreStorageParamTest, ::testing::ValuesIn(GetPairVector()));
+//INSTANTIATE_TEST_CASE_P(RangeOfUuids, ICoreStorageParamTest, ::testing::ValuesIn(GetUuidVector()));

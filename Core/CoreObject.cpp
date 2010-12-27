@@ -9,19 +9,19 @@
 // --------------------------- CoreObject Private Methods ---------------------------
 
 
-CoreObjectBase::CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject, const ObjID_t &objID) :
-	_project(project), _metaObject(metaObject), _idPair(METAID_NONE, objID), _attributeMap(), _isDirty(false), _refCount(0)
+CoreObjectBase::CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject, const Uuid &uuid) :
+	_project(project), _metaObject(metaObject), _uuid(uuid), _attributeMap(), _isDirty(false), _refCount(0)
 {
 	// Make sure project and metaObject are valid
 	ASSERT( project != NULL );
 	ASSERT( metaObject != NULL );
-	ASSERT( metaObject->MetaID(this->_idPair.metaID) == S_OK );
+	ASSERT( uuid != Uuid::Null() );
 	// Must regiter object with parent project
-	this->_project->RegisterObject(this->_idPair, this);
+	this->_project->RegisterObject(this->_uuid, this);
 
 	// Create all of the attributes
 	std::list<CoreMetaAttribute*> metaAttributes;
-	ASSERT( this->_metaObject->Attributes(metaAttributes)== S_OK );
+	ASSERT( this->_metaObject->GetAttributes(metaAttributes)== S_OK );
 	std::list<CoreMetaAttribute*>::iterator metaAttrIter = metaAttributes.begin();
 	while( metaAttrIter != metaAttributes.end() )
 	{
@@ -193,21 +193,23 @@ void CoreObjectBase::FillAfterCreateObject()
 // --------------------------- CoreObjectBase Public Methods ---------------------------
 
 
-const Result_t CoreObjectBase::Create(CoreProject *project, const MetaObjIDPair &idPair, CoreObject* &coreObject) throw()
+const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, CoreObject* &coreObject) throw()
 {
 	if( project == NULL ) return E_INVALID_USAGE;
-	if( idPair.metaID == METAID_NONE || idPair.objID == OBJID_NONE ) return E_INVALID_USAGE;
+	if( uuid != Uuid::Null() ) return E_INVALID_USAGE;
 	
 	CoreMetaProject *metaProject = NULL;
 	Result_t result = project->MetaProject(metaProject);
 	ASSERT( result == S_OK );
+	// Set storage to point at this object and get the coreMetaObject
+	ICoreStorage* storage;
+	storage = project->SetStorageObject(uuid);
+	ASSERT( storage == S_OK );
 	CoreMetaObject *metaObject = NULL;
-	// Find the metaObject (tests if metaID is valid)
-	result = metaProject->Object(idPair.metaID, metaObject);
-	if( result != S_OK ) return E_METAID;
+	ASSERT( storage->MetaObject(metaObject) == S_OK );
 	ASSERT( metaObject != NULL );
-	// Create the actual coreObjectBase
-	CoreObjectBase* coreObjectBase = new CoreObjectBase(project, metaObject, idPair.objID);
+	// Create the actual coreObjectBase (new a shiny new & unique Uuid)
+	CoreObjectBase* coreObjectBase = new CoreObjectBase(project, metaObject, uuid);
 	ASSERT( coreObjectBase != NULL );
 	// Create the CoreObject (refPointer) to the base object
 	coreObject = coreObjectBase->Reference();
@@ -227,8 +229,8 @@ CoreObjectBase::~CoreObjectBase()
 		if (attrIter->second != NULL) delete attrIter->second;
 	}
 	// Unregister the object from the project
-	if( this->_project != NULL )
-		this->_project->UnregisterObject(this->_idPair);
+	ASSERT( this->_project != NULL );
+	this->_project->UnregisterObject(this->_uuid);
 }
 
 
@@ -275,7 +277,7 @@ void CoreObjectBase::UnregisterAttribute(const AttrID_t &attrID) throw()
 ICoreStorage* CoreObjectBase::SetStorageObject(void) const
 {
 	// Set the project storage to point to this object
-	return this->_project->SetStorageObject( this->_idPair );
+	return this->_project->SetStorageObject( this->_uuid );
 }
 
 

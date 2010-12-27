@@ -22,6 +22,12 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		582BD65E12C8F07B00B18A19 /* TestingHarness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F412B970E200F4AB58 /* TestingHarness.cpp */; };
+		582BD66712C8F10600B18A19 /* MgaGeneric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E712B970C900F4AB58 /* MgaGeneric.cpp */; };
+		582BD67C12C8F2C500B18A19 /* MetaGeneric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */; };
+		582BD67D12C8F2C900B18A19 /* MetaGeneric.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909212B9708D00F4AB58 /* MetaGeneric.h */; };
+		582BD67E12C8F2CD00B18A19 /* MgaGeneric.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D312B970BF00F4AB58 /* MgaGeneric.h */; };
+		582BD68912C8F36300B18A19 /* CoreStorageTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F812B970F400F4AB58 /* CoreStorageTesting.cpp */; };
 		5843399C125B8B5400DD904D /* MGALib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58E90A1F124CEFFF00B8E3CF /* MGALib.framework */; };
 		5843905812B96FD900F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
 		5843905A12B96FEB00F4AB58 /* highres_timing.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843905912B96FEB00F4AB58 /* highres_timing.h */; };
@@ -48,67 +54,10 @@
 		5843908612B9703300F4AB58 /* CoreObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */; };
 		5843908712B9703300F4AB58 /* CoreProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */; };
 		5843908812B9703300F4AB58 /* CoreStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907F12B9703300F4AB58 /* CoreStorage.cpp */; };
-		5843909D12B9708D00F4AB58 /* MetaAspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908A12B9708D00F4AB58 /* MetaAspect.h */; };
-		5843909E12B9708D00F4AB58 /* MetaAttribute.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908B12B9708D00F4AB58 /* MetaAttribute.h */; };
-		5843909F12B9708D00F4AB58 /* MetaBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */; };
-		584390A012B9708D00F4AB58 /* MetaConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908D12B9708D00F4AB58 /* MetaConnection.h */; };
-		584390A112B9708D00F4AB58 /* MetaConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908E12B9708D00F4AB58 /* MetaConstraint.h */; };
-		584390A212B9708D00F4AB58 /* MetaEnumItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908F12B9708D00F4AB58 /* MetaEnumItem.h */; };
-		584390A312B9708D00F4AB58 /* MetaFCO.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909012B9708D00F4AB58 /* MetaFCO.h */; };
-		584390A412B9708D00F4AB58 /* MetaFolder.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */; };
-		584390A512B9708D00F4AB58 /* MetaGeneric.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909212B9708D00F4AB58 /* MetaGeneric.h */; };
-		584390A612B9708D00F4AB58 /* MetaModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909312B9708D00F4AB58 /* MetaModel.h */; };
-		584390A712B9708D00F4AB58 /* MetaPart.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909412B9708D00F4AB58 /* MetaPart.h */; };
-		584390A812B9708D00F4AB58 /* MetaPointerSpec.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909512B9708D00F4AB58 /* MetaPointerSpec.h */; };
-		584390A912B9708D00F4AB58 /* MetaProject.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909612B9708D00F4AB58 /* MetaProject.h */; };
-		584390AA12B9708D00F4AB58 /* MetaReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909712B9708D00F4AB58 /* MetaReference.h */; };
-		584390AB12B9708D00F4AB58 /* MetaRegNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909812B9708D00F4AB58 /* MetaRegNode.h */; };
-		584390AC12B9708D00F4AB58 /* MetaRole.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909912B9708D00F4AB58 /* MetaRole.h */; };
-		584390AD12B9708D00F4AB58 /* MetaSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909A12B9708D00F4AB58 /* MetaSet.h */; };
-		584390BF12B970A300F4AB58 /* MetaAspect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B012B970A300F4AB58 /* MetaAspect.cpp */; };
-		584390C012B970A300F4AB58 /* MetaAttribute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B112B970A300F4AB58 /* MetaAttribute.cpp */; };
-		584390C112B970A300F4AB58 /* MetaBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B212B970A300F4AB58 /* MetaBase.cpp */; };
-		584390C212B970A300F4AB58 /* MetaConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B312B970A300F4AB58 /* MetaConnection.cpp */; };
-		584390C312B970A300F4AB58 /* MetaConstraint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B412B970A300F4AB58 /* MetaConstraint.cpp */; };
-		584390C412B970A300F4AB58 /* MetaFCO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B512B970A300F4AB58 /* MetaFCO.cpp */; };
-		584390C512B970A300F4AB58 /* MetaFolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B612B970A300F4AB58 /* MetaFolder.cpp */; };
-		584390C612B970A300F4AB58 /* MetaGeneric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */; };
-		584390C712B970A300F4AB58 /* MetaModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B812B970A300F4AB58 /* MetaModel.cpp */; };
-		584390C812B970A300F4AB58 /* MetaPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B912B970A300F4AB58 /* MetaPart.cpp */; };
-		584390C912B970A300F4AB58 /* MetaPointerSpec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */; };
-		584390CA12B970A300F4AB58 /* MetaProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */; };
-		584390CB12B970A300F4AB58 /* MetaReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BC12B970A300F4AB58 /* MetaReference.cpp */; };
-		584390CC12B970A300F4AB58 /* MetaRegNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BD12B970A300F4AB58 /* MetaRegNode.cpp */; };
-		584390CD12B970A300F4AB58 /* MetaSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */; };
-		584390D812B970BF00F4AB58 /* MgaAttribute.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390CE12B970BF00F4AB58 /* MgaAttribute.h */; };
-		584390D912B970BF00F4AB58 /* MgaEventSink.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390CF12B970BF00F4AB58 /* MgaEventSink.h */; };
-		584390DA12B970BF00F4AB58 /* MgaFCO.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D012B970BF00F4AB58 /* MgaFCO.h */; };
-		584390DB12B970BF00F4AB58 /* MgaFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D112B970BF00F4AB58 /* MgaFilter.h */; };
-		584390DC12B970BF00F4AB58 /* MgaFolder.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D212B970BF00F4AB58 /* MgaFolder.h */; };
-		584390DD12B970BF00F4AB58 /* MgaGeneric.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D312B970BF00F4AB58 /* MgaGeneric.h */; };
-		584390DE12B970BF00F4AB58 /* MgaProject.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D412B970BF00F4AB58 /* MgaProject.h */; };
-		584390DF12B970BF00F4AB58 /* MgaRegistrar.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D512B970BF00F4AB58 /* MgaRegistrar.h */; };
-		584390E012B970BF00F4AB58 /* MgaTerritory.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D612B970BF00F4AB58 /* MgaTerritory.h */; };
-		584390E112B970BF00F4AB58 /* MgaTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 584390D712B970BF00F4AB58 /* MgaTypes.h */; };
-		584390EB12B970C900F4AB58 /* MgaAttribute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E212B970C900F4AB58 /* MgaAttribute.cpp */; };
-		584390EC12B970C900F4AB58 /* MgaError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E312B970C900F4AB58 /* MgaError.cpp */; };
-		584390ED12B970C900F4AB58 /* MgaFCO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E412B970C900F4AB58 /* MgaFCO.cpp */; };
-		584390EE12B970C900F4AB58 /* MgaFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E512B970C900F4AB58 /* MgaFilter.cpp */; };
-		584390EF12B970C900F4AB58 /* MgaFolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E612B970C900F4AB58 /* MgaFolder.cpp */; };
-		584390F012B970C900F4AB58 /* MgaGeneric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E712B970C900F4AB58 /* MgaGeneric.cpp */; };
-		584390F112B970C900F4AB58 /* MgaProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E812B970C900F4AB58 /* MgaProject.cpp */; };
-		584390F212B970C900F4AB58 /* MgaRegistrar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E912B970C900F4AB58 /* MgaRegistrar.cpp */; };
-		584390F312B970C900F4AB58 /* MgaTerritory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390EA12B970C900F4AB58 /* MgaTerritory.cpp */; };
-		584390F512B970E200F4AB58 /* TestingHarness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F412B970E200F4AB58 /* TestingHarness.cpp */; };
 		584390FC12B970F400F4AB58 /* CoreMetaTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F612B970F400F4AB58 /* CoreMetaTesting.cpp */; };
-		584390FD12B970F400F4AB58 /* CoreStorageTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F812B970F400F4AB58 /* CoreStorageTesting.cpp */; };
-		584390FE12B970F400F4AB58 /* CoreTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390FA12B970F400F4AB58 /* CoreTesting.cpp */; };
-		5843910312B9711100F4AB58 /* MgaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390FF12B9711100F4AB58 /* MgaProjectTesting.cpp */; };
-		5843910412B9711100F4AB58 /* MgaRegistrarTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843910112B9711100F4AB58 /* MgaRegistrarTesting.cpp */; };
 		5843913E12B9749600F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
 		587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 587E25BD12BBB8050035DB9E /* CoreTypes.cpp */; };
 		587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */; };
-		58E371BF12C3F56F00BA324B /* MetaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */; };
 		58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 		58F92C2A125FABD200FAF4C6 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 /* End PBXBuildFile section */
@@ -588,33 +537,8 @@
 				5843907412B9701900F4AB58 /* CoreStorage.h in Headers */,
 				5843907512B9701900F4AB58 /* CoreTransactionItem.h in Headers */,
 				5843907612B9701900F4AB58 /* CoreTypes.h in Headers */,
-				5843909D12B9708D00F4AB58 /* MetaAspect.h in Headers */,
-				5843909E12B9708D00F4AB58 /* MetaAttribute.h in Headers */,
-				5843909F12B9708D00F4AB58 /* MetaBase.h in Headers */,
-				584390A012B9708D00F4AB58 /* MetaConnection.h in Headers */,
-				584390A112B9708D00F4AB58 /* MetaConstraint.h in Headers */,
-				584390A212B9708D00F4AB58 /* MetaEnumItem.h in Headers */,
-				584390A312B9708D00F4AB58 /* MetaFCO.h in Headers */,
-				584390A412B9708D00F4AB58 /* MetaFolder.h in Headers */,
-				584390A512B9708D00F4AB58 /* MetaGeneric.h in Headers */,
-				584390A612B9708D00F4AB58 /* MetaModel.h in Headers */,
-				584390A712B9708D00F4AB58 /* MetaPart.h in Headers */,
-				584390A812B9708D00F4AB58 /* MetaPointerSpec.h in Headers */,
-				584390A912B9708D00F4AB58 /* MetaProject.h in Headers */,
-				584390AA12B9708D00F4AB58 /* MetaReference.h in Headers */,
-				584390AB12B9708D00F4AB58 /* MetaRegNode.h in Headers */,
-				584390AC12B9708D00F4AB58 /* MetaRole.h in Headers */,
-				584390AD12B9708D00F4AB58 /* MetaSet.h in Headers */,
-				584390D812B970BF00F4AB58 /* MgaAttribute.h in Headers */,
-				584390D912B970BF00F4AB58 /* MgaEventSink.h in Headers */,
-				584390DA12B970BF00F4AB58 /* MgaFCO.h in Headers */,
-				584390DB12B970BF00F4AB58 /* MgaFilter.h in Headers */,
-				584390DC12B970BF00F4AB58 /* MgaFolder.h in Headers */,
-				584390DD12B970BF00F4AB58 /* MgaGeneric.h in Headers */,
-				584390DE12B970BF00F4AB58 /* MgaProject.h in Headers */,
-				584390DF12B970BF00F4AB58 /* MgaRegistrar.h in Headers */,
-				584390E012B970BF00F4AB58 /* MgaTerritory.h in Headers */,
-				584390E112B970BF00F4AB58 /* MgaTypes.h in Headers */,
+				582BD67D12C8F2C900B18A19 /* MetaGeneric.h in Headers */,
+				582BD67E12C8F2CD00B18A19 /* MgaGeneric.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -716,13 +640,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				584390F512B970E200F4AB58 /* TestingHarness.cpp in Sources */,
 				584390FC12B970F400F4AB58 /* CoreMetaTesting.cpp in Sources */,
-				584390FD12B970F400F4AB58 /* CoreStorageTesting.cpp in Sources */,
-				584390FE12B970F400F4AB58 /* CoreTesting.cpp in Sources */,
-				5843910312B9711100F4AB58 /* MgaProjectTesting.cpp in Sources */,
-				5843910412B9711100F4AB58 /* MgaRegistrarTesting.cpp in Sources */,
-				58E371BF12C3F56F00BA324B /* MetaProjectTesting.cpp in Sources */,
+				582BD65E12C8F07B00B18A19 /* TestingHarness.cpp in Sources */,
+				582BD68912C8F36300B18A19 /* CoreStorageTesting.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -741,31 +661,9 @@
 				5843908612B9703300F4AB58 /* CoreObject.cpp in Sources */,
 				5843908712B9703300F4AB58 /* CoreProject.cpp in Sources */,
 				5843908812B9703300F4AB58 /* CoreStorage.cpp in Sources */,
-				584390BF12B970A300F4AB58 /* MetaAspect.cpp in Sources */,
-				584390C012B970A300F4AB58 /* MetaAttribute.cpp in Sources */,
-				584390C112B970A300F4AB58 /* MetaBase.cpp in Sources */,
-				584390C212B970A300F4AB58 /* MetaConnection.cpp in Sources */,
-				584390C312B970A300F4AB58 /* MetaConstraint.cpp in Sources */,
-				584390C412B970A300F4AB58 /* MetaFCO.cpp in Sources */,
-				584390C512B970A300F4AB58 /* MetaFolder.cpp in Sources */,
-				584390C612B970A300F4AB58 /* MetaGeneric.cpp in Sources */,
-				584390C712B970A300F4AB58 /* MetaModel.cpp in Sources */,
-				584390C812B970A300F4AB58 /* MetaPart.cpp in Sources */,
-				584390C912B970A300F4AB58 /* MetaPointerSpec.cpp in Sources */,
-				584390CA12B970A300F4AB58 /* MetaProject.cpp in Sources */,
-				584390CB12B970A300F4AB58 /* MetaReference.cpp in Sources */,
-				584390CC12B970A300F4AB58 /* MetaRegNode.cpp in Sources */,
-				584390CD12B970A300F4AB58 /* MetaSet.cpp in Sources */,
-				584390EB12B970C900F4AB58 /* MgaAttribute.cpp in Sources */,
-				584390EC12B970C900F4AB58 /* MgaError.cpp in Sources */,
-				584390ED12B970C900F4AB58 /* MgaFCO.cpp in Sources */,
-				584390EE12B970C900F4AB58 /* MgaFilter.cpp in Sources */,
-				584390EF12B970C900F4AB58 /* MgaFolder.cpp in Sources */,
-				584390F012B970C900F4AB58 /* MgaGeneric.cpp in Sources */,
-				584390F112B970C900F4AB58 /* MgaProject.cpp in Sources */,
-				584390F212B970C900F4AB58 /* MgaRegistrar.cpp in Sources */,
-				584390F312B970C900F4AB58 /* MgaTerritory.cpp in Sources */,
 				587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */,
+				582BD66712C8F10600B18A19 /* MgaGeneric.cpp in Sources */,
+				582BD67C12C8F2C500B18A19 /* MetaGeneric.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

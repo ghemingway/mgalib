@@ -27,7 +27,7 @@ protected:
 	CoreObjectBase							*_parent;
 	CoreMetaAttribute						*_metaAttribute;	
 	bool									_isDirty;
-	uint16_t								_refCount;
+	uint32_t								_refCount;
 
 	friend class CoreObjectBase;
 	static const Result_t Create(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute) throw();
@@ -49,7 +49,7 @@ public:
 	virtual ~CoreAttributeBase();
 
 	inline CoreMetaAttribute* MetaAttribute(void) const throw()			{ return this->_metaAttribute; }
-	inline const Result_t AttributeID(AttrID_t &attrID) const throw()	{ return this->_metaAttribute->AttributeID(attrID); }
+	inline const Result_t AttributeID(AttrID_t &attrID) const throw()	{ return this->_metaAttribute->GetAttributeID(attrID); }
 	inline bool IsDirty(void) const throw()								{ return this->_isDirty; }
 	inline void MarkDirty(void) throw();
 	bool InTransaction(void) const throw();
@@ -102,7 +102,7 @@ public:
 			ICoreStorage* storage = this->SetStorageObject();
 			// Read the value from storage
 			AttrID_t attrID;
-			ASSERT( this->_metaAttribute->AttributeID(attrID) == S_OK );
+			ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
 			Result_t result = storage->GetAttributeValue(attrID, value);
 			if (result != S_OK) return result;
 			// Save the value
@@ -131,9 +131,9 @@ public:
 typedef CoreAttributeTemplateBase<int32_t>						CoreAttributeLong;
 typedef CoreAttributeTemplateBase<double>						CoreAttributeReal;
 typedef CoreAttributeTemplateBase<std::string>					CoreAttributeString;
-typedef CoreAttributeTemplateBase<std::vector<unsigned char> >	CoreAttributeBinary;
-typedef CoreAttributeTemplateBase<std::list<MetaObjIDPair> >	CoreAttributeCollection;
-typedef CoreAttributeTemplateBase<MetaObjIDPair>				CoreAttributePointer;
+typedef CoreAttributeTemplateBase<Uuid>							CoreAttributeLongPointer;
+typedef CoreAttributeTemplateBase<std::list<Uuid> >				CoreAttributeCollection;
+typedef CoreAttributeTemplateBase<Uuid>							CoreAttributePointer;
 
 
 // --------------------------- CoreDataAttribute

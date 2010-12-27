@@ -5,140 +5,80 @@
 
 
 /*** Internally Defined Symbols ***/
-#define COREBIN_DEFAULTCACHESIZE	10000000
+#define COREBIN_DEFAULTCACHESIZE			10000000
+#define COREBIN_FILEBUFFERSIZE_BYTES		8096
 
 
 // --------------------------- IOStream Access  --------------------------- //
 
 
 // IFStream Reads
-inline static void _Read(std::fstream &ifs, int16_t &value)			{ ifs.read((char*)&value, sizeof(int16_t)); }
-inline static void _Read(std::fstream &ifs, uint32_t &value)		{ ifs.read((char*)&value, sizeof(uint32_t)); }
-inline static void _Read(std::fstream &ifs, int32_t &value)			{ ifs.read((char*)&value, sizeof(int32_t)); }
-inline static void _Read(std::fstream &ifs, double &value)			{ ifs.read((char*)&value, sizeof(double)); }
-inline static void _Read(std::fstream &ifs, ValueType &valueType)	{ valueType = ValueType::Read(ifs); }
-inline static void _Read(std::fstream &ifs, MetaObjIDPair &value)
-	{ ifs.read((char*)&(value.metaID), sizeof(MetaID_t)); ifs.read((char*)&(value.objID), sizeof(ObjID_t)); }
-inline static void _Read(std::fstream &ifs, std::streampos &pos)
-	{ uint64_t value; ifs.read((char*)&value, sizeof(uint64_t));  pos = (std::streampos)value; }
+inline static void _Read(char* &stream, int16_t &value)			{ memcpy(&value, stream, sizeof(int16_t)); stream += sizeof(int16_t); }
+inline static void _Read(char* &stream, uint32_t &value)		{ memcpy(&value, stream, sizeof(uint32_t)); stream += sizeof(uint32_t); }
+inline static void _Read(char* &stream, int32_t &value)			{ memcpy(&value, stream, sizeof(int32_t)); stream += sizeof(int32_t); }
+inline static void _Read(char* &stream, double &value)			{ memcpy(&value, stream, sizeof(double)); stream += sizeof(double); }
+inline static void _Read(char* &stream, ValueType &valueType)	{ valueType = ValueType::Read(stream); }
+inline static void _Read(char* &stream, std::streampos &pos)	{ uint64_t value; memcpy(&value, stream, sizeof(uint64_t));  pos = (std::streampos)value; stream += sizeof(uint64_t); }
+inline static void _Read(char* &stream, Uuid &value)			{ memcpy(&value, stream, sizeof(Uuid));  stream += sizeof(Uuid); }
 
-static void _Read(std::fstream &ifs, std::vector<unsigned char> &value)
+inline static void _Read(char* &stream, std::string &str)
 {
-	// Make sure the file is open
-	ASSERT( ifs.is_open() );
-	// Get the length of the vector
-	uint32_t len;
-	_Read(ifs, len);
-	ASSERT( len >= 0 );
-	// Read data into the vector
-	value.resize(len);
-	if( len > 0 )
-		ifs.read( (char *) &value[0], len);
-}
-
-static void _Read(std::fstream &ifs, Uuid &value)
-{
-	// Make sure the file is open
-	ASSERT( ifs.is_open() );
-	// Get the length of the Uuid (must be 16)
-	uint32_t len;
-	_Read(ifs, len);
-	ASSERT( len == 16 );
-	// Read data into the Uuid
-	ifs.read( (char *) &value, len);
-}
-
-static void _Read(std::fstream &ifs, std::string &str)
-{
-	// Make sure the file is open
-	ASSERT( ifs.is_open() );
 	// Read the length of the string
 	uint32_t len;
-	_Read(ifs, len);
+	_Read(stream, len);
 	ASSERT( len >= 0 );
 	// Create the string
 	str.resize(len);
-	if( len > 0 )
-		ifs.read( (char *) &str[0], len);
+	memcpy(&str[0], stream, len);
+	stream += len;
 }
 
-static void _Read(std::fstream &ifs, std::list<MetaObjIDPair> &collection)
+inline static void _Read(char* &stream, std::list<Uuid> &collection)
 {
-	// Make sure the file is open
-	ASSERT( ifs.is_open() );
-	// Read the length of the string
+	// Read the number of Uuids in the list
 	uint32_t len;
-	_Read(ifs, len);
+	_Read(stream, len);
 	ASSERT( len >= 0 );
 	// Read data into the list
-	MetaObjIDPair idPair;
+	Uuid uuid;
 	for (uint32_t i=0; i<len; ++i)
 	{
-		_Read(ifs, idPair);
-		collection.push_back(idPair);
+		// One read from the stream per Uuid
+		_Read(stream, uuid);
+		collection.push_back(uuid);
 	}
 }
 
 // OFStream Writes
-template<class T>
-inline static void _Write(std::fstream &ofs, const T &value)			{ ofs.write((const char*)&value, sizeof(T)); }
-inline static void _Write(std::fstream &ofs, const int16_t &value)		{ ofs.write((const char*)&value, sizeof(int16_t)); }
-inline static void _Write(std::fstream &ofs, const uint32_t &value)		{ ofs.write((const char*)&value, sizeof(uint32_t)); }
-inline static void _Write(std::fstream &ofs, const int32_t &value)		{ ofs.write((const char*)&value, sizeof(int32_t)); }
-inline static void _Write(std::fstream &ofs, const double &value)		{ ofs.write((const char*)&value, sizeof(double)); }
-inline static void _Write(std::fstream &ofs, const ValueType &valueType){ valueType.Write(ofs); }
-inline static void _Write(std::fstream &ofs, const MetaObjIDPair &value)
-	{ ofs.write((const char*)&(value.metaID), sizeof(MetaID_t)); ofs.write((const char*)&(value.objID), sizeof(ObjID_t)); }
-inline static void _Write(std::fstream &ofs, const std::streampos &pos)
-	{ uint64_t value = (uint64_t)pos; ofs.write((const char*)&value, sizeof(uint64_t)); }
+inline static void _Write(char* &stream, const int16_t &value)		{ memcpy(stream, &value, sizeof(int16_t)); stream += sizeof(int16_t); }
+inline static void _Write(char* &stream, const uint32_t &value)		{ memcpy(stream, &value, sizeof(uint32_t)); stream += sizeof(uint32_t); }
+inline static void _Write(char* &stream, const int32_t &value)		{ memcpy(stream, &value, sizeof(int32_t)); stream += sizeof(int32_t); }
+inline static void _Write(char* &stream, const double &value)		{ memcpy(stream, &value, sizeof(double)); stream += sizeof(double); }
+inline static void _Write(char* &stream, const ValueType &valueType){ valueType.Write(stream); }
+inline static void _Write(char* &stream, const std::streampos &pos)	{ uint64_t value = (uint64_t)pos; memcpy(stream, &value, sizeof(uint64_t)); stream += sizeof(uint64_t); }
+inline static void _Write(char* &stream, const Uuid &value)			{ memcpy(stream, &value, sizeof(Uuid)); stream += sizeof(Uuid); }
 
-static void _Write(std::fstream &ofs, const std::vector<unsigned char> &value) {
-	// Make sure the file is open
-	ASSERT( ofs.is_open() );
-	// Write the length of the vector
-	uint32_t len = value.size();
-	ASSERT( len >= 0 );
-	_Write(ofs, len);
-	// Write the actual the vector
-	if( len > 0 )
-		ofs.write( (char*)&value[0], len);
-}
-
-static void _Write(std::fstream &ofs, Uuid &value) {
-	// Make sure the file is open
-	ASSERT( ofs.is_open() );
-	// Write the length of the Uuid (always 16)
-	uint32_t len = sizeof(Uuid);
-	ASSERT( len == 16 );
-	_Write(ofs, len);
-	// Write the actual the UUID
-	ofs.write( (char*)&value, len);
-}
-
-static void _Write(std::fstream &ofs, const std::string &str) {
-	// Make sure the file is open
-	ASSERT( ofs.is_open() );
+inline static void _Write(char* &stream, const std::string &str) {
 	// Write the length of the string
 	uint32_t len = str.length();
 	ASSERT( len >= 0 );
-	_Write(ofs, len);
+	_Write(stream, len);
 	// Write the actual string
-	if( len > 0 )
-		ofs.write( (char*)&str[0], len);
+	memcpy(stream, &str[0], len);
+	stream += len;
 }
 
-static void _Write(std::fstream &ofs, const std::list<MetaObjIDPair> &collection) {
-	// Make sure the file is open
-	ASSERT( ofs.is_open() );
-	// Write the length of the vector
+inline static void _Write(char* &stream, const std::list<Uuid> &collection) {
+	// Write the length of the list
 	uint32_t len = collection.size();
 	ASSERT( len >= 0 );
-	_Write(ofs, len);
-	// Write the actual vector
-	std::list<MetaObjIDPair>::const_iterator collectionIter = collection.begin();
+	_Write(stream, len);
+	// Write the actual list
+	std::list<Uuid>::const_iterator collectionIter = collection.begin();
 	while (collectionIter != collection.end())
 	{
-		_Write(ofs, *collectionIter);
+		// One write to the stream per Uuid
+		_Write(stream, *collectionIter);
 		++collectionIter;
 	}
 }
@@ -147,11 +87,10 @@ static void _Write(std::fstream &ofs, const std::list<MetaObjIDPair> &collection
 // --------------------------- BinAttr ---------------------------
 
 
-BinAttribute *BinAttribute::Read(BinObject *parent, std::fstream &stream, std::vector<std::pair<AttrID_t,MetaObjIDPair> > &pointers, const bool &v3)
+BinAttribute *BinAttribute::Read(BinObject *parent, char *stream)
 {
 	ASSERT( parent != NULL );
-	ASSERT( parent->MetaID() != METAID_NONE );
-	ASSERT( stream.is_open() );
+	ASSERT( stream != NULL );
 	// Get the value type
 	ValueType valueType;
 	_Read(stream, valueType);
@@ -170,27 +109,16 @@ BinAttribute *BinAttribute::Read(BinObject *parent, std::fstream &stream, std::v
 		binAttribute = new BinAttributeReal(parent, attrID);
 	else if (valueType == ValueType::String())
 		binAttribute = new BinAttributeString(parent, attrID);
-	else if (valueType == ValueType::Binary())
-		binAttribute = new BinAttributeBinary(parent, attrID);
-	else if (valueType == ValueType::Lock())
-		binAttribute = new BinAttributeLock(parent, attrID);
-	else if (valueType == ValueType::Pointer())
-		binAttribute = new BinAttributePointer(parent, attrID);
+	else if (valueType == ValueType::LongPointer())
+		binAttribute = new BinAttributeLongPointer(parent, attrID);
 	else if (valueType == ValueType::Collection())
 		binAttribute = new BinAttributeCollection(parent, attrID);
+	else if (valueType == ValueType::Pointer())
+		binAttribute = new BinAttributePointer(parent, attrID);
 	// Return what we have
 	ASSERT( binAttribute != NULL );
 	// Command the attribute to finish reading itself
-	binAttribute->FileRead(stream, v3);
-	// Special case for ValueType::Pointer
-	if (valueType == ValueType::Pointer()) {
-		BinAttributePointer *pointer = (BinAttributePointer*)binAttribute;
-		// Add the pointer to the vector if non-NONE
-		if ( pointer->MetaID() != METAID_NONE ) {
-//			std::cout << "\t\tPointer: (" << pointer->MetaID() << ", " << pointer->ObjID() << ").\n";
-			pointers.push_back( std::make_pair(attrID, pointer->Get()) );
-		}
-	}
+	binAttribute->StreamRead(stream);
 	// Return the new attribute
 	return binAttribute;
 };
@@ -199,7 +127,6 @@ BinAttribute *BinAttribute::Read(BinObject *parent, std::fstream &stream, std::v
 BinAttribute* BinAttribute::Create(BinObject *parent, const ValueType &valueType, const AttrID_t &attrID)
 {
 	ASSERT( parent != NULL );
-	ASSERT( parent->MetaID() != METAID_NONE );
 	ASSERT( valueType != ValueType::None() );
 	ASSERT( attrID != ATTRID_NONE );
 	BinAttribute *binAttribute = NULL;
@@ -210,14 +137,12 @@ BinAttribute* BinAttribute::Create(BinObject *parent, const ValueType &valueType
 		binAttribute = new BinAttributeReal(parent, attrID);
 	else if (valueType == ValueType::String())
 		binAttribute = new BinAttributeString(parent, attrID);
-	else if (valueType == ValueType::Binary())
-		binAttribute = new BinAttributeBinary(parent, attrID);
-	else if (valueType == ValueType::Lock())
-		binAttribute = new BinAttributeLock(parent, attrID);
-	else if (valueType == ValueType::Pointer())
-		binAttribute = new BinAttributePointer(parent, attrID);
+	else if (valueType == ValueType::LongPointer())
+		binAttribute = new BinAttributeLongPointer(parent, attrID);
 	else if (valueType == ValueType::Collection())
 		binAttribute = new BinAttributeCollection(parent, attrID);
+	else if (valueType == ValueType::Pointer())
+		binAttribute = new BinAttributePointer(parent, attrID);
 	// Return what we have
 	ASSERT( binAttribute != NULL );	
 	// Return the new attribute
@@ -226,75 +151,88 @@ BinAttribute* BinAttribute::Create(BinObject *parent, const ValueType &valueType
 
 
 // BinAttribute Read/Write Methods (need access to _Write and _Read functions)
+inline void BinAttributeLong::StreamRead(char* &stream)
+{
+	_Read(stream, this->_value);
+}
 
-inline void BinAttributeLong::FileWrite(std::fstream &stream, const bool &v3) const
+inline void BinAttributeLong::StreamWrite(char* &stream) const
 {
 	_Write(stream, ValueType::Long());
 	_Write(stream, this->_attrID);
 	_Write(stream, this->_value);
 }
 
-inline void BinAttributeReal::FileWrite(std::fstream &stream, const bool &v3) const
+inline void BinAttributeReal::StreamRead(char* &stream)
+{
+	_Read(stream, this->_value);
+}
+
+inline void BinAttributeReal::StreamWrite(char* &stream) const
 {
 	_Write(stream, ValueType::Real());
 	_Write(stream, this->_attrID);
 	_Write(stream, this->_value);
 }
 
-inline void BinAttributeString::FileWrite(std::fstream &stream, const bool &v3) const
+inline void BinAttributeString::StreamRead(char* &stream)
+{
+	_Read(stream, this->_value);
+}
+
+inline void BinAttributeString::StreamWrite(char* &stream) const
 {
 	_Write(stream, ValueType::String());
 	_Write(stream, this->_attrID);
 	_Write(stream, this->_value);
 }
-inline void BinAttributeString::FileRead(std::fstream &stream, const bool &v3)			{ _Read(stream, this->_value); }
 
-inline void BinAttributeBinary::FileWrite(std::fstream &stream, const bool &v3) const
+inline uint32_t BinAttributeString::Size(void) const
 {
-	_Write(stream, ValueType::Binary());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
+	// TODO: Need to fix this correctly, even for UTF-8 encoding
+	ASSERT(false);
+	return 0;
 }
-inline void BinAttributeBinary::FileRead(std::fstream &stream, const bool &v3)			{ _Read(stream, this->_value); }
 
-inline void BinAttributeCollection::FileWrite(std::fstream &stream, const bool &v3) const
+inline void BinAttributeLongPointer::StreamRead(char* &stream)
 {
-	_Write(stream, ValueType::Collection());
-	_Write(stream, this->_attrID);
-	// Do nothing for v2
-	if (!v3) return;
-	// Otherwise, write out the collection size
-	_Write(stream, this->_value);
-}
-inline void BinAttributeCollection::FileRead(std::fstream &stream, const bool &v3)
-{
-	// Do nothing for v2
-	if (!v3) return;
-	// Otherwise, read in the collection
 	_Read(stream, this->_value);
 }
 
-void BinAttributePointer::FileWrite(std::fstream &stream, const bool &v3) const
+inline void BinAttributeLongPointer::StreamWrite(char* &stream) const
+{
+	_Write(stream, ValueType::LongPointer());
+	_Write(stream, this->_attrID);
+	_Write(stream, this->_value);
+}
+
+inline void BinAttributeCollection::StreamRead(char* &stream)
+{
+	_Read(stream, this->_value);
+}
+
+inline void BinAttributeCollection::StreamWrite(char* &stream) const
+{
+	_Write(stream, ValueType::Collection());
+	_Write(stream, this->_attrID);
+	_Write(stream, this->_value);
+}
+
+inline uint32_t BinAttributeCollection::Size(void) const
+{
+	return (this->_value.size() * sizeof(Uuid));
+}
+
+void BinAttributePointer::StreamRead(char* &stream)
+{
+	_Read(stream, this->_value);
+}
+
+void BinAttributePointer::StreamWrite(char* &stream) const
 {
 	_Write(stream, ValueType::Pointer());
 	_Write(stream, this->_attrID);
-	_Write(stream, this->_value.metaID);
-	// Only write the objID if metaID is not NONE
-	if (this->_value.metaID != METAID_NONE)
-		_Write(stream, this->_value.objID);
-}
-void BinAttributePointer::FileRead(std::fstream &stream, const bool &v3)
-{
-	// Read in the metaID for the pointer
-	_Read(stream, this->_value.metaID);
-	// Only read the objID if metaID is not NONE
-	if( this->_value.metaID != METAID_NONE )
-	{
-		// Read in the object ID
-		_Read(stream, this->_value.objID);
-		ASSERT( this->_value.objID != OBJID_NONE );
-	}
-//	std::cout << "\t\tPointer (" << this->_idPair.metaID << ", " << this->_idPair.objID << ")\n";
+	_Write(stream, this->_value);
 }
 
 
@@ -307,14 +245,14 @@ void BinObject::CreateAttributes(CoreMetaObject *metaObject)
 	ASSERT( this->_attributes.empty() );
 	// Get the meta attributes for the meta object
 	std::list<CoreMetaAttribute*> metaAttributeList;
-	ASSERT( metaObject->Attributes(metaAttributeList) == S_OK );
+	ASSERT( metaObject->GetAttributes(metaAttributeList) == S_OK );
 	std::list<CoreMetaAttribute*>::const_iterator attribIter = metaAttributeList.begin();
 	while( attribIter != metaAttributeList.end() )
 	{
 		ValueType valueType;
 		ASSERT( (*attribIter)->GetValueType(valueType) == S_OK );
 		AttrID_t attrID = ATTRID_NONE;
-		ASSERT( (*attribIter)->AttributeID(attrID) == S_OK );
+		ASSERT( (*attribIter)->GetAttributeID(attrID) == S_OK );
 		BinAttribute *binAttribute = BinAttribute::Create(this, valueType, attrID);
 		ASSERT( binAttribute != NULL );
 		this->_attributes.push_front(binAttribute);
@@ -327,8 +265,10 @@ void BinObject::CreateAttributes(CoreMetaObject *metaObject)
 
 bool BinObject::IsConnected(void) const
 {
-	// Special case - Root object (METAID_ROOT::OBJID_ROOT) is always connected
-	if( this->_idPair.metaID == METAID_ROOT && this->_idPair.objID == OBJID_ROOT ) return true;
+	// Special case - Root object (METAID_ROOT) is always connected
+	MetaID_t metaID;
+	ASSERT( this->_metaObject->GetMetaID(metaID) == S_OK );
+	if( metaID == METAID_ROOT ) return true;
 	// Go through all attributes
 	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
 	while( attrIter != this->_attributes.end() )
@@ -365,30 +305,29 @@ BinObject::~BinObject()
 }
 
 
-BinObject* BinObject::Read(std::fstream &stream, std::vector<std::pair<AttrID_t,MetaObjIDPair> > &pointers, const bool &v3)
+BinObject* BinObject::Read(char* &stream)
 {
-	ASSERT( stream.is_open() );
+	ASSERT( stream != NULL );
 	// First, read in the metaID
 	MetaID_t metaID;
 	_Read(stream, metaID);
 	// We are done if is METAID_NONE
 	if( metaID == METAID_NONE ) return NULL;
 	
-	// Second, read in the objID
-	ObjID_t objID;
-	_Read(stream, objID);
-	ASSERT( objID != OBJID_NONE );
+	// Second, read in the Uuid
+	Uuid uuid;
+	_Read(stream, uuid);
+	ASSERT( uuid != Uuid::Null() );
 	// Create the binObject
-	MetaObjIDPair idPair(metaID, objID);
-	BinObject* binObject = new BinObject(idPair);
+	BinObject* binObject = new BinObject(uuid);
 	ASSERT( binObject != NULL );
 	BinAttribute *binAttribute = NULL;
-	ValueType valueType(ValueType::None());
+	ValueType valueType;
 	// Continue to read in attributes until a NULL is returned
 	do
 	{
 		// Read in an attribute
-		binAttribute = BinAttribute::Read(binObject, stream, pointers, v3);
+		binAttribute = BinAttribute::Read(binObject, stream);
 		// Add the attribute to the object
 		if (binAttribute != NULL) binObject->_attributes.push_front(binAttribute);
 	} while (binAttribute != NULL);
@@ -397,14 +336,12 @@ BinObject* BinObject::Read(std::fstream &stream, std::vector<std::pair<AttrID_t,
 };
 
 
-BinObject* BinObject::Create(CoreMetaObject *metaObject, const ObjID_t &objID)
+BinObject* BinObject::Create(CoreMetaObject *metaObject, const Uuid &uuid)
 {
 	ASSERT( metaObject != NULL );
-	ASSERT( objID != OBJID_NONE );
-	// Create a new binObject (OBJID is determined by BinFile that should be calling this method)
-	MetaObjIDPair idPair(METAID_NONE, objID);
-	ASSERT( metaObject->MetaID(idPair.metaID) == S_OK );
-	BinObject* binObject = new BinObject(idPair);
+	ASSERT( uuid != Uuid::Null() );
+	// Create a new binObject (uuid is determined by BinFile, which should be calling this method)
+	BinObject* binObject = new BinObject(uuid);
 	ASSERT( binObject != NULL);
 	// Add the object's attributes (also marks the object as dirty)
 	binObject->CreateAttributes(metaObject);
@@ -412,37 +349,59 @@ BinObject* BinObject::Create(CoreMetaObject *metaObject, const ObjID_t &objID)
 }
 
 
-void BinObject::Write(std::fstream &stream, IndexHash &hash, const bool &v3)
+uint32_t BinObject::Size(void) const
 {
-	ASSERT( stream.is_open() );
-	// Is this object deleted (via implicit deferred deletion - i.e. no connected forward pointers)
-	if ( !this->IsConnected() ) return;
-
-	// Get the object's position and insert it into the hash
-	std::streampos pos = stream.tellp();
-	hash.insert( std::make_pair(this->_idPair, pos));
-	
-	// Write the metaID
-	_Write(stream, this->_idPair);
-	// Write all of the attributes
-	std::list<BinAttribute*>::iterator attrIter = this->_attributes.begin();
+	// Remember, objects have a MetaID, Uuid, and ValueType::None in addition to attributes
+	uint32_t size = sizeof(MetaID_t) + sizeof(Uuid) + sizeof(uint8_t);
+	// Go through all attributes
+	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
 	while( attrIter != this->_attributes.end() )
 	{
-		(*attrIter)->FileWrite(stream, v3);
+		// Sum the size (don't forget the ValueType and AttrID for each attribute)
+		size += (*attrIter)->Size() + sizeof(uint8_t) + sizeof(AttrID_t);
+		// Move on to the next attribute
+		++attrIter;
+	}
+	// Return the total size
+	return size;
+}
+
+
+uint32_t BinObject::Write(char* &stream) const
+{
+	ASSERT( stream != NULL );
+	// Is this object deleted (via implicit deferred deletion - i.e. no connected forward pointers)
+	if ( !this->IsConnected() ) return 0;
+	char* streamMark = stream;
+	// Write the metaID
+	MetaID_t metaID;
+	ASSERT( this->_metaObject->GetMetaID(metaID) == S_OK );
+	_Write(stream, metaID);
+	// Write the Uuid
+	_Write(stream, this->_uuid);
+	// Write all of the attributes
+	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
+	while( attrIter != this->_attributes.end() )
+	{
+		(*attrIter)->StreamWrite(stream);
 		// Move to the next attribute
 		++attrIter;
 	}
 	// Write the closing ValueType::None() to signal end of object
 	_Write(stream, ValueType::None());
+	uint32_t writeSize = (uint32_t)(stream - streamMark);
+	uint32_t sizeSize = this->Size();
+	ASSERT( writeSize == sizeSize );
 //	std::cout << "Write Object (" << pos << " @ " << stream.tellp() << ")-(" << this->_idPair.metaID << ", " << this->_idPair.objID << ").\n";
+	return writeSize;
 }
 
 
 // Find the desired attribute in this object
-BinAttribute* BinObject::Attribute(const AttrID_t &attrID)
+BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 {
 	std::list<BinAttribute*>::iterator binAttrIter = this->_attributes.begin();
-	while( binAttrIter != this->_attributes.end() && (*binAttrIter)->AttributeID() != attrID )
+	while( binAttrIter != this->_attributes.end() && (*binAttrIter)->GetAttributeID() != attrID )
 		++binAttrIter;
 	// Did we not find it return NULL
 	if( binAttrIter == this->_attributes.end() ) return NULL;
@@ -455,13 +414,13 @@ BinAttribute* BinObject::Attribute(const AttrID_t &attrID)
 
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
-	_filename(filename), _isV3(false), _metaProjectUuid(), _inputFile(), _scratchFile(), _metaIDHash(),
-	_inputHash(), _scratchHash(), _cacheHash(), _cacheQueue(), _maxCacheSize(COREBIN_DEFAULTCACHESIZE),
+	_filename(filename), _metaProjectUuid(), _inputFile(), _scratchFile(),
+	_indexHash(),_cacheQueue(), _maxCacheSize(COREBIN_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects()
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 }
 
 
@@ -472,9 +431,11 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	// Create a BinFile object with the given name and metaProject
 	BinFile *binFile = new BinFile(filename, coreMetaProject);
 	ASSERT( binFile != NULL );
-	binFile->OpenMetaProject();
+	// Open the metaProject and get the Uuid
+	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
 
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
+	binFile->_inputFile.clear();
 	binFile->_inputFile.open(binFile->_filename.c_str(), std::ios::in | std::ios::out | std::ios::binary | std::ios_base::trunc );
 	if( binFile->_inputFile.fail() || !binFile->_inputFile.is_open() ) {
 		delete binFile;
@@ -492,21 +453,14 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 		delete binFile;
 		return E_FILEOPEN;
 	}
-	
-//	// Initialize the metaObjID hash and make sure METAID_ROOT has OBJID_NONE
-//	MetaObjIDHashIterator metaHashIter = binFile->_metaIDHash.find(METAID_ROOT);
-//	ASSERT( metaHashIter != binFile->_metaIDHash.end() );
-//	metaHashIter->second = OBJID_NONE;
-	
+
 	// Now just create the actual METAID_ROOT object (using a nice transaction of course)
-	ObjID_t rootObjID = OBJID_NONE;
+	Uuid rootUuid;
 	ASSERT( binFile->BeginTransaction() == S_OK );
-	ASSERT( binFile->CreateObject(METAID_ROOT, rootObjID) == S_OK );
-	ASSERT( rootObjID == OBJID_ROOT );
+	ASSERT( binFile->CreateObject(METAID_ROOT, rootUuid) == S_OK );
 	ASSERT( binFile->CommitTransaction() == S_OK );
-	
 	// Return the new BinFile
-	binFile->_openedObject = binFile->_cacheHash.end();
+	binFile->_openedObject = binFile->_indexHash.end();
 	storage = binFile;
 	return S_OK;
 }
@@ -523,7 +477,8 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	// Create a BinFile object with the given name
 	BinFile *binFile = new BinFile(tmpName, coreMetaProject);
 	ASSERT( binFile != NULL );
-	binFile->OpenMetaProject();
+	// Open the metaProject and get the Uuid
+	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
 
 	// Load the project
 	Result_t result = binFile->Load();
@@ -545,10 +500,9 @@ const Result_t BinFile::Load(void)
 	ASSERT( !this->_inTransaction );
 	ASSERT( this->_filename != "" );
 	ASSERT( this->_metaProject != NULL );
-	// Make sure the caches and hashes are clear
+	// Make sure the cache and indexHash are clear
 	this->FlushCache();
-	this->_inputHash.clear();
-	this->_scratchHash.clear();
+	this->_indexHash.clear();
 
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
 	this->_inputFile.open(this->_filename.c_str(), std::ios::in | std::ios::binary);
@@ -559,321 +513,191 @@ const Result_t BinFile::Load(void)
 	_SplitPath(this->_filename, directory, filename);
 	scratchFileName = directory + std::string("~") + filename;
 	this->_scratchFile.open(scratchFileName.c_str(), std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios::trunc);
-	if( this->_scratchFile.fail() || !this->_scratchFile.is_open() ) {
+	if( this->_scratchFile.fail() || !this->_scratchFile.is_open() )
+	{
 		// Close the input file
 		this->_inputFile.close();
 		return E_FILEOPEN;
 	}
 
-	// Read the project Uuid from the file
+	// Read the project Uuid and index object count from the file
 	Uuid uuid;
-	_Read(this->_inputFile, uuid);
+	uint32_t objCount;
+	char buffer[sizeof(Uuid) + sizeof(uint32_t)], *stream = buffer;
+	this->_inputFile.read(buffer, sizeof(Uuid) + sizeof(uint32_t));
+	_Read(stream, uuid);
+	_Read(stream, objCount);
 	// Make sure the Uuid matches 
-	if( !(uuid == this->_metaProjectUuid) ) {
+	if( !(uuid == this->_metaProjectUuid) )
+	{
 		// Close the files
 		this->_inputFile.close();
 		this->_scratchFile.close();
 		return E_PROJECT_MISMATCH;
 	}
-
-	// Record where in the file we are
-	std::streampos pos = this->_inputFile.tellg();
-	// See if we have an index or not
-	MetaID_t metaID;
-	_Read(this->_inputFile, metaID);
-	// Return the stream to its previous spot
-	this->_inputFile.seekg(pos);
-
-	// Do we read index or build index
-	Result_t result;
-	if (metaID == DTID_INDEX) result = this->ReadIndex(this->_inputFile);
-	// Building index also modifies all objects with back pointers (they will be in scratch file or cache)
-	else result = this->BuildIndex();
+	// Read the object index
+	Result_t result = this->ReadIndex(this->_inputFile, objCount);
 	// Do we have a good index
-	if (result != S_OK){
+	if (result != S_OK)
+	{
 		// Close the files
 		this->_inputFile.close();
 		this->_scratchFile.close();
 		return result;
 	}
-//	std::cout << "Post-Load State (Cache: " << this->_cacheHash.size() << ", Input: " << this->_inputHash.size() << ", Scratch: " << this->_scratchHash.size() << ").\n";
 	// Open went well (make sure to clear the openedObject)
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 	return S_OK;
 }
 
 
-void BinFile::OpenMetaProject(void)
+const Result_t BinFile::ReadIndex(std::fstream &stream, const uint32_t &objCount)
 {
-	ASSERT( this->_metaProject != NULL );
-	// Get the metaProject uuid
-	ASSERT( this->_metaProject->GetUuid(this->_metaProjectUuid) == S_OK );
-	// Initialize the metaIDHash
-	this->_metaIDHash.clear();
-	// Get the coreMetaObjects from the project
-	std::list<CoreMetaObject*> metaObjectList;
-	ASSERT( this->_metaProject->Objects(metaObjectList) == S_OK );
-	std::list<CoreMetaObject*>::iterator listIter = metaObjectList.begin();
-	while( listIter != metaObjectList.end() )
-	{
-		ASSERT( *listIter != NULL );
-		MetaID_t metaID = METAID_NONE;
-		ASSERT( (*listIter)->MetaID(metaID) == S_OK );
-		ASSERT( metaID != METAID_NONE );
-		// Make sure this object is not already in the hash
-		ASSERT( this->_metaIDHash.find(metaID) == _metaIDHash.end() );
-		// Insert the metaObject ID into the hash
-		this->_metaIDHash.insert( std::make_pair(metaID, OBJID_NONE) );
-		++listIter;
-	}
-	//	std::cout << "MetaIDs from MetaProject: " << this->_metaIDHash.size() << std::endl;
-}
-
-
-const Result_t BinFile::ReadIndex(std::fstream &stream) {
 	ASSERT( stream.is_open() );
-	// Mark that we have an index
-	this->_isV3 = true;
-	// Read in the DTID_INDEX first
-	MetaID_t metaID;
-	_Read(stream, metaID);
-	ASSERT( metaID == DTID_INDEX );
-	// Now read how many objects are in the index
-	ObjID_t objCount;
-	MetaObjIDPair idPair;
-	uint64_t position;
-	std::streampos pos;
-	_Read(stream, objCount);
-	// Was the read good?
-	if( stream.fail() ) return E_FILEOPEN;
-	// Therefore, the index is how large...
-	uint32_t indexSizeB = objCount * (sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));
+	// Therefore, the index is how large (Uuid, Position, Size)
+	uint32_t indexSizeB = objCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::vector<char> indexBuffer;
 	indexBuffer.reserve(indexSizeB);
-	char *indexPointer = &indexBuffer[0];
-	stream.read(indexPointer, indexSizeB);
+	char *bufferPointer = &indexBuffer[0];
+	// Read the index from the file itself
+	stream.read(bufferPointer, indexSizeB);
 	// Read in each item for the index
-	for (ObjID_t i=0; i < objCount; ++i)
+	Uuid uuid;
+	IndexEntry entry = { NULL, IndexLocation::Input(), 0, 0};
+	for (uint32_t i=0; i < objCount; ++i)
 	{
-		// Copy the metaID into the pair
-		memcpy(&idPair.metaID, indexPointer, sizeof(MetaID_t));
-		indexPointer += sizeof(MetaID_t);
-		// Copy the objID into the pair
-		memcpy(&idPair.objID, indexPointer, sizeof(ObjID_t));
-		indexPointer += sizeof(ObjID_t);
-		// Lastly, copy the position into a temp value
-		memcpy(&position, indexPointer, sizeof(uint64_t));
-		indexPointer += sizeof(uint64_t);
-		pos = position;
-		// Make sure this is a valid MetaID
-		MetaObjIDHashIterator hashIter = this->_metaIDHash.find(idPair.metaID);
-		ASSERT( hashIter != this->_metaIDHash.end() );
-		// Get the largest objID for each metaID, used when we create new objects to ensure unique objID
-		if( hashIter->second < idPair.objID )
-			hashIter->second = idPair.objID;
+		// Copy the Uuid into the variable
+		_Read(bufferPointer, uuid);
+		// Copy the position into a temp value and then into the entry
+		_Read(bufferPointer, entry.position);
+		// Copy the size into the entry
+		_Read(bufferPointer, entry.sizeB);
 		// Place these into the indexHash
-		this->_inputHash.insert( std::make_pair(idPair, pos) );
+		this->_indexHash.insert( std::make_pair(uuid, entry) );
 	}
-//	std::cout << objCount << " objects read into inputHash index.\n";
+//	std::cout << objCount << " objects read into index.\n";
 	return S_OK;
 }
 
 
-const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &hash) {
-//	std::cout << "Writing Index @ " << stream.tellp() << ".\n";
-	// Write out DTID_INDEX first
-	_Write(stream, (MetaID_t)DTID_INDEX);
-	if( stream.bad() ) return E_FILEOPEN;
-	// Now write out how many objects are in the index
-	ObjID_t objCount = hash.size();
-//	std::cout << "Writing Index @ " << stream.tellp() << ".\n";
-	_Write(stream, objCount);
-	// Therefore, the index is how large...
-	uint32_t indexSizeB = objCount * (sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));
+const Result_t BinFile::WriteIndex(std::fstream &stream, const uint32_t &objCount) const
+{
+	ASSERT( stream.is_open() );
+	// Create a correctly sized output buffer
+	uint32_t indexSizeB = objCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::vector<char> indexBuffer;
 	indexBuffer.reserve(indexSizeB);
-	char *indexPointer = &indexBuffer[0];
+	char *bufferPointer = &indexBuffer[0];
 	// Write each item from the index into the buffer
-	IndexHash::const_iterator hashIter = hash.begin();
-	while( hashIter != hash.end() ) {
-		// Copy the metaID into the buffer
-		memcpy(indexPointer, &(hashIter->first.metaID), sizeof(MetaID_t));
-		indexPointer += sizeof(MetaID_t);
-		// Copy the objID into the buffer
-		memcpy(indexPointer, &(hashIter->first.objID), sizeof(ObjID_t));
-		indexPointer += sizeof(ObjID_t);
-		// Copy the position into the buffer
-		uint64_t position = hashIter->second;
-		memcpy(indexPointer, &position, sizeof(uint64_t));
-		indexPointer += sizeof(uint64_t);
+	IndexHash::const_iterator hashIter = this->_indexHash.begin();
+	while( hashIter != this->_indexHash.end() )
+	{
+		// Copy in the Uuid
+		_Write(bufferPointer, hashIter->first);
+		// Copy in the File Position
+		_Write(bufferPointer, hashIter->second.position);
+		// Copy in the Object Size
+		_Write(bufferPointer, hashIter->second.sizeB);
 		// Move on to the next hash element
 		++hashIter;
 	}
 	// Now write out the data to the file
-	stream.write(indexPointer, indexSizeB);
-//	std::cout << "\t" << hash.size() << " objects written into index. @ " << stream.tellp() << ".\n";
+	stream.write(&indexBuffer[0], indexSizeB);
 	return S_OK;
 }
 
 
-const Result_t BinFile::BuildIndex(void) {
-	// Mark that we don't have an index (really only is meaningful to collection attributes)
-	this->_isV3 = false;
-	// Read in all objects and build index as we go
-	BinObject* binObject = NULL;
-	std::streampos pos;
-	// Temporary hash for all objects (helps with building backPointer hash)
-	std::vector< std::pair<MetaObjIDPair,std::vector<std::pair<AttrID_t,MetaObjIDPair> > > > forwardPointers;
-	do
-	{
-		// Record where in the file we are
-		pos = this->_inputFile.tellg();
-		// Start each object with a clean set of pointers
-		std::vector<std::pair<AttrID_t,MetaObjIDPair> > pointers;
-		// Try to read the object
-		binObject = BinObject::Read(this->_inputFile, pointers, false);
-		//Is there an object?
-		if (binObject != NULL)
-		{
-			// Make sure its meta is correct
-			MetaID_t metaID = binObject->MetaID();
-			ObjID_t objID = binObject->ObjID();
-			// Make sure this is a valid MetaID
-			MetaObjIDHashIterator hashIter = this->_metaIDHash.find(metaID);
-			ASSERT( hashIter != this->_metaIDHash.end() );
-//			CoreMetaObject* metaObject;
-//			this->_metaProject->Object(metaID, metaObject);
-//			std::cout << "Object (" << metaObject->Name() << ", " << objID << ") @" << pos << std::endl;
-			// Get the largest objID for each metaID, used when we create new objects to ensure unique objID
-			if( hashIter->second < objID )
-				hashIter->second = objID;
-			// Insert the object into the inputHash
-			MetaObjIDPair idPair(metaID, objID);
-			std::pair<IndexHashIterator, bool> ret = this->_inputHash.insert( std::make_pair(idPair, pos) );
-			// Get forward pointers into the list
-			forwardPointers.push_back( std::make_pair(idPair, pointers) );
-			// Make sure insertion was successful
-			ASSERT( ret.second );
-			// Finally, delete the binObject
-			delete binObject;
-		}
-	// Read until no valid binObjects are left
-	} while (binObject != NULL );
+IndexHashIterator BinFile::FetchObject(const Uuid &uuid) {
+	std::cout << "Fetching (" << uuid << ").\n";
+	// Is the object in index
+	IndexHashIterator indexIter = this->_indexHash.find(uuid);
+	if (indexIter == this->_indexHash.end()) return indexIter;
 
-	// Use forward pointers to build back pointer collections on objects
-	MetaObjIDPair fromPair;
-	BinAttributeCollection *collection = NULL;
-	std::vector< std::pair<MetaObjIDPair,std::vector<std::pair<AttrID_t,MetaObjIDPair> > > >::iterator fpIter = forwardPointers.begin();
-	while (fpIter != forwardPointers.end())
-	{
-		// Get the fromPair
-		fromPair = fpIter->first;
-		std::vector<std::pair<AttrID_t,MetaObjIDPair> >::iterator toIter = fpIter->second.begin();
-		while (toIter != fpIter->second.end())
-		{
-			// Get the to object we are looking for
-			CacheHashIterator cacheIter = this->FetchObject(toIter->second);
-			ASSERT( cacheIter != this->_cacheHash.end() );
-			binObject = cacheIter->second.object;
-			ASSERT( binObject != NULL );
-			// Get the back pointer collection for the to object
-			collection = (BinAttributeCollection*)binObject->Attribute(toIter->first + ATTRID_COLLECTION);
-			ASSERT( collection != NULL );
-			// Add the back pointer to the collection
-			collection->Add(fromPair);
-			// Move to the next toPair
-			++toIter;
-		}
-		// Move to the next forward pointing object
-		++fpIter;
-	}
-	// All is good
-	return S_OK;
-}
-
-
-CacheHashIterator BinFile::FetchObject(const MetaObjIDPair &idPair) {
-//	std::cout << "Fetching (" << idPair.metaID << ", " << idPair.objID << ").\n";
-	// Is the object in cache
-	CacheHashIterator cacheIter = this->_cacheHash.find(idPair);
-	if (cacheIter != this->_cacheHash.end())
+	//Is the object in the cache
+	if (indexIter->second.location == IndexLocation::Cache())
 	{
 		// Remove the object from the cacheQueue
-		this->_cacheQueue.remove(cacheIter);
+		this->_cacheQueue.remove(uuid);
 		// Move the object to the top of the cacheQueue
-		this->_cacheQueue.push_front(cacheIter);
-//		std::cout << "Found Object (" << cacheIter->first.metaID << ", " << cacheIter->first.objID << ") in cache.\n";
-		return cacheIter;
+		this->_cacheQueue.push_front(uuid);
+		std::cout << "Found Object (" << indexIter->first << ") in cache.\n";
 	}
 	// Next, try the inputFile
-	IndexHashIterator hashIter = this->_inputHash.find(idPair);
-	if (hashIter != this->_inputHash.end())
+	else if (indexIter->second.location == IndexLocation::Input())
 	{
 		// Move the object from the scratch file to the cache
-		cacheIter = this->CacheObjectFromFile(this->_inputFile, this->_inputHash, hashIter, this->_isV3);		
-//		std::cout << "Found Object (" << cacheIter->first.metaID << ", " << cacheIter->first.objID << ") in file.\n";
-		return cacheIter;
+		this->CacheObjectFromFile(this->_inputFile, indexIter);
+		std::cout << "Found Object (" << indexIter->first << ") in file.\n";
 	}
 	// Lastly, is the object in the scratch file
-	hashIter = this->_scratchHash.find(idPair);
-	if (hashIter != this->_scratchHash.end())
+	else // if (indexIter->second.location == IndexLocation::Scratch())
 	{
 		// Move the object from the scratch file to the cache
-		cacheIter = this->CacheObjectFromFile(this->_scratchFile, this->_scratchHash, hashIter, true);
-//		std::cout << "Found Object (" << cacheIter->first.metaID << ", " << cacheIter->first.objID << ") in scratch.\n";
+		this->CacheObjectFromFile(this->_scratchFile, indexIter);
+		std::cout << "Found Object (" << indexIter->first << ") in scratch.\n";
 		// Since the scratchFile is only for dirty objects, must mark object as dirty
-		cacheIter->second.object->MarkDirty();
-		return cacheIter;
+		indexIter->second.object->MarkDirty();
 	}
-	// Never found...this is not good
-	return this->_cacheHash.end();
+	// Return the indexIter
+	return indexIter;
 }
 
 
-CacheHashIterator BinFile::CacheObjectFromFile(std::fstream &stream, IndexHash &hash, IndexHashIterator &iter, const bool &v3)
+void BinFile::CacheObjectFromFile(std::fstream &stream, IndexHashIterator &hashIter)
 {
 	ASSERT( stream.is_open() );
 	// Move the read pointer to the appropraite place
-	stream.seekg(iter->second);
+	stream.seekg(hashIter->second.position);
 	// Try to read the object
-	std::vector<std::pair<AttrID_t,MetaObjIDPair> > pointers;
-	BinObject* binObject = BinObject::Read(stream, pointers, v3);
+	std::vector<char> buffer;
+	buffer.reserve(hashIter->second.sizeB);
+	char *bufferPointer = &buffer[0];
+	stream.read(bufferPointer, hashIter->second.sizeB);
+	BinObject* binObject = BinObject::Read(bufferPointer);
 	ASSERT( binObject != NULL );
 	// Make sure there is space in the cache
 	this->CheckCacheSize();
 	// Move the object to the cache and to the front of the cacheQueue
-	CacheEntry entry = { binObject, iter->second };
-	std::pair<CacheHashIterator,bool> insertPair = this->_cacheHash.insert( std::make_pair(iter->first,entry) );
-	ASSERT( insertPair.second );
-	this->_cacheQueue.push_front(insertPair.first);
-	// Remove the object from the file's hash
-	hash.erase(iter);
-	// Return the newly inserted cache iterator
-	return insertPair.first;
+	this->_cacheQueue.push_front(hashIter->first);
 }
 
 
 void BinFile::CheckCacheSize(void)
 {
 	// If cache size (+1 object) will be too large, get last used object
-	if (this->_cacheHash.size() >= this->_maxCacheSize) {
-		// TODO: Need to implement the cacheQueue and pushing objects out of cache
-		ASSERT(false);
-		CacheHashIterator cacheIter  = this->_cacheQueue.back();
+	while (this->_cacheQueue.size() >= this->_maxCacheSize)
+	{
+		// Get the object info from the cache and index
+		Uuid uuid  = this->_cacheQueue.back();
+		ASSERT( uuid != Uuid::Null() );
+		IndexHashIterator hashIter = this->_indexHash.find(uuid);
+		ASSERT( hashIter != this->_indexHash.end() );
 		// If the object is not dirty
-		if (!cacheIter->second.object->IsDirty()) {
-			// Place the object into inputHash (no need to write anything)
-			// ...
+		if (!hashIter->second.object->IsDirty())
+		{
+			// Place the object back into _inputFile (no need to write anything)
+			hashIter->second.location = IndexLocation::Input();
 		}
 		// If the object is dirty, see where the end of scratchFile is
-		else {
+		else
+		{
+			// Set the location to _scratchFile (need to write it out)
+			hashIter->second.location = IndexLocation::Scratch();
+			// Get the size of the binObject
+			hashIter->second.sizeB = hashIter->second.object->Size();
+			// Get the position of where the write it going to happen
+			hashIter->second.position = (uint64_t)this->_scratchFile.tellp();
 			// Now, write to the end of scratchFile
-			// ...
-			// Next, add object into scratchHash
-			// ...
+			std::vector<char> buffer;
+			buffer.reserve(hashIter->second.sizeB);
+			char *bufferPointer = &buffer[0];
+			hashIter->second.object->Write(bufferPointer);
+			this->_scratchFile.write(bufferPointer, hashIter->second.sizeB);
 		}
-		// Finally, remove that object from the cacheHash and cacheQueue
-		this->_cacheHash.erase(cacheIter);
+		// Delete the object now (not needed any longer)
+		ASSERT( hashIter->second.object != NULL );
+		delete hashIter->second.object;		
+		// Finally, remove that object from the cacheQueue
 		this->_cacheQueue.pop_back();
 	}
 }
@@ -881,24 +705,23 @@ void BinFile::CheckCacheSize(void)
 
 void BinFile::FlushCache(void)
 {
-	// Loop through each cache item
-	CacheHashIterator cacheIter = this->_cacheHash.begin();
-	while (cacheIter != this->_cacheHash.end())
+	// Loop through each index item
+	IndexHashIterator indexIter = this->_indexHash.begin();
+	while (indexIter != this->_indexHash.end())
 	{
-		// Delete the object
-		if (cacheIter->second.object != NULL)
-			delete cacheIter->second.object;
-		// Move on to the next cacheEntry
-		++cacheIter;
+		// Delete the object if it is in Cache
+		if (indexIter->second.location == IndexLocation::Cache())
+			delete indexIter->second.object;
+		// Move on to the next indexEntry
+		++indexIter;
 	}
 	// Make sure to clear the cache
-	this->_cacheHash.clear();
 	this->_cacheQueue.clear();
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 }
 
 
-// --------------------------- Private BinFile Methods ---------------------------
+// --------------------------- Public BinFile Methods ---------------------------
 
 
 BinFile::~BinFile()
@@ -921,7 +744,11 @@ BinFile::~BinFile()
 
 const Result_t BinFile::MaxMemoryFootprint(const uint64_t &size) throw()
 {
-	// No implementation as of now
+	// Set the max cache size (in number of objects in cache)
+	this->_maxCacheSize = size;
+	// See if we need to reduce the number of objects in the cache
+	this->CheckCacheSize();
+	// We are done now
 	return S_OK;
 }
 
@@ -933,14 +760,14 @@ const Result_t BinFile::MetaObject(CoreMetaObject* &coreMetaObject) const throw(
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	// Stupid messing with CONST workaround
-	CacheHash::const_iterator iter = this->_cacheHash.end();
-	CacheHash::const_iterator iter2 = this->_openedObject;
+	IndexHash::const_iterator iter = this->_indexHash.end();
+	IndexHash::const_iterator iter2 = this->_openedObject;
 	// If no currently opened object, return NULL
 	if (iter == iter2) return E_INVALID_USAGE;
 	// Get the metaObject from the associated metaProject
 	BinObject* binObject = this->_openedObject->second.object;
 	ASSERT( binObject != NULL );
-	this->_metaProject->Object(binObject->MetaID(), coreMetaObject);
+	coreMetaObject = binObject->GetMetaObject();
 	ASSERT( coreMetaObject != NULL );
 	return S_OK;
 }
@@ -950,43 +777,35 @@ const Result_t BinFile::MetaID(MetaID_t &metaID) const throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	// Stupid messing with CONST workaround
-	CacheHash::const_iterator iter = this->_cacheHash.end();
-	CacheHash::const_iterator iter2 = this->_openedObject;
+	IndexHash::const_iterator iter = this->_indexHash.end();
+	IndexHash::const_iterator iter2 = this->_openedObject;
 	// If no currently opened object, return METAID_NONE
 	if (iter == iter2) return E_INVALID_USAGE;
-	metaID = this->_openedObject->second.object->MetaID();
+	metaID = this->_openedObject->second.object->GetMetaID();
 	ASSERT( metaID != METAID_NONE );
 	return S_OK;
 }
 
 
-
-const Result_t BinFile::ObjectVector(std::vector<MetaObjIDPair> &objectVector) throw()
+const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const throw()
 {
 	// Clear the incoming vector
 	objectVector.clear();
-	// Load it with the input hash
-	IndexHash::iterator indexIter = this->_inputHash.begin();
-	while(indexIter != this->_inputHash.end())
+	// Load it with the indexHash
+	IndexHash::const_iterator indexIter = this->_indexHash.begin();
+	while(indexIter != this->_indexHash.end())
 	{
 		objectVector.push_back( indexIter->first );
 		++indexIter;
 	}
-	// Load it with the scratch hash
-	indexIter = this->_scratchHash.begin();
-	while(indexIter != this->_scratchHash.end())
-	{
-		objectVector.push_back( indexIter->first );
-		++indexIter;
-	}
-	// Load it with the cache hash
-	CacheHash::iterator cacheIter = this->_cacheHash.begin();
-	while(cacheIter != this->_cacheHash.end())
-	{
-		objectVector.push_back( cacheIter->first );
-		++cacheIter;
-	}
-	// No implementation as of now
+	// All is good
+	return S_OK;
+}
+
+
+const Result_t BinFile::RootUuid(Uuid &uuid) const throw()
+{
+	uuid = Uuid::Null();
 	return S_OK;
 }
 
@@ -998,93 +817,65 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 	ASSERT( this->_inputFile.is_open() );
 	ASSERT( this->_scratchFile.is_open() );
 	// Passing an empty filename implies saving the file with the current filename
-	std::string saveAs;
+	std::string saveAs, directory;
 	if (filename == "") saveAs = this->_filename;
 	else saveAs = filename;
 	// Are we overwriting the origial file?
 	bool overwrite = (this->_filename == saveAs);
 	// Open the file for writing
-	// TODO: Need to properly handle filenames with full path
-	std::string tmpFilename = "~_" + saveAs;
+	_SplitPath(saveAs, directory, saveAs);
+	std::string tmpFilename = directory + "~_" + saveAs;
 	std::fstream outputFile;
-	outputFile.open(tmpFilename.c_str(), std::ios::out | std::ios::binary );
+	outputFile.open(tmpFilename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 	ASSERT( !outputFile.fail() );
 	ASSERT( outputFile.is_open() );
-
 	// Save implies commiting any open transaction
 	if (this->_inTransaction) this->CommitTransaction();
-	
-//	std::cout << "Pre-Save State (Cache: " << this->_cacheHash.size() << ", Input: " << this->_inputHash.size() << ", Scratch: " << this->_scratchHash.size() << ").\n";
-	// Write out the metaProjectID
-	_Write(outputFile, this->_metaProjectUuid);
+
+	// Write out the metaProjectID + number of objects in the index
+	std::vector<char> buffer;
+	buffer.reserve(sizeof(Uuid) + sizeof(uint32_t));
+	char *bufferPointer = &buffer[0];
+	uint32_t objectCount = this->_indexHash.size();
+	_Write(bufferPointer, this->_metaProjectUuid);
+	_Write(bufferPointer, objectCount);
+	outputFile.write(&buffer[0], sizeof(Uuid) + sizeof(uint32_t));
 	// Move streampos to end of what will be the index
-	int indexSizeB = this->_inputHash.size() + this->_scratchHash.size() + this->_cacheHash.size();
-	indexSizeB = indexSizeB * 14;//(sizeof(MetaID_t) + sizeof(ObjID_t) + sizeof(uint64_t));	// Index entry size = 14B (MetaID + ObjID + 64-bit pos)
-	indexSizeB = indexSizeB + 6;//sizeof(DTID_INDEX) + sizeof(ObjID_t);						// Index contains header flag and index count
+	int indexSizeB = sizeof(uint32_t) + objectCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::streampos startOfIndex = outputFile.tellp();
 	for (int i=0; i<indexSizeB; ++i) outputFile.put(0);
 
-	BinObject* binObject = NULL;
-	IndexHash index;
-	// Write out all of the objects - start with cache
-	CacheHashIterator cacheIter = this->_cacheHash.begin();
-	while ( cacheIter != this->_cacheHash.end())
+	// Write out all of the objects
+	IndexHashIterator hashIter = this->_indexHash.begin();
+	while (hashIter != this->_indexHash.end())
 	{
-		// Write the object and its attributes
-		cacheIter->second.object->Write(outputFile, index, v3);
-		// Move on to the next cache entry
-		++cacheIter;
+		ASSERT( hashIter->second.object != NULL );
+		// Fetch the object into memory
+		this->FetchObject(hashIter->first);
+		// Get the current outputFile position and object size (needed for correct index)
+		hashIter->second.position = outputFile.tellp();
+		hashIter->second.sizeB = hashIter->second.object->Size();
+		// Size the buffer and set the bufferPointer
+		buffer.reserve(hashIter->second.sizeB);
+		bufferPointer = &buffer[0];
+		// Write the object to the buffer
+		hashIter->second.object->Write(bufferPointer);
+		// Write the buffer to the stream
+		outputFile.write(&buffer[0], hashIter->second.sizeB);
+		// Move on to the next item in the hash
+		++hashIter;
 	}
-	this->FlushCache();
-	// Next write out inputFile objects
-	IndexHashIterator indexIter = this->_inputHash.begin();
-	while ( !this->_inputHash.empty())
-	{
-		MetaObjIDPair idPair = (*indexIter).first;
-		ASSERT( idPair.metaID != METAID_NONE );
-		ASSERT( idPair.objID != OBJID_NONE );
-		// Fetch the object
-		cacheIter = this->FetchObject(idPair);
-		ASSERT( cacheIter != this->_cacheHash.end() );
-		binObject = cacheIter->second.object;
-		ASSERT( binObject != NULL );
-		// Write the object and its attributes
-		binObject->Write(outputFile, index, v3);
-		// Move on to next object
-		indexIter = this->_inputHash.begin();
-	}
-	this->FlushCache();
-	// Finally, write out the scratchFile objects
-	indexIter = this->_scratchHash.begin();
-	while ( !this->_scratchHash.empty())
-	{
-		MetaObjIDPair idPair = (*indexIter).first;
-		ASSERT( idPair.metaID != METAID_NONE );
-		ASSERT( idPair.objID != OBJID_NONE );
-		// Fetch the object
-		cacheIter = this->FetchObject(idPair);
-		ASSERT( cacheIter != this->_cacheHash.end() );
-		binObject = cacheIter->second.object;
-		ASSERT( binObject != NULL );
-		// Write the object and its attributes
-		binObject->Write(outputFile, index, v3);
-		// Move on to next object
-		indexIter = this->_scratchHash.begin();
-	}
-	// Close the file with a METAID_NONE
-	_Write(outputFile, (MetaID_t)METAID_NONE);
 
 	// Now that we know where everything will be, write out the index
 	outputFile.seekp(startOfIndex);
-	this->WriteIndex(outputFile, index);
+	this->WriteIndex(outputFile, objectCount);
 	// Close the file and we are done with it
 	outputFile.close();
 	ASSERT( !outputFile.fail() );	//E_FILEOPEN;
-	
+
 	// Close and delete scratch file
 	this->_scratchFile.close();
 	ASSERT( !this->_scratchFile.fail() );	//E_FILEOPEN
-	// TODO: Need to properly handle filenames with full path
 	std::string scratchFileName = "~" + this->_filename;
 	remove(scratchFileName.c_str());
 
@@ -1099,7 +890,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 	// Rename tmp file to desired name
 	rename(tmpFilename.c_str(), saveAs.c_str());
 	// Set the new filename and load (what was outputFile)
-	this->_filename = saveAs;
+	this->_filename = directory + saveAs;
 	// Now load the newly saved file and keep on truckin'
 	this->Load();
 	return S_OK;
@@ -1114,7 +905,7 @@ const Result_t BinFile::BeginTransaction(void) throw()
 	ASSERT( this->_createdObjects.empty() );
 	ASSERT( this->_changedObjects.empty() );
 	// Get ready for new transaction
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 	this->_inTransaction = true;
 	return S_OK;
 }
@@ -1131,20 +922,21 @@ const Result_t BinFile::CommitTransaction(void) throw()
 		// Ok, so we are doing something, mark the binFile as dirty
 		this->MarkDirty();
 		// Created objects - nothing to be done here
-		this->_createdObjects.clear();	
-		
+		this->_createdObjects.clear();
+
 		// Changed objects - discard pre/post - otherwise we are good
 		ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
 		while (changeIter != this->_changedObjects.end())
 		{
 			// Simply delete the AttributeChange
-			if (*changeIter != NULL) delete *changeIter;
+			ASSERT( *changeIter != NULL );
+			delete *changeIter;
 			++changeIter;
 		}
 		this->_changedObjects.clear();
-		
+
 		// Must actually delete all objects in deletedObjects list
-		std::list< std::pair<MetaObjIDPair,CacheEntry> >::iterator deletedIter = this->_deletedObjects.begin();
+		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 		while ( deletedIter != this->_deletedObjects.end() )
 		{
 			// Delete the object itself
@@ -1157,7 +949,7 @@ const Result_t BinFile::CommitTransaction(void) throw()
 		this->_deletedObjects.clear();
 	}
 	// We are good
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 	this->_inTransaction = false;
 	return S_OK;
 }
@@ -1173,13 +965,13 @@ const Result_t BinFile::AbortTransaction(void) throw()
 	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedObjects.empty() )
 	{
 		// Must move all deletedObjects back to cache
-		std::list< std::pair<MetaObjIDPair,CacheEntry> >::iterator deletedIter = this->_deletedObjects.begin();
+		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 		while (deletedIter != this->_deletedObjects.end())
 		{
 			// Insert into the cache and queue
-			std::pair<CacheHashIterator,bool> insertReturn = this->_cacheHash.insert( *deletedIter );
+			std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( *deletedIter );
 			ASSERT( insertReturn.second );
-			this->_cacheQueue.push_front(insertReturn.first);
+			this->_cacheQueue.push_front(deletedIter->first);
 			// Move to the next deleted object in the list
 			++deletedIter;
 		}
@@ -1191,11 +983,11 @@ const Result_t BinFile::AbortTransaction(void) throw()
 		while (changeIter != this->_changedObjects.rend())
 		{
 			// Get the attribute change record
-			CacheHashIterator binIter = this->FetchObject((*changeIter)->idPair);
-			ASSERT( binIter != this->_cacheHash.end() );
+			IndexHashIterator binIter = this->FetchObject((*changeIter)->uuid);
+			ASSERT( binIter != this->_indexHash.end() );
 			BinObject* binObject = binIter->second.object;
 			ASSERT( binObject != NULL );
-			BinAttribute* binAttribute = binObject->Attribute((*changeIter)->attrID);
+			BinAttribute* binAttribute = binObject->GetAttribute((*changeIter)->attrID);
 			ASSERT( binAttribute != NULL );
 			// Is the changed attribute a LONG
 			if (binAttribute->GetValueType() == ValueType::Long()) {
@@ -1221,11 +1013,11 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->value);
 			}
-			// Is the changed attribute a BINARY
-			else if (binAttribute->GetValueType() == ValueType::Binary()) {
-				BinAttributeBinary *attribute = (BinAttributeBinary*)binAttribute;
+			// Is the changed attribute a LONGPOINTER
+			else if (binAttribute->GetValueType() == ValueType::LongPointer()) {
+				BinAttributeLongPointer *attribute = (BinAttributeLongPointer*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange< std::vector<unsigned char> >* changeRecord = (AttributeChange< std::vector<unsigned char> >*)*changeIter;
+				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->value);
 			}
@@ -1233,7 +1025,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			else if (binAttribute->GetValueType() == ValueType::Collection()) {
 				BinAttributeCollection *attribute = (BinAttributeCollection*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange< std::list<MetaObjIDPair> >* changeRecord = (AttributeChange< std::list<MetaObjIDPair> >*)*changeIter;
+				AttributeChange< std::list<Uuid> >* changeRecord = (AttributeChange< std::list<Uuid> >*)*changeIter;
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->value);
 			}
@@ -1241,7 +1033,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			else if (binAttribute->GetValueType() == ValueType::Pointer()) {
 				BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange<MetaObjIDPair>* changeRecord = (AttributeChange<MetaObjIDPair>*)*changeIter;
+				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->value);
 			}
@@ -1253,19 +1045,19 @@ const Result_t BinFile::AbortTransaction(void) throw()
 		this->_changedObjects.clear();
 		
 		// Delete all Created objects
-		std::list<MetaObjIDPair>::iterator createdIter = this->_createdObjects.begin();
+		std::list<Uuid>::iterator createdIter = this->_createdObjects.begin();
 		while( createdIter != this->_createdObjects.end() )
 		{
 			// Fetch the created object
-			CacheHashIterator cacheIter = this->FetchObject(*createdIter);
-			ASSERT( cacheIter != this->_cacheHash.end() );
+			IndexHashIterator indexIter = this->FetchObject(*createdIter);
+			ASSERT( indexIter != this->_indexHash.end() );
 			// Delete the object itself
-			BinObject* binObject = cacheIter->second.object;
+			BinObject* binObject = indexIter->second.object;
 			ASSERT( binObject != NULL );
 			delete binObject;
 			// Remove object info from cacheHash and cacheQueue
-			this->_cacheHash.erase(cacheIter);
-			this->_cacheQueue.remove(cacheIter);
+			this->_indexHash.erase(indexIter);
+			this->_cacheQueue.remove(*createdIter);
 			// Move on to the next created object
 			++createdIter;
 		}
@@ -1273,53 +1065,51 @@ const Result_t BinFile::AbortTransaction(void) throw()
 		this->_createdObjects.clear();
 	}
 	// We were successful
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 	this->_inTransaction = false;
 	return S_OK;
 }
 
 
-const Result_t BinFile::OpenObject(const MetaObjIDPair &idPair) throw()
+const Result_t BinFile::OpenObject(const Uuid &uuid) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( idPair.metaID == METAID_NONE || idPair.objID == OBJID_NONE ) return E_INVALID_USAGE;
+	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	// If there is already an open object, close it
-	if( this->_openedObject != this->_cacheHash.end() )
+	if( this->_openedObject != this->_indexHash.end() )
 		this->CloseObject();
 	// Fetch the object - make sure we got it
-	this->_openedObject = this->FetchObject(idPair);
-	if( this->_openedObject == this->_cacheHash.end() ) return E_NOTFOUND;
+	this->_openedObject = this->FetchObject(uuid);
+	if( this->_openedObject == this->_indexHash.end() ) return E_NOTFOUND;
 	return S_OK;
 }
  
  
-const Result_t BinFile::CreateObject(const MetaID_t &metaID, ObjID_t &newObjID) throw()
+const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) throw()
 {
 	if( metaID == METAID_NONE ) return E_INVALID_USAGE;
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	// Close any open object
 	ASSERT( this->CloseObject() == S_OK );
-	// Lookup the metaID in the metaProject (via metaIDHash) to make sure it is valid
+	// Lookup the metaID in the metaProject to make sure it is valid
 	CoreMetaObject* metaObject = NULL;
-	Result_t result = this->_metaProject->Object(metaID, metaObject);
+	Result_t result = this->_metaProject->GetObject(metaID, metaObject);
 	if ( result != S_OK || metaObject == NULL ) return E_METAID;
-	MetaObjIDHashIterator metaObjIDIter = this->_metaIDHash.find(metaID);
-	ASSERT( metaObjIDIter != this->_metaIDHash.end() );
-	// Make sure to increment the objID in the metaIDHash (ensures it stays unique)
-	MetaObjIDPair idPair(metaObjIDIter->first, ++(metaObjIDIter->second));
-	BinObject* binObject = BinObject::Create(metaObject, idPair.objID);
+	// Make sure to use a new Uuid to make sure it is unique
+	Uuid uuid;
+	BinObject* binObject = BinObject::Create(metaObject, uuid);
 	ASSERT( binObject != NULL );
 
-	// Put the object into the cache and queue
-	CacheEntry cacheEntry = { binObject, 0 };
-	std::pair<CacheHashIterator,bool> insertReturn = this->_cacheHash.insert( std::make_pair(idPair, cacheEntry) );
+	// Put the object into the index and queue
+	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, binObject->Size() };
+	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
-	this->_cacheQueue.push_front(insertReturn.first);
+	this->_cacheQueue.push_front(uuid);
 	// Put the object into the createdObjects list
-	this->_createdObjects.push_front(idPair);
+	this->_createdObjects.push_front(uuid);
 	this->_openedObject = insertReturn.first;
-	// Set the new objID
-	newObjID = idPair.objID;
+	// Set the new UUID
+	newUuid = uuid;
 	return S_OK;
 }
  
@@ -1328,7 +1118,7 @@ const Result_t BinFile::CloseObject(void) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	// No longer need the object
-	this->_openedObject = this->_cacheHash.end();
+	this->_openedObject = this->_indexHash.end();
 	return S_OK;
 }
 
@@ -1336,16 +1126,16 @@ const Result_t BinFile::CloseObject(void) throw()
 const Result_t BinFile::DeleteObject(void) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
 
 	// Clean up dangling pointers to/from binObject
 	BinObject *object = this->_openedObject->second.object;
 	ASSERT( object != NULL );
 	CoreMetaObject *metaObject = NULL;
-	ASSERT( this->_metaProject->Object( object->MetaID(), metaObject ) == S_OK );
+	ASSERT( this->_metaProject->GetObject(object->GetMetaID(), metaObject) == S_OK );
 	ASSERT( metaObject != NULL );
 	std::list<CoreMetaAttribute*> metaAttributes;
-	ASSERT( metaObject->Attributes(metaAttributes) == S_OK );
+	ASSERT( metaObject->GetAttributes(metaAttributes) == S_OK );
 	std::list<CoreMetaAttribute*>::const_iterator attributeIter = metaAttributes.begin();
 	while (attributeIter != metaAttributes.end())
 	{
@@ -1354,22 +1144,21 @@ const Result_t BinFile::DeleteObject(void) throw()
 		ASSERT( (*attributeIter)->GetValueType(valueType) == S_OK );
 		if (valueType == ValueType::Pointer())
 		{
-			// Just set this attribute to METAID_NONE::OBJID_NONE
-			MetaObjIDPair idPair(METAID_NONE, OBJID_NONE), tmpPair;
+			// Just set this attribute to Uuid::Null()
+			Uuid newUuid = Uuid::Null();
 			AttrID_t attrID;
-			ASSERT( (*attributeIter)->AttributeID(attrID) == S_OK );
-			this->GetAttributeValue(attrID, tmpPair);
-			ASSERT( this->SetAttributeValue(attrID, idPair) == S_OK );
+			ASSERT( (*attributeIter)->GetAttributeID(attrID) == S_OK );
+			ASSERT( this->SetAttributeValue(attrID, newUuid) == S_OK );
 		}
 		// Move on to the next attribute
 		++attributeIter;
 	}
 
-	// Capture the object's idPair, pos, and pointer
+	// Capture the object's Uuid, pos, and pointer
 	this->_deletedObjects.push_front( std::make_pair(this->_openedObject->first, this->_openedObject->second) );
-	// Remove object from cacheQueue and cacheHash
-	this->_cacheQueue.remove(this->_openedObject);
-	this->_cacheHash.erase(this->_openedObject);
+	// Remove object from cacheQueue and indexHash
+	this->_cacheQueue.remove(this->_openedObject->first);
+	this->_indexHash.erase(this->_openedObject->first);
 	// "Close" the object
 	return this->CloseObject();
 }
@@ -1378,8 +1167,8 @@ const Result_t BinFile::DeleteObject(void) throw()
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Long() ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
@@ -1391,8 +1180,8 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, int32_t &value
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, double &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Real() ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
@@ -1404,8 +1193,8 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, double &value)
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::string &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::String() ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
@@ -1414,24 +1203,11 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::string &v
 }
 
 
-const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::vector<unsigned char> &value) throw()
+const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Binary() ) return E_ATTVALTYPE;
-	// Now return the actual value of the object
-	value = ((BinAttributeBinary*)binAttribute)->Get();
-	return S_OK;
-}
-
-
-const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::list<MetaObjIDPair> &value) throw()
-{
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Collection() ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
@@ -1440,15 +1216,19 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::list<Meta
 }
 
 
-const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, MetaObjIDPair &value) throw()
+const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Pointer() ) return E_ATTVALTYPE;
-	// Now return the actual value of the object
-	value = ((BinAttributePointer*)binAttribute)->Get();
+	// Make sure we are looking at either a long pointer or a regular pointer
+	if( binAttribute->GetValueType() == ValueType::Pointer() )
+		value = ((BinAttributePointer*)binAttribute)->Get();
+	else if ( binAttribute->GetValueType() == ValueType::LongPointer())
+		value = ((BinAttributeLongPointer*)binAttribute)->Get();
+	else return E_ATTVALTYPE;
+	// Must have found the right stuff
 	return S_OK;
 }
 
@@ -1456,8 +1236,8 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, MetaObjIDPair 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Long() ) return E_ATTVALTYPE;
 	BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
@@ -1466,7 +1246,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t 
 	// Must save old value
 	AttributeChange<int32_t>* changeRecord = new AttributeChange<int32_t>();
 	ASSERT( changeRecord != NULL );
-	changeRecord->idPair = this->_openedObject->first;
+	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
 	changeRecord->value = attribute->Get();
 	// Add the change record into the changedObjects list
@@ -1480,8 +1260,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Real() ) return E_ATTVALTYPE;
 	BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
@@ -1490,7 +1270,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &
 	// Must save old value
 	AttributeChange<double>* changeRecord = new AttributeChange<double>();
 	ASSERT( changeRecord != NULL );
-	changeRecord->idPair = this->_openedObject->first;
+	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
 	changeRecord->value = attribute->Get();
 	// Add the change record into the changedObjects list
@@ -1504,8 +1284,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::String() ) return E_ATTVALTYPE;
 	BinAttributeString *attribute = (BinAttributeString*)binAttribute;
@@ -1514,7 +1294,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	// Must save old value
 	AttributeChange<std::string>* changeRecord = new AttributeChange<std::string>();
 	ASSERT( changeRecord != NULL );
-	changeRecord->idPair = this->_openedObject->first;
+	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
 	changeRecord->value = attribute->Get();
 	// Add the change record into the changedObjects list
@@ -1525,80 +1305,69 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 }
 
 
-const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::vector<unsigned char> &value) throw()
+const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Binary() ) return E_ATTVALTYPE;
-	BinAttributeBinary *attribute = (BinAttributeBinary*)binAttribute;
-	// Quick check to see if there is a no-change requested
-	if (attribute->Get() == value) return S_OK;
-	// Must save old value
-	AttributeChange< std::vector<unsigned char> >* changeRecord = new AttributeChange< std::vector<unsigned char> >();
-	ASSERT( changeRecord != NULL );
-	changeRecord->idPair = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->value = attribute->Get();
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
-	// Update the attribute value
-	attribute->Set(value);
-	return S_OK;
-}
-
-
-const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const MetaObjIDPair &value) throw()
-{
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_cacheHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->Attribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Pointer() ) return E_ATTVALTYPE;
+	if( binAttribute->GetValueType() != ValueType::Pointer() &&
+	    binAttribute->GetValueType() != ValueType::LongPointer() ) return E_ATTVALTYPE;
 	BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 	// Quick check to see if there is a no-change requested
 	if (attribute->Get() == value) return S_OK;
-	// Make sure value is valid (either a valid object or NONE pair - and pointed to has good backpointer collection)
-	BinAttributeCollection *newCollection = NULL;
-	if (value.metaID != METAID_NONE || value.objID != OBJID_NONE)
+	// Is this a LongPointer
+	if (binAttribute->GetValueType() == ValueType::LongPointer())
 	{
-		// Can we fetch this object - if not it is an error
-		CacheHashIterator newObjecterIterator = this->FetchObject(value);
-		if (newObjecterIterator == this->_cacheHash.end()) return E_NOTFOUND;
-		// Does the object have a correct backpointer collection
-		BinObject* binObject = newObjecterIterator->second.object;
-		ASSERT( binObject != NULL );
-		newCollection = (BinAttributeCollection*)binObject->Attribute(attrID + ATTRID_COLLECTION);
-		// Make sure the backpointer collection exists
-		if (newCollection == NULL) return E_VALTYPE;
+		// Must save old value
+		AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+		changeRecord->value = attribute->Get();
+		// Add the change record into the changedObjects list
+		this->_changedObjects.push_back(changeRecord);
+		// Update the attribute value
+		attribute->Set(value);
 	}
-
-	// Must save old value
-	AttributeChange<MetaObjIDPair>* changeRecord = new AttributeChange<MetaObjIDPair>();
-	ASSERT( changeRecord != NULL );
-	changeRecord->idPair = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->value = attribute->Get();
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
-
-	// Update the current pointed-to object's backpointer collection (if idPair is valid)
-	if (changeRecord->value.metaID != METAID_NONE && changeRecord->value.objID != OBJID_NONE)
+	else if (binAttribute->GetValueType() == ValueType::Pointer())
 	{
-		BinObject *binObject = this->FetchObject(changeRecord->value)->second.object;
-		ASSERT( binObject != NULL );
-		BinAttributeCollection *collection = (BinAttributeCollection*)binObject->Attribute(attrID + ATTRID_COLLECTION);
-		ASSERT( collection != NULL );	//	<-- Means pointed-to-object doesn't have backpointer collection for this type of pointer
-		collection->Remove(this->_openedObject->first);
+		// Make sure value is valid (either a valid object or NONE pair - and pointed to has good backpointer collection)
+		BinAttributeCollection *newCollection = NULL;
+		if (value != Uuid::Null())
+		{
+			// Can we fetch this object - if not it is an error
+			IndexHashIterator newObjecterIterator = this->FetchObject(value);
+			if (newObjecterIterator == this->_indexHash.end()) return E_NOTFOUND;
+			// Does the object have a correct backpointer collection
+			BinObject* binObject = newObjecterIterator->second.object;
+			ASSERT( binObject != NULL );
+			newCollection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
+			// Make sure the backpointer collection exists
+			if (newCollection == NULL) return E_VALTYPE;
+		}
+		// Must save old value
+		AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+		changeRecord->value = attribute->Get();
+		// Add the change record into the changedObjects list
+		this->_changedObjects.push_back(changeRecord);
+		// Update the current pointed-to object's backpointer collection (if idPair is valid)
+		if (changeRecord->value != Uuid::Null())
+		{
+			BinObject *binObject = this->FetchObject(changeRecord->value)->second.object;
+			ASSERT( binObject != NULL );
+			BinAttributeCollection *collection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
+			ASSERT( collection != NULL );	//	<-- Means pointed-to-object doesn't have backpointer collection for this type of pointer
+			collection->Remove(this->_openedObject->first);
+		}
+		// Update the actual pointer value
+		attribute->Set(value);
+		// Update the pointed-to object's backpointer collection (if it points to something valid)
+		if (newCollection != NULL) newCollection->Add(this->_openedObject->first);		
 	}
-
-	// Update the actual pointer value
-	attribute->Set(value);
-
-	// Update the pointed-to object's backpointer collection (if it points to something valid)
-	if (newCollection != NULL) newCollection->Add(this->_openedObject->first);
-
 	// All is good...
 	return S_OK;
 }
