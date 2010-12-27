@@ -40,3 +40,7 @@ Bytes (all ordered little endian):
 === End of Attributes when !ValueType equals VALUETYPE_NONE ===
 
 === End of Objects when MetaID equals METAID_NONE ===
+
+= Loading a v3 MGA File =
+
+Files are loaded via the !BinFile::Load() method.  One fstream read is performed to get the first 20 bytes of the file.  This will get the Uuid and size of the Index.  The Uuid is compared to that of the !CoreMetaProject passed in.  The number of objects in the index is passed to !BinFile::!ReadIndex() which calculates the size of the index and performs a single read to read in the entire index.  All reading after this is done on a per-object basis.
