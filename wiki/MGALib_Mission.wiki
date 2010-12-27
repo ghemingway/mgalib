@@ -8,7 +8,7 @@ There are a large number of enhancements and changes that users of GME would lik
 == List of Possible Changes (in no specific order) ==
 
 || ID || Title || Description || Status || Owner ||
-|| 1 || *Unified UUID* || Move to using a single UUID (16 byte) representation for all object identification. A single UUID will be attached to every !CoreObject and all references to other objects will be done via a UUID.  This replaces at least 3 existing identification schemes currently in place in MGA: 1) MetaID,ObjID for !CoreObjects; 2) MetaRefID within a !MetaProject; 3) Something ID for use with Libraries. || Core and Meta are Done - Need to do MGA || GrahamH ||
+|| 1 || *Unified UUID* || Move to using a single UUID (16 byte) representation for all object identification. A single UUID will be attached to every !CoreObject and all references to other objects will be done via a UUID.  This replaces at least 3 existing identification schemes currently in place in MGA: 1) MetaID,ObjID for !CoreObjects; 2) MetaRefID within a !MetaProject; 3) Something ID for use with Libraries. || Accepted.  Core and Meta are Done - Need to do MGA || GrahamH ||
 || 2 || *Remove Locks and Multi-user and Implement Optimistic VC* || Several previous attempts at implementing multi-user support are currently within the MGA codebase. || In discussion || LarryH ||
 || 3 || *First-class Support for Inheritance* || Paradigm definition preserves relationship. || In discussion || PeterV ||
 || 4 || *First-class support for !RefPorts* || What about !RefAttributes?? || In discussion || GrahamH ||
