@@ -9,41 +9,33 @@ Below is the byte-level description of the MGA binary file format.  This will ch
 
 Bytes (all ordered little endian):
 
-0-3: Size of GUID (always = 16)
+0-15: Uuid (long, short, short, 8xChar)
 
-4-19: GUID (long, short, short, 8xChar)
-		{ 68, 116, 143, 2, 81, 46, 211, 17, 179, 109, 0, 98, 8, 45, 248, 116)
+16-19: Size of Index (4 bytes uint32_t)
 
-
-*** New Addition ***
-20-21: DTID_INDEX (2B, if present then index is present)
-22-26: Size of Index (4 bytes ObjID_t)
-
-== Index Entry ==
-  * MetaID (2 bytes)
-  * ObjID(4 bytes)
-  * File Position (8 bytes)
-*** End of Addition ***
-
+== Index Entries (Each) ==
+  * MetaID (2 bytes - MetaID_t)
+  * Uuid (16 bytes)
+  * File Position (8 bytes - uin64_t)
+  * Object Size (4 bytes - uint32_t)
 
 === Start of Objects ===
 
-0-1: MetaID (2 bytes)<br>
-2-5: ObjID (4 bytes)<br>
+0-1: MetaID (2 bytes - MetaID_t)<br>
+2-17: Uuid (16 bytes)<br>
 
 === Start of Attributes ===
 
-0-1: ValueType (2 bytes)<br>
-2-3: AttrID (2 bytes)<br>
+0-1: ValueType (1 byte - uint8_t)<br>
+2-3: AttrID (2 bytes - AttrID_t)<br>
 
 -- Read Attribute Value
-  * Long: 4 bytes
-  * Real: 4 bytes
-  * String: 4 bytes for length + length number of bytes
-  * Binary: 4 bytes for length + length number of bytes
-  * Lock: 0 bytes
-  * Collection: 0 bytes (***New Addition: 4 bytes size, + MetaID,ObjID (6B) per item in collection ***)
-  * Pointer: 2 bytes (MetaID) + 4 bytes (ObjID) - only MetaID if MetaID == METAID_NONE
+  * Long: 4 bytes - int32_t
+  * Real: 8 bytes - double
+  * String: 4 bytes for length (uint32_t) + length number of bytes
+  * LongPointer: 16 bytes (Uuid)
+  * Collection: 4 bytes size (uint32_t) + 16 bytes (Uuid) per item in collection
+  * Pointer: 16 bytes (Uuid)
 
 === End of Attributes when !ValueType equals VALUETYPE_NONE ===
 
