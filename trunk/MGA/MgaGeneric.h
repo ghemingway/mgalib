@@ -12,7 +12,7 @@ namespace MGA {
 
 
 /*** Public Method Declarations ***/
-const Result_t CreateMGACoreMetaProject(const bool &v2, CoreMetaProject* &metaProject);
+const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 
 
 // DATA

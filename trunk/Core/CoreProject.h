@@ -28,7 +28,7 @@ typedef struct Transaction
 	bool							readOnly;
 	std::list<CoreObjectBase*>		createdObjects;
 	std::list<CoreAttributeBase*>	attributes;
-	std::list<MetaObjIDPair>		deletedObjects;
+	std::list<Uuid>					deletedObjects;
 } Transaction;
 
 typedef std::list<CoreAttributeBase*>UndoItemsList;
@@ -36,7 +36,7 @@ typedef UndoItemsList::iterator		UndoItemsListIterator;
 typedef std::list<UndoItemsList>	UndoItemsListList;
 
 
-typedef MGALib_unordered_map<MetaObjIDPair,CoreObjectBase*,MetaObjID2Pair_HashFunc> ObjectHash;
+typedef STDEXT::hash_map<Uuid,CoreObjectBase*,Uuid_HashFunc> ObjectHash;
 typedef ObjectHash::iterator ObjectHashIterator;
 
 
@@ -72,9 +72,9 @@ protected:
 	void DiscardUndo(void);
 
 	friend class CoreObjectBase;
-	void RegisterObject(const MetaObjIDPair &idPair, CoreObjectBase *object) throw();
-	void UnregisterObject(const MetaObjIDPair &idPair) throw();
-	ICoreStorage* SetStorageObject(const MetaObjIDPair &idPair) throw();
+	void RegisterObject(const Uuid &uuid, CoreObjectBase *object) throw();
+	void UnregisterObject(const Uuid &uuid) throw();
+	ICoreStorage* SetStorageObject(const Uuid &uuid) throw();
 
 	friend class CoreAttributeBase;
 	void RegisterTransactionItem(CoreAttributeBase* attribute) throw();	
@@ -98,10 +98,10 @@ public:
 	const Result_t CommitTransaction(void) throw();
 	const Result_t AbortTransaction(void) throw();
 
-	const Result_t Object(const MetaObjIDPair &idPair, CoreObject* &object) throw();
+	const Result_t Object(const Uuid &uuid, CoreObject* &object) throw();
 	const Result_t CreateObject(const MetaID_t &metaID, CoreObject* &object) throw();
 	const Result_t RootObject(CoreObject* &rootObject) throw();
-	const Result_t DeleteObject(const MetaObjIDPair &idPair) throw();
+	const Result_t DeleteObject(const Uuid &uuid) throw();
 
 	const Result_t UndoTransaction(void) throw();
 	const Result_t RedoTransaction(void) throw();

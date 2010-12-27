@@ -37,25 +37,25 @@ std::string CoreProject::GetFirstToken(const std::string &connection)
 }
 
 
-void CoreProject::RegisterObject(const MetaObjIDPair &idPair, CoreObjectBase *object) throw()
+void CoreProject::RegisterObject(const Uuid &uuid, CoreObjectBase *object) throw()
 {
 	// Check some things
 	ASSERT( this->_storage != NULL );
-	ASSERT( idPair.metaID != METAID_NONE && idPair.objID != OBJID_NONE );
+	ASSERT( uuid != Uuid::Null() );
 	ASSERT( object != NULL );
 	// Must not find object already in the hash
-	ASSERT( this->_objectHash.find(idPair) == this->_objectHash.end() );
+	ASSERT( this->_objectHash.find(uuid) == this->_objectHash.end() );
 	// Insert the object into the hash
-	this->_objectHash.insert( std::make_pair(idPair, object) );
+	this->_objectHash.insert( std::make_pair(uuid, object) );
 }
 
 
-void CoreProject::UnregisterObject(const MetaObjIDPair &idPair) throw()
+void CoreProject::UnregisterObject(const Uuid &uuid) throw()
 {
 	ASSERT( this->_storage != NULL );
-	ASSERT( idPair.metaID != METAID_NONE && idPair.objID != OBJID_NONE );
+	ASSERT( uuid != Uuid::Null() );
 	// Is the pair in the hash?
-	ObjectHashIterator objIter = this->_objectHash.find(idPair);
+	ObjectHashIterator objIter = this->_objectHash.find(uuid);
 	if( objIter != this->_objectHash.end() )
 	{
 		// Remove the object from the hash
@@ -67,9 +67,11 @@ void CoreProject::UnregisterObject(const MetaObjIDPair &idPair) throw()
 }
 
 
-ICoreStorage* CoreProject::SetStorageObject(const MetaObjIDPair &idPair) throw()
+ICoreStorage* CoreProject::SetStorageObject(const Uuid &uuid) throw()
 {
-	Result_t result = this->_storage->OpenObject(idPair);
+	// Try to open the object at the storage level
+	Result_t result = this->_storage->OpenObject(uuid);
+	// Really should be good here
 	ASSERT( result == S_OK );
 	return this->_storage;
 }
@@ -102,7 +104,7 @@ CoreProject::~CoreProject()
 			
 			std::string name, metaName;
 			Result_t result;
-			metaObj->Name(metaName);
+			metaObj->GetName(metaName);
 			ASSERT( result = this->BeginTransaction(true) == S_OK );
 			result = objBase->GetAttributeValue(ATTRID_NAME, name);
 			if ( result != S_OK )
@@ -364,22 +366,24 @@ const Result_t CoreProject::AbortTransaction(void) throw()
 }
 
 
-const Result_t CoreProject::Object(const MetaObjIDPair &idPair, CoreObject* &object) throw()
+const Result_t CoreProject::Object(const Uuid &uuid, CoreObject* &object) throw()
 {
-	if( idPair.metaID == METAID_NONE || idPair.objID == OBJID_NONE ) return E_INVALID_USAGE;
+	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	if( this->_transactionList.empty() ) return E_TRANSACTION;
 	// Have we already fetched this object
-	ObjectHashIterator objectIter = this->_objectHash.find(idPair);
+	ObjectHashIterator objectIter = this->_objectHash.find(uuid);
 	if( objectIter != this->_objectHash.end() )
 	{
 		ASSERT( objectIter->second != NULL );
 		// Create a CoreObject(smart pointer) for the object
 		object = objectIter->second->Reference();
-		return S_OK;
 	}
 	// Otherwise, we have to instantiate this object (this will register it to the project)
-	Result_t result = CoreObjectBase::Create(this, idPair, object);
-	if( result != S_OK ) return result;
+	else
+	{
+		Result_t result = CoreObjectBase::Create(this, uuid, object);
+		if( result != S_OK ) return result;
+	}
 	ASSERT( object != NULL );
 	return S_OK;
 }
@@ -391,11 +395,11 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject* &ob
 	// Must be in a write transaction
 	if( this->_transactionList.empty() || this->_transactionList.front().readOnly ) return E_TRANSACTION;
 	// Create an object of the specified MetaID (call to ICoreStorage)
-	MetaObjIDPair idPair(metaID, OBJID_NONE);
-	Result_t result = this->_storage->CreateObject(metaID, idPair.objID);
-	ASSERT( result == S_OK && idPair.objID != OBJID_NONE );
+	Uuid uuid =  Uuid::Null();
+	Result_t result = this->_storage->CreateObject(metaID, uuid);
+	ASSERT( result == S_OK && uuid != Uuid::Null() );
 	// Now create the corresponding CoreObjectBase and CoreObject pointer
-	result = CoreObjectBase::Create(this, idPair, object);
+	result = CoreObjectBase::Create(this, uuid, object);
 	if( result != S_OK )
 	{
 		// Delete that object from storage
@@ -412,27 +416,29 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject* &ob
 
 const Result_t CoreProject::RootObject(CoreObject* &coreObject) throw()
 {
-	// Get the root object
-	MetaObjIDPair idPair(METAID_ROOT, OBJID_ROOT);
-	return this->Object(idPair, coreObject);
+	// Get the root object from the storage
+	Uuid uuid = Uuid::Null();
+	ASSERT( this->_storage->RootUuid(uuid) == S_OK );
+	ASSERT( uuid != Uuid::Null() );
+	return this->Object(uuid, coreObject);
 }
 
 
-const Result_t CoreProject::DeleteObject(const MetaObjIDPair &idPair) throw()
+const Result_t CoreProject::DeleteObject(const Uuid &uuid) throw()
 {
-	if( idPair.metaID == METAID_NONE || idPair.objID == OBJID_NONE ) return E_INVALID_USAGE;
+	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	// Must be in a write transaction
 	if( this->_transactionList.empty() || this->_transactionList.front().readOnly ) return E_TRANSACTION;
 	// Is this object in the objectHash?  Don't allow delete if so
-	if( this->_objectHash.find(idPair) != this->_objectHash.end() ) return E_LOCK_VIOLATION;
-	// Open the object with the specified IDPair (call to ICoreStorage)
-	Result_t result = this->_storage->OpenObject(idPair);
+	if( this->_objectHash.find(uuid) != this->_objectHash.end() ) return E_LOCK_VIOLATION;
+	// Open the object with the specified Uuid (call to ICoreStorage)
+	Result_t result = this->_storage->OpenObject(uuid);
 	if( result != S_OK ) return result;
 	// Now delete it in storage
 	result = this->_storage->DeleteObject();
 	if( result != S_OK ) return result;
 	// Add object to deleted objects list of the transaction
-	this->_transactionList.front().deletedObjects.push_back( idPair );
+	this->_transactionList.front().deletedObjects.push_back(uuid);
 	return S_OK;
 }
 

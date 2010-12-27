@@ -2,10 +2,10 @@
 #include "MetaGeneric.h"
 
 
-static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject)
+const Result_t CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 {
-	GUID_t guid = {0x028F7AA4,0x2E51,0x11D3,{0xB3,0x17,0x00,0x62,0x08,0x2D,0xF8,0x85}};
-	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", guid);
+	Uuid uuid = "{DC5D7DEE-A590-C947-B707ADB3E98E2879}";
+	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", uuid);
 	ASSERT( metaProject != NULL );
 
 // ------- Macros
@@ -30,15 +30,9 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 	result = object->AddAttribute(metaid, token, name, valtype, attribute); \
 	ASSERT( result == S_OK );
 
-// ------- Common
-
-#define DECLARE_COMMON() \
-	CREATE_ATTRIBUTE(ATTRID_LOCK, "ObjLock", "Object Lock", ValueType::Lock());
-
 // ------- Base
 
 #define DECLARE_BASE() \
-	DECLARE_COMMON(); \
 	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String()); \
 	CREATE_ATTRIBUTE(ATTRID_METAREF, "MetaRef", "Meta ID",VALTYPE_METAREF); \
 	CREATE_ATTRIBUTE(ATTRID_DISPNAME, "DispName", "Displayed Name", ValueType::String()); \
@@ -61,12 +55,10 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 	DECLARE_FOLDER();
 
 	CREATE_OBJECT(METAID_METAFOLDERLINK, "MetaFolderLink", "Meta Folder Link");
-	DECLARE_COMMON();
 	CREATE_POINTER(ATTRID_FOLDERLINK_PARENT_PTR, "Parent", "Parent");
 	CREATE_POINTER(ATTRID_FOLDERLINK_CHILD_PTR, "Child", "Child");
 
 	CREATE_OBJECT(METAID_METAROOTOBJLINK, "MetaRootObjLink", "Meta Root Object Link");
-	DECLARE_COMMON();
 	CREATE_POINTER(ATTRID_ROOTOBJLINK_FOLDER_PTR, "Folder", "Folder");
 	CREATE_POINTER(ATTRID_ROOTOBJLINK_OBJECT_PTR, "Object", "Object");
 
@@ -76,7 +68,7 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 	DECLARE_FOLDER();
 	CREATE_ATTRIBUTE(ATTRID_PARNAME, "ParName", "Paradigm Name", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_PARDISPNAME, "ParDispName", "Displayed Name", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_GUID, "ParGUID", "Paradigm GUID", ValueType::Binary());
+	CREATE_ATTRIBUTE(ATTRID_GUID, "ParGUID", "Paradigm GUID", ValueType::LongPointer());
 	CREATE_ATTRIBUTE(ATTRID_VERSION, "Version", "Paradigm Version", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_AUTHOR, "Author", "Paradigm Author", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_COMMENT, "Comment", "Comment", ValueType::String());
@@ -143,7 +135,6 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 	CREATE_COLLECTION(ATTRID_ENUMITEMS_COLL, "EnumItems", "Enum Items");
 
 	CREATE_OBJECT(METAID_METAATTRLINK, "MetaAttrLink", "Meta Attribute Link");
-	DECLARE_COMMON();
 	CREATE_POINTER(ATTRID_ATTRLINK_USEDIN_PTR, "AttrUsedIn", "Used In");
 	CREATE_POINTER(ATTRID_ATTRLINK_ATTR_PTR, "Attribute", "Attribute");
 
@@ -153,14 +144,12 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 	CREATE_ATTRIBUTE(ATTRID_PTRSPECNAME, "SpecName", "Pointer Spec Name", ValueType::String()); \
 	CREATE_COLLECTION(ATTRID_PTRITEMS_COLL, "Items", "Pointer Items");
 	CREATE_OBJECT(METAID_METAPOINTERSPEC, "MetaPointerSpec", "Meta Pointer Specification");
-	DECLARE_COMMON();
 	DECLARE_POINTERSPEC();
 	CREATE_POINTER(ATTRID_PTRSPECS_COLL, "SpecParent", "Parent");
 
 // ------- PointerItem
 
 	CREATE_OBJECT(METAID_METAPOINTERITEM, "MetaPointerItem", "Meta Pointer Item");
-	DECLARE_COMMON();
 	CREATE_POINTER(ATTRID_PTRITEMS_COLL, "ItemParent", "Parent");
 	CREATE_ATTRIBUTE(ATTRID_PTRITEMDESC, "Desc", "Description", ValueType::String());
 
@@ -185,14 +174,12 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 // ------- ConnJoint
 
 	CREATE_OBJECT(METAID_METACONNJOINT, "MetaConnJoint", "Meta Connection Joint");
-	DECLARE_COMMON();
 	CREATE_POINTER(ATTRID_CONNJOINTS_COLL, "JointParent", "Parent");
 	CREATE_COLLECTION(ATTRID_PTRSPECS_COLL, "Specs", "Pointer Specifications");
 
 // ------- RegNode
 
 	CREATE_OBJECT(METAID_METAREGNODE, "MetaRegNode", "Meta Registry Node");
-	DECLARE_COMMON();
 	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_VALUE, "Value", "Value", ValueType::String());
 	CREATE_POINTER(ATTRID_REGNODES_COLL, "RegNodeParent", "Parent");
@@ -201,7 +188,6 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 // ------- EnumItem
 
 	CREATE_OBJECT(METAID_METAENUMITEM, "MetaEnumItem", "Meta Registry Node");
-	DECLARE_COMMON();
 	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Displayed Name", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_VALUE, "Value", "Value", ValueType::String());
 	CREATE_POINTER(ATTRID_ENUMITEMS_COLL, "EnumItemParent", "Parent");
@@ -209,7 +195,6 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 // ------- Constraint
 
 	CREATE_OBJECT(METAID_METACONSTRAINT, "MetaConstraint", "Meta Constraint");
-	DECLARE_COMMON();
 	CREATE_POINTER(ATTRID_CONSTRAINT_PTR, "ConstraintParent", "Constraint Parent");
 	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String());
 	CREATE_ATTRIBUTE(ATTRID_DISPNAME, "DispName", "Displayed Name", ValueType::String());
@@ -221,39 +206,5 @@ static const Result_t _CreateMetaCoreMetaProjectv2(CoreMetaProject* &metaProject
 	CREATE_ATTRIBUTE(ATTRID_CONSNAMESPC, "DesiredNamespace", "DesiredNamespace", ValueType::String());
 
 	return S_OK;
-}
-
-
-static const Result_t _CreateMetaCoreMetaProjectv3(CoreMetaProject* &metaProject)
-{
-	Uuid uuid = "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}";
-	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", uuid);
-	ASSERT( metaProject != NULL );
-
-	Result_t result;
-	CoreMetaObject* object;
-	CoreMetaAttribute* attribute;
-
-	// ------- Project
-	
-	CREATE_OBJECT(METAID_METAPROJECT, "MetaProject", "Meta Project");
-	DECLARE_FOLDER();
-	CREATE_ATTRIBUTE(ATTRID_PARNAME, "ParName", "Paradigm Name", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_PARDISPNAME, "ParDispName", "Displayed Name", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_GUID, "ParGUID", "Paradigm GUID", ValueType::Binary());
-	CREATE_ATTRIBUTE(ATTRID_VERSION, "Version", "Paradigm Version", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_AUTHOR, "Author", "Paradigm Author", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_COMMENT, "Comment", "Comment", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_CDATE, "CDate", "Create Date", VALTYPE_DATE);
-	CREATE_ATTRIBUTE(ATTRID_MDATE, "MDate", "Modification Date", VALTYPE_DATE);
-
-	return S_OK;
-}
-
-
-const Result_t MGA::CreateMetaCoreMetaProject(const bool &v2, CoreMetaProject* &metaProject)
-{
-	if (v2) return _CreateMetaCoreMetaProjectv2(metaProject);
-	else return _CreateMetaCoreMetaProjectv3(metaProject);
 }
 

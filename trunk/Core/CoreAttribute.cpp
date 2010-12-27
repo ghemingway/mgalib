@@ -14,7 +14,7 @@ CoreAttributeBase::CoreAttributeBase(CoreObjectBase* parent, CoreMetaAttribute *
 	ASSERT( metaAttribute != NULL );
 	// Register the attribute
 	AttrID_t attrID;
-	ASSERT( metaAttribute->AttributeID(attrID) == S_OK );
+	ASSERT( metaAttribute->GetAttributeID(attrID) == S_OK );
 	parent->RegisterAttribute(attrID, this);
 }
 
@@ -35,9 +35,8 @@ const Result_t CoreAttributeBase::Create(CoreObjectBase *parent, CoreMetaAttribu
 		attribute = new CoreAttributeReal(parent, metaAttribute);
 	else if (valueType == ValueType::String())
 		attribute = new CoreAttributeString(parent, metaAttribute);
-	else if (valueType == ValueType::Binary())
-		attribute = new CoreAttributeBinary(parent, metaAttribute);
-	else if (valueType == ValueType::Lock()) return S_OK;
+	else if (valueType == ValueType::LongPointer())
+		attribute = new CoreAttributeLongPointer(parent, metaAttribute);
 	else if (valueType == ValueType::Collection())
 		attribute = new CoreAttributeCollection(parent, metaAttribute);
 	else if (valueType == ValueType::Pointer())
@@ -74,7 +73,7 @@ CoreAttributeBase::~CoreAttributeBase()
 	ASSERT( !this->_isDirty );
 	// Unregister the attribute from the parent
 	AttrID_t attrID;
-	ASSERT( this->_metaAttribute->AttributeID(attrID) == S_OK );	
+	ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );	
 	this->_parent->UnregisterAttribute(attrID);
 }
 
