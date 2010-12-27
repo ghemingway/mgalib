@@ -26,14 +26,14 @@ Bytes (all ordered little endian):
 
 === Start of Attributes ===
 
-0-1: ValueType (1 byte - uint8_t)<br>
+0-1: !ValueType (1 byte - uint8_t)<br>
 2-3: AttrID (2 bytes - AttrID_t)<br>
 
 -- Read Attribute Value
   * Long: 4 bytes - int32_t
   * Real: 8 bytes - double
   * String: 4 bytes for length (uint32_t) + length number of bytes
-  * LongPointer: 16 bytes (Uuid)
+  * !LongPointer: 16 bytes (Uuid)
   * Collection: 4 bytes size (uint32_t) + 16 bytes (Uuid) per item in collection
   * Pointer: 16 bytes (Uuid)
 
