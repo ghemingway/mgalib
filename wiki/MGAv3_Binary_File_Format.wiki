@@ -43,3 +43,10 @@ Bytes (all ordered little endian):
 = Loading a v3 MGA File =
 
 Files are loaded via the !BinFile::Load() method.  One fstream read is performed to get the first 20 bytes of the file.  This will get the Uuid and size of the Index.  The Uuid is compared to that of the !CoreMetaProject passed in.  The number of objects in the index is passed to !BinFile::!ReadIndex() which calculates the size of the index and performs a single read to read in the entire index.  All reading after this is done on a per-object basis.
+
+= MGA File Limitations =
+
+There should be as few limitations as possible with the new v3 file format.  Here are a couple that I know of:
+
+  * Max File Size: 64-bit addressing (terabytes)
+  * Max Number of Objects: 32-bit (4,294,967,295 objects)
