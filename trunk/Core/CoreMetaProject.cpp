@@ -20,7 +20,7 @@ CoreMetaProject::~CoreMetaProject()
 }
 
 
-const Result_t CoreMetaProject::Object(const MetaID_t &metaID, CoreMetaObject* &object) throw()
+const Result_t CoreMetaProject::GetObject(const MetaID_t &metaID, CoreMetaObject* &object) throw()
 {
 	if ( metaID == METAID_NONE ) return E_INVALID_USAGE;
 	// Get iterator to front of object list
@@ -32,7 +32,7 @@ const Result_t CoreMetaProject::Object(const MetaID_t &metaID, CoreMetaObject* &
 		ASSERT( *objectIter != NULL );
 		// Did we find the right object
 		MetaID_t tmpMetaID = METAID_NONE;
-		ASSERT( (*objectIter)->MetaID(tmpMetaID) == S_OK );
+		ASSERT( (*objectIter)->GetMetaID(tmpMetaID) == S_OK );
 		if( tmpMetaID == metaID )
 		{
 			// If so, return its pointer

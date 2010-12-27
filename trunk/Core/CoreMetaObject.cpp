@@ -20,7 +20,7 @@ CoreMetaObject::~CoreMetaObject()
 }
 
 
-const Result_t CoreMetaObject::Attribute(const AttrID_t &attrID, CoreMetaAttribute* &attribute) const throw()
+const Result_t CoreMetaObject::GetAttribute(const AttrID_t &attrID, CoreMetaAttribute* &attribute) const throw()
 {
 	if ( attrID == ATTRID_NONE ) return E_INVALID_USAGE;
 	// Start at the beginning of the attribute list
@@ -32,7 +32,7 @@ const Result_t CoreMetaObject::Attribute(const AttrID_t &attrID, CoreMetaAttribu
 		ASSERT( (*iter) != NULL );
 		// Is this the attribute we are looking for
 		AttrID_t tmpAttrID = ATTRID_NONE;
-		ASSERT( (*iter)->AttributeID(tmpAttrID) == S_OK );
+		ASSERT( (*iter)->GetAttributeID(tmpAttrID) == S_OK );
 		if( tmpAttrID == attrID )
 		{
 			// Yes it is...

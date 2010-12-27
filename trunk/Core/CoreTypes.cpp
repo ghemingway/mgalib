@@ -4,7 +4,7 @@
 
 // --------------------------- GUID --------------------------- //
 
-
+/*
 // Convert from the vector rep to a GUID_t
 GUID_t& GUID_t::operator=(const std::vector<unsigned char> &bin)
 {
@@ -132,7 +132,7 @@ std::string GUID_t::ToString(const std::vector<unsigned char> &guid)
 	std::string value = guidStruct;
 	return value;
 }
-
+*/
 
 // --------------------------- UUID --------------------------- //
 
@@ -156,13 +156,13 @@ Uuid::Uuid()
 #endif
 }
 
-
+/*
 Uuid::Uuid(const GUID_t &guid)
 {
 	// Just copy the bytes in
 	memcpy(this->_data, &guid, sizeof(GUID_t));
 }
-
+*/
 
 Uuid::Uuid(const std::vector<unsigned char> &vector)
 {
@@ -375,3 +375,13 @@ std::ostream& MGA::operator<<(std::ostream& out, const Uuid &uuid)
 	out << stringVersion;
 	return out;
 }
+
+
+Uuid Uuid::Null(void)
+{
+	Uuid retVal;
+	// Return an all zero Uuid (signals Null value)
+	memset(&retVal, 0, 16);
+	return retVal;
+}
+

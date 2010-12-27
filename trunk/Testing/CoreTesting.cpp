@@ -1,7 +1,7 @@
 /*** Included Header Files ***/
 #include "CoreTesting.h"
 
-
+/*
 TEST_F(CoreProjectTest,OpenProject)
 {
 	// Try opening a non-existant file
@@ -102,3 +102,4 @@ TEST_F(CoreProjectTest,UndoQueueSize)
 TEST_F(CoreProjectTest,RedoQueueSize)
 {
 }
+*/
