@@ -9,9 +9,11 @@ Below is the byte-level description of the MGA binary file format.  This will ch
 
 Bytes (all ordered little endian):
 
-0-15: Uuid (long, short, short, 8xChar)
+0-15: Uuid (16 bytes) - The Uuid of the corresponding MetaProject.
 
-16-19: Size of Index (4 bytes uint32_t)
+16-19: Size of Index (4 bytes as uint32_t)
+
+20-35: Uuid(16 bytes) - The Uuid of the root object for this project.
 
 == Index Entries (Each) ==
   * Uuid (16 bytes)
