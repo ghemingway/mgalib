@@ -196,15 +196,14 @@ void CoreObjectBase::FillAfterCreateObject()
 const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, CoreObject* &coreObject) throw()
 {
 	if( project == NULL ) return E_INVALID_USAGE;
-	if( uuid != Uuid::Null() ) return E_INVALID_USAGE;
+	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	
 	CoreMetaProject *metaProject = NULL;
-	Result_t result = project->MetaProject(metaProject);
-	ASSERT( result == S_OK );
+	ASSERT( project->MetaProject(metaProject) == S_OK );
 	// Set storage to point at this object and get the coreMetaObject
 	ICoreStorage* storage;
 	storage = project->SetStorageObject(uuid);
-	ASSERT( storage == S_OK );
+	ASSERT( storage != NULL );
 	CoreMetaObject *metaObject = NULL;
 	ASSERT( storage->MetaObject(metaObject) == S_OK );
 	ASSERT( metaObject != NULL );

@@ -117,17 +117,18 @@ private:
 	Uuid								_uuid;						//!< Uuid for identification
 	CoreMetaObject						*_metaObject;				//!< MetaObject for this object
 	std::list<BinAttribute*>			_attributes;				//!< List of attributes
-	bool								_isDirty;					//!< Flag for if object attributes have been changed
+	bool								_isDirty;					//!< Flag for if object attributes have been changed0
 private:
 	BinObject();													//!< Deny access to default constructor
-	BinObject(const Uuid &uuid) : _uuid(uuid), _attributes(), _isDirty(false) { }
+	BinObject(CoreMetaObject* &metaObject, const Uuid &uuid) :
+		_uuid(uuid), _metaObject(metaObject), _attributes(), _isDirty(false) { }
 	void CreateAttributes(CoreMetaObject *metaobject);				//!< Uses metaObject to create empty attributes
 	bool IsConnected(void) const;									//!< Are any forward pointers connected?
 
 public:
 	~BinObject();
 	// Static methods to read or create an object
-	static BinObject* Read(char* &stream);
+	static BinObject* Read(CoreMetaProject* &metaProject, char* &stream, const Uuid &uuid);
 	static BinObject* Create(CoreMetaObject *metaObject, const Uuid &uuid);
 
 	inline const Uuid GetUuid(void) const							{ return this->_uuid; }
@@ -151,6 +152,7 @@ private:
 	// Base State Variables
 	std::string							_filename;					//!< Primary file name (opened as read-only)
 	Uuid								_metaProjectUuid;			//!< MetaProject Uuid
+	Uuid								_rootUuid;					//!< Uuid of the root object for the graph
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
 	// Input, Scratch and Cache Hash/Queue Variables
@@ -228,8 +230,8 @@ protected:
 	BinAttributeBase<T>();
 public:
 	BinAttributeBase<T>(BinObject* parent, const AttrID_t &attrID, const T &value) : ::BinAttribute(parent, attrID), _value(value) { }
-	inline const Result_t Set(const T &value)			{ this->_parent->MarkDirty(); this->_value = value; return S_OK; }
-	inline T Get(void) const							{ return this->_value; }
+	inline virtual const Result_t Set(const T &value)	{ this->_parent->MarkDirty(); this->_value = value; return S_OK; }
+	inline virtual T Get(void) const					{ return this->_value; }
 };
 
 
@@ -267,7 +269,8 @@ class BinAttributeString : public BinAttributeBase<std::string> {
 public:
 	BinAttributeString(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::string>(parent, attrID, "") { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::String(); }
-	virtual uint32_t Size(void) const;
+	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size()); }
+	virtual const Result_t Set(const std::string &value);
 	virtual void StreamRead(char* &stream);
 	virtual void StreamWrite(char* &stream) const;
 };
@@ -295,7 +298,7 @@ public:
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Collection(); }
 	inline void Add(const Uuid &value)					{ this->_parent->MarkDirty(); this->_value.push_back(value); }
 	inline void Remove(const Uuid &value)				{ this->_parent->MarkDirty(); this->_value.remove(value); }
-	virtual uint32_t Size(void) const;
+	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size() * sizeof(Uuid)); }
 	virtual void StreamRead(char* &stream);
 	virtual void StreamWrite(char* &stream) const;
 };

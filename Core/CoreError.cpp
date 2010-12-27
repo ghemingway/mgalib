@@ -39,7 +39,8 @@ std::string core_descs[] =
 	"Cannot delete Object, has nonempty collection",
 	"Cannot resolve the connection string",
 	"Invalid binary file storage",
-	"Project has no name"
+	"Project has no name",
+	"String is not valid UTF-8 encoded"
 };
 
 

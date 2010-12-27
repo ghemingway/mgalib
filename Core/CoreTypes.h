@@ -121,19 +121,19 @@ struct Uuid_HashFunc
 			memcpy(&returnValue+2, &uuid+8, 1);
 			memcpy(&returnValue+3, &uuid+12, 1);
 		}
-		if (sizeof(size_t) == 8)
+		else if (sizeof(size_t) == 8)
 		{
 			// Copy over bytes 0, 2, 4, 6, 8, 10, 12, 14
-			memcpy(&returnValue, &uuid, 1);
-			memcpy(&returnValue+1, &uuid+2, 1);
-			memcpy(&returnValue+2, &uuid+4, 1);
-			memcpy(&returnValue+3, &uuid+6, 1);
-			memcpy(&returnValue+4, &uuid+8, 1);
-			memcpy(&returnValue+5, &uuid+10, 1);
-			memcpy(&returnValue+6, &uuid+12, 1);
-			memcpy(&returnValue+7, &uuid+14, 1);
+			memcpy(&returnValue, &uuid, sizeof(size_t));
+//			memcpy(&returnValue, &uuid, 1);
+//			memcpy(&returnValue+1, &uuid+2, 1);
+//			memcpy(&returnValue+2, &uuid+4, 1);
+//			memcpy(&returnValue+3, &uuid+6, 1);
+//			memcpy(&returnValue+4, &uuid+8, 1);
+//			memcpy(&returnValue+5, &uuid+10, 1);
+//			memcpy(&returnValue+6, &uuid+12, 1);
+//			memcpy(&returnValue+7, &uuid+14, 1);
 		}
-		else ASSERT(false);
 		return returnValue;
 	}
 };

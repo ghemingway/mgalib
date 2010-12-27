@@ -127,12 +127,19 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	metaProject->_rootObject->SetAttributeValue(ATTRID_CDATE, _CurrentTime());
 	metaProject->_rootObject->SetAttributeValue(ATTRID_MDATE, _CurrentTime());
 	metaProject->_rootObject->SetAttributeValue(ATTRID_NAME, std::string(""));
-	metaProject->_rootObject->SetAttributeValue(ATTRID_METAREF, 1000);
 	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
 	ASSERT( metaProject->_coreProject->CommitTransaction() == S_OK );
 	// MetaProject is ready
 	project = metaProject;
 	return S_OK;
+}
+
+
+const Result_t MetaProject::Save(const std::string &filename) throw()
+{
+	ASSERT( this->_coreProject != NULL );
+	// Ask the coreProject to save itself
+	return this->_coreProject->Save(filename);
 }
 
 
@@ -169,7 +176,7 @@ const Result_t MetaProject::GetUuid(Uuid &uuid) const throw()
 	Uuid value = Uuid::Null();
 	// Get the value from the root object
 	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
-	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_GUID, value);
+	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_UUID, value);
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	if (result != S_OK) return result;
 	// Convert GUID from bin value to GUID_t
@@ -177,16 +184,16 @@ const Result_t MetaProject::GetUuid(Uuid &uuid) const throw()
 	return S_OK;
 }
 
-/*
-const Result_t MetaProject::SetGUID(const GUID_t &guid) throw()
+
+const Result_t MetaProject::SetUuid(const Uuid &uuid) throw()
 {
 	// Set the value in the root object
 	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
-	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_GUID, guid);
+	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_UUID, uuid);
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetName(std::string &name) const throw()
 {
@@ -197,7 +204,7 @@ const Result_t MetaProject::GetName(std::string &name) const throw()
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetName(const std::string &name) throw()
 {
 	// Set the value in the root object
@@ -206,7 +213,7 @@ const Result_t MetaProject::SetName(const std::string &name) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetDisplayedName(std::string &displayedName) const throw()
 {
@@ -217,7 +224,7 @@ const Result_t MetaProject::GetDisplayedName(std::string &displayedName) const t
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetDisplayedName(const std::string &value) throw()
 {
 	// Set the value in the root object
@@ -226,7 +233,7 @@ const Result_t MetaProject::SetDisplayedName(const std::string &value) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetVersion(std::string &version) const throw()
 {
@@ -237,7 +244,7 @@ const Result_t MetaProject::GetVersion(std::string &version) const throw()
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetVersion(const std::string &value) throw()
 {
 	// Set the value in the root object
@@ -246,7 +253,7 @@ const Result_t MetaProject::SetVersion(const std::string &value) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetAuthor(std::string &author) const throw()
 {
@@ -257,7 +264,7 @@ const Result_t MetaProject::GetAuthor(std::string &author) const throw()
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetAuthor(const std::string &value) throw()
 {
 	// Set the value in the root object
@@ -266,7 +273,7 @@ const Result_t MetaProject::SetAuthor(const std::string &value) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetComment(std::string &comment) const throw()
 {
@@ -277,7 +284,7 @@ const Result_t MetaProject::GetComment(std::string &comment) const throw()
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetComment(const std::string &value) throw()
 {
 	// Set the value in the root object
@@ -286,7 +293,7 @@ const Result_t MetaProject::SetComment(const std::string &value) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetCreatedAt(std::string &createdAt) const throw()
 {
@@ -297,7 +304,7 @@ const Result_t MetaProject::GetCreatedAt(std::string &createdAt) const throw()
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetCreatedAt(const std::string &value) throw()
 {
 	// Set the value in the root object
@@ -306,7 +313,7 @@ const Result_t MetaProject::SetCreatedAt(const std::string &value) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::GetModifiedAt(std::string &modifiedAt) const throw()
 {
@@ -317,7 +324,7 @@ const Result_t MetaProject::GetModifiedAt(std::string &modifiedAt) const throw()
 	return result;
 }
 
-/*
+
 const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 {
 	// Set the value in the root object
@@ -326,7 +333,7 @@ const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
 	return result;
 }
-*/
+
 
 const Result_t MetaProject::FindObject(const Uuid &uuid, MetaBase* &metaBase) throw()
 {
@@ -358,9 +365,6 @@ void MetaProject::CreateMetaObj(metaid_type metaid, CCoreObjectPtr &obj)
 
 	COMTHROW( coreproject->CreateObject(metaid, PutOut(obj)) );
 }
-
-
-// ------- CheckPath
 
 
 void MetaProject::CreatePathItems(bstr_const_iterator i, bstr_const_iterator e, pathitems_type &pathitems)
