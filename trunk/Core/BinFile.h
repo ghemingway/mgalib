@@ -215,6 +215,7 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw();	//!<
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
 };
 

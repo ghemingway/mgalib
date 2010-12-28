@@ -262,6 +262,7 @@ const Result_t CoreProject::CommitTransaction(void) throw()
 	// Is this a nested commit transaction
 	if( this->_transactionList.size() > 1 )
 	{
+		ASSERT(false);
 /*
 		Transaction &currentTransaction = this->_transactionList.front();
 		TransactionTypesListIterator previous = ++this->_transactions.begin();
@@ -291,16 +292,6 @@ const Result_t CoreProject::CommitTransaction(void) throw()
 	// This is a final commit
 	else
 	{
-/*		
-		ASSERT( !this->_undos.empty() && this->_undos.front().empty() );
-		FinalTransactionItemsListIterator finalIter = this->_finalTransactionItems.begin();
-		FinalTransactionItemsListIterator finalEnd = this->_finalTransactionItems.end();
-		while( finalIter != finalEnd )
-		{
-			(*finalIter)->CommitFinalTransaction();
-			++finalIter;
-		}
-*/
 		// Get the transaction and process (don't need to worry about CreateObjects since they are already in storage)
 		Transaction &transaction = this->_transactionList.front();
 		// Go through all attribute changes and write into storage
@@ -312,36 +303,20 @@ const Result_t CoreProject::CommitTransaction(void) throw()
 			++attrIter;
 		}
 		// Go through all object deletes and write into storage
-		// ...
+		std::list<Uuid>::iterator deletedIter = transaction.deletedObjects.begin();
+		while( deletedIter != transaction.deletedObjects.end() )
+		{
+			// Set storage to this object and delete it
+			ASSERT( this->_storage->OpenObject(*deletedIter) == S_OK );
+			ASSERT( this->_storage->DeleteObject() == S_OK );
+			// Move on to the next deleted object
+			++deletedIter;
+		}
 		// Commit the transaction in storage
 		this->_storage->CommitTransaction();
-/*		
-		ASSERT( !this->_undos.empty() && this->_undos.front().empty() );
-		// some objects might get destroyed in CommitFinalTransactionFinish
-		finalIter = this->_finalTransactionItems.begin();
-		ASSERT( finalEnd == this->_finalTransactionItems.end() );
-		int finalTransactionCount = this->_finalTransactionItems.size(); 
-		while( finalIter != finalEnd )
-		{
-			// they can register undo_items
-			(*finalIter)->CommitFinalTransactionFinish(undo);
-			++finalIter;
-			
-			ASSERT( --finalTransactionCount >= 0 );
-		}
-		ASSERT( finalTransactionCount == 0 );
-		// if this was a read-only transaction, then no one could have registered
-		ASSERT( !this->_transactions.front().readonly || this->_undos.front().empty() );
-		this->_finalTransactionItems.clear();
-*/
 		// Remove the final transaction
 		this->_transactionList.pop_front();
 		ASSERT( this->_transactionList.empty() );
-/*
-		// if no undo info here then we don't record it
-		if( this->_undos.front().empty() )
-			this->_undos.pop_front();
-*/
 	}
 	return S_OK;
 }
@@ -349,6 +324,7 @@ const Result_t CoreProject::CommitTransaction(void) throw()
 
 const Result_t CoreProject::AbortTransaction(void) throw()
 {
+	ASSERT(false);
 //	if( this->_storage == NULL || transactionType == TransactionType::Any() || !this->InTransaction() ||
 //	   (limited_size(this->_transactions, 2) == 1 && transactionType == TransactionType::First() ) )
 //	{
@@ -442,7 +418,7 @@ const Result_t CoreProject::DeleteObject(const Uuid &uuid) throw()
 	return S_OK;
 }
 
-
+/*
 const Result_t CoreProject::UndoTransaction(void) throw()
 {
 //	ASSERT( (int) undos.size() >= redo_count && redo_count >= 0 );

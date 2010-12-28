@@ -194,7 +194,7 @@ inline const Result_t BinAttributeString::Set(const std::string &value)
 	std::string localValue = value;
 	// Make sure this is a valid UTF-8 encoding
 	std::string::iterator endIter = utf8::find_invalid(localValue.begin(), localValue.end());
-	if (endIter != value.end())
+	if (endIter != localValue.end())
 	{
 		std::cout << "Invalid UTF-8 encoding detected!\n";
 		std::cout << "This part is fine: " << std::string(localValue.begin(), endIter) << "\n";
@@ -1317,6 +1317,14 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	this->_changedObjects.push_back(changeRecord);
 	// Update the attribute value
 	attribute->Set(value);
+	return S_OK;
+}
+
+
+const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw()
+{
+	// This is a dummy function to help out some template issues.  Really should find a better way
+	ASSERT(false);
 	return S_OK;
 }
 
