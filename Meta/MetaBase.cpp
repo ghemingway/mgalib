@@ -126,7 +126,7 @@ MetaBase::~MetaBase()
 {
 	ASSERT( this->_coreObject != NULL );
 	// Delete the coreObject
-	this->_coreObject.reset();
+	this->_coreObject = NULL;
 }
 
 

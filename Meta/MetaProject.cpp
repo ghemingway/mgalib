@@ -40,7 +40,7 @@ MetaProject::~MetaProject()
 	ASSERT( this->_rootObject != NULL );
 	ASSERT( this->_coreProject != NULL );
 	// Remove the reference to the rootObject
-	delete this->_rootObject.get();
+	this->_rootObject = NULL;
 	// Now we can delete the core project
 	delete this->_coreProject;
 }
@@ -53,7 +53,7 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 	CoreMetaProject* coreMetaProject;
 	ASSERT( CreateMetaCoreMetaProject(coreMetaProject) == S_OK );
 	CoreProject *coreProject;
-	Result_t result = CoreProject::OpenProject(connection, coreMetaProject, coreProject);
+	Result_t result = CoreProject::Open(connection, coreMetaProject, coreProject);
 	if (result != S_OK)
 	{
 		// Clean up and exit
@@ -81,7 +81,7 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	ASSERT( CreateMetaCoreMetaProject(coreMetaProject) == S_OK );
 	ASSERT( coreMetaProject != NULL );
 	CoreProject *coreProject;
-	Result_t result = CoreProject::CreateProject(connection, coreMetaProject, coreProject);
+	Result_t result = CoreProject::Create(connection, coreMetaProject, coreProject);
 	if (result != S_OK)
 	{
 		std::cout << GetErrorInfo(result);

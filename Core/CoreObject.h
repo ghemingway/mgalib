@@ -39,18 +39,17 @@ protected:
 	uint32_t								_refCount;
 
 	void CreateAttributes(void);
+	friend class CoreObject;
+	friend class CoreAttributeBase;
+	inline uint32_t Reference(void)			{ return ++this->_refCount; }
+	inline uint32_t Release(void)			{ return --this->_refCount; }
+	void RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase *attribute) throw();
+	void UnregisterAttribute(const AttrID_t &attrID) throw();
+	ICoreStorage* SetStorageObject(void) const;
 
 public:
 	static const Result_t Create(CoreProject *project, const Uuid &uuid, CoreObject &coreObject) throw();
 	virtual ~CoreObjectBase();
-
-	// ------- Hidden (Core only) Interface ------------ //
-
-//	CoreObject* Reference(void);
-//	void Release(void);
-	void RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase *attribute) throw();
-	void UnregisterAttribute(const AttrID_t &attrID) throw();
-	ICoreStorage* SetStorageObject(void) const;
 
 	// ------- ICoreObject Interface ------------ //
 
@@ -120,59 +119,41 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& out, const CoreObjectBase *object)
 	{
-		out << object->_metaObject;
+		out << "(" << object->_refCount << ")" << object->_metaObject;
 		return out;
 	}
 };
 
-/*
+
 class CoreObject
 {
 private:
-	CoreObjectBase			*_base;
-
-	friend class CoreObjectBase;
-	CoreObject();
-	CoreObject(CoreObjectBase* base) : _base(base)				{ ASSERT( base != NULL ); }
-
-	friend class CoreProject;
-	CoreObjectBase* Base(void) const							{ return this->_base; }
+	CoreObjectBase					*_base;
+	inline void Release(void)
+	{
+		uint32_t count = 0;
+		if(this->_base != NULL) count = this->_base->Release();
+		if (count == 0) delete this->_base;
+	}
+	inline void Reference(void)
+	{
+		if( this->_base != NULL ) this->_base->Reference();
+	}
 public:
-	~CoreObject()												{ this->_base->Release(); }
+	CoreObject() : _base(NULL)									{ }
+	CoreObject(CoreObjectBase* base) : _base(base)				{ this->Reference(); }
+	CoreObject(const CoreObject &obj) : _base(obj._base)		{ this->Reference(); }
+	~CoreObject()												{ this->Release(); }
 
-	// ------- ICoreObject Interface ------------ //
-
-	inline CoreAttribute* operator[](const AttrID_t &attrID) const throw() {
-		CoreAttribute* attribute; Result_t result = this->_base->Attribute(attrID, attribute); if (result == S_OK) return attribute; else return NULL; }
-	inline const Result_t Project(CoreProject* &project) const	throw()		{ return this->_base->Project(project); }
-	inline const Result_t MetaObject(CoreMetaObject* obj) const throw()		{ return this->_base->MetaObject(obj); }
-	inline const Result_t GetUuid(Uuid &uuid) const throw()					{ return this->_base->GetUuid(uuid); }
-	inline const Result_t GetMetaID(MetaID_t &metaID) const throw()			{ return this->_base->GetMetaID(metaID); }
-	inline const Result_t IsDirty(bool &flag) const throw()					{ return this->_base->IsDirty(flag); }
-	inline const Result_t MarkDirty(void) throw()							{ return this->_base->MarkDirty(); }
-	inline const Result_t InTransaction(bool &flag) const throw()			{ return this->_base->InTransaction(flag); }
-	
-	inline const Result_t Attributes(std::list<CoreAttribute*> &controlled) throw() {
-		return this->_base->Attributes(controlled); }
-	inline const Result_t Attribute(const AttrID_t &attrID, CoreAttribute* &attribute) throw() {
-		return this->_base->Attribute(attrID, attribute); }
-
-	template<class T>
-	inline const Result_t GetAttributeValue(const AttrID_t &attrID, T &value) const throw() {
-		return this->_base->GetAttributeValue(attrID, value); }
-	template<class T>
-	const Result_t SetAttributeValue(const AttrID_t &attrID, const T &value) throw() {
-		return this->_base->SetAttributeValue<T>(attrID, value); }
-	template<class T>
-	const Result_t LoadedAttributeValue(const AttrID_t &attrID, const T &value) throw();
-	template<class T>
-	const Result_t PreviousAttributeValue(const AttrID_t &attrID, const T &value) throw();
-	template<class T>
-	const Result_t SearchCollection(const AttrID_t &collectionAttrID, const AttrID_t &attrID, const T &value, CoreObject* &object) throw();
-
-	friend std::ostream& operator<<(std::ostream& out, const CoreObject *object) { return out << object->_base; }
+	inline CoreObjectBase* operator->() const					{ return this->_base; }
+	inline CoreObject& operator=(CoreObjectBase* base)			{ this->Release(); this->_base = base; this->Reference(); return *this; }
+	inline CoreObject& operator=(const CoreObject &obj)			{ this->Release(); this->_base = obj._base; this->Reference(); return *this; }
+	inline bool operator==(const CoreObjectBase* base) const	{ return (this->_base == base); }
+	inline bool operator!=(const CoreObjectBase* base) const	{ return (this->_base != base); }
+	inline bool operator==(const CoreObject &obj) const			{ return (this->_base == obj._base); }
+	inline bool operator!=(const CoreObject &obj) const			{ return (this->_base != obj._base); }
 };
-*/
+
 
 /*** End of MGA Namespace ***/
 }

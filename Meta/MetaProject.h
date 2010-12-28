@@ -4,6 +4,7 @@
 
 /*** Included Header Files ***/
 #include "../MGA/MgaTypes.h"
+#include "../Core/CoreObject.h"
 
 
 /*** Namespace Declaration ***/

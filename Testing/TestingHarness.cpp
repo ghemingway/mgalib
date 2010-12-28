@@ -48,7 +48,7 @@ std::vector<Uuid> GetUuidVector(void)
 	CoreProject *coreProject;
 	result = ICoreStorage::RegisterStorage("MGA", new BinFileFactory());
 	ASSERT( result == S_OK );
-	result = CoreProject::OpenProject(testFileName, metaProject, coreProject);
+	result = CoreProject::Open(testFileName, metaProject, coreProject);
 	ASSERT( result == S_OK );
 	ICoreStorage* storage;
 	result = coreProject->Storage(storage);

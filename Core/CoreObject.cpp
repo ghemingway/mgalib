@@ -146,8 +146,8 @@ const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, Co
 	// Create the actual coreObjectBase (new a shiny new & unique Uuid)
 	CoreObjectBase* coreObjectBase = new CoreObjectBase(project, metaObject, uuid);
 	ASSERT( coreObjectBase != NULL );
-	// Create the CoreObject (refPointer) to the base object
-	coreObject = CoreObject(coreObjectBase);
+	// Set the CoreObject (refPointer) to the base object
+	coreObject = coreObjectBase;
 	return S_OK;
 }
 
@@ -168,26 +168,6 @@ CoreObjectBase::~CoreObjectBase()
 	this->_project->UnregisterObject(this->_uuid);
 }
 
-/*
-CoreObject* CoreObjectBase::Reference(void)
-{
-	// Increase refCount
-	this->_refCount++;
-	// Create a new CoreObject
-	CoreObject* newObject = new CoreObject(this);
-	ASSERT( newObject != NULL );
-	return newObject;
-}
-
-
-void CoreObjectBase::Release(void)
-{
-	// Decrement the refCount
-	this->_refCount--;
-	// Is this object no longer needed
-	if (this->_refCount == 0) delete this;
-}
-*/
 
 void CoreObjectBase::RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase *attribute) throw()
 {
