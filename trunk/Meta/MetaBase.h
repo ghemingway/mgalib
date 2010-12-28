@@ -28,10 +28,10 @@ private:
 	MetaBase& operator=(const MetaBase &);						//!< Deny access to equals operator
 	
 protected:
-	CoreObject					*_coreObject;					//!< Pointer to wrapped core object
+	CoreObject					_coreObject;					//!< Pointer to wrapped core object
 	MetaProject					*_metaProject;					//!< Pointer to parent project
 
-	static void TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject);
+//	static void TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject);
 
 	template <class T>
 	const Result_t ObjectFromAttribute(const AttrID_t &attrID, T &obj) const throw()
@@ -95,11 +95,11 @@ protected:
 	}
 
 public:
-	MetaBase(CoreObject* &coreObject, MetaProject* &metaProject);
+	MetaBase(CoreObject &coreObject, MetaProject* &metaProject);
 	virtual ~MetaBase();
 
-	static void TraverseCollection(MetaProject* &metaProject, CoreObject* &coreObject, const AttrID_t &attrID);
-	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
+//	static void TraverseCollection(MetaProject* &metaProject, CoreObject* &coreObject, const AttrID_t &attrID);
+//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
 
 	virtual const Result_t GetUuid(Uuid &uuid) const throw();
 	virtual const Result_t GetMetaProject(MetaProject* &project) const throw();

@@ -5,7 +5,6 @@
 /*** Included Header Files ***/
 #include "CoreTypes.h"
 #include "CoreStorage.h"
-#include "CoreTransactionItem.h"
 
 
 /*** Namespace Declaration ***/
@@ -14,7 +13,6 @@ namespace MGA {
 
 /*** Class Predefinitions ***/
 class CoreProject;
-class CoreObject;
 class CoreObjectBase;
 class CoreAttributeBase;
 class CoreMetaProject;
@@ -98,9 +96,9 @@ public:
 	const Result_t CommitTransaction(void) throw();
 	const Result_t AbortTransaction(void) throw();
 
-	const Result_t Object(const Uuid &uuid, CoreObject* &object) throw();
-	const Result_t CreateObject(const MetaID_t &metaID, CoreObject* &object) throw();
-	const Result_t RootObject(CoreObject* &rootObject) throw();
+	const Result_t Object(const Uuid &uuid, CoreObject &object) throw();
+	const Result_t CreateObject(const MetaID_t &metaID, CoreObject &object) throw();
+	const Result_t RootObject(CoreObject &rootObject) throw();
 	const Result_t DeleteObject(const Uuid &uuid) throw();
 
 //	const Result_t UndoTransaction(void) throw();

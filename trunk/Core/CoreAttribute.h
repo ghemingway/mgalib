@@ -4,7 +4,6 @@
 
 /*** Included Header Files ***/
 #include "CoreTypes.h"
-#include "CoreTransactionItem.h"
 #include "CoreMetaAttribute.h"
 #include "CoreStorage.h"
 
@@ -22,6 +21,10 @@ class CoreObjectBase;
 
 class CoreAttributeBase
 {
+private:
+	CoreAttributeBase();
+	CoreAttributeBase(const CoreAttributeBase &);
+	
 protected:
 	CoreObjectBase							*_parent;
 	CoreMetaAttribute						*_metaAttribute;	
@@ -31,14 +34,8 @@ protected:
 	friend class CoreObjectBase;
 	static const Result_t Create(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute) throw();
 	ICoreStorage* SetStorageObject(void) const;
-
-//	friend class CoreProject;
-
-	CoreAttributeBase();
-	CoreAttributeBase(const CoreAttributeBase &);
-	CoreAttributeBase(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute);
-	
 	void RegisterTransactionItem(void);
+	CoreAttributeBase(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute);
 
 public:
 	virtual ~CoreAttributeBase();

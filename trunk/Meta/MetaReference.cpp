@@ -5,7 +5,7 @@
 
 // --------------------------- MetaReference --------------------------- //
 
-
+/*
 void MetaReference::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -14,7 +14,7 @@ void MetaReference::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	MetaFCO::Traverse(metaProject, coreObject);
 	MetaPointerSpec::Traverse(metaProject, coreObject);
 }
-
+*/
 
 const Result_t MetaReference::GetRefSpec(MetaPointerSpec* &pointerSpec) const throw()
 {

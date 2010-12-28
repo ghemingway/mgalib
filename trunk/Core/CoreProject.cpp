@@ -342,7 +342,7 @@ const Result_t CoreProject::AbortTransaction(void) throw()
 }
 
 
-const Result_t CoreProject::Object(const Uuid &uuid, CoreObject* &object) throw()
+const Result_t CoreProject::Object(const Uuid &uuid, CoreObject &object) throw()
 {
 	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	if( this->_transactionList.empty() ) return E_TRANSACTION;
@@ -352,7 +352,7 @@ const Result_t CoreProject::Object(const Uuid &uuid, CoreObject* &object) throw(
 	{
 		ASSERT( objectIter->second != NULL );
 		// Create a CoreObject(smart pointer) for the object
-		object = objectIter->second->Reference();
+		object = CoreObject(objectIter->second);
 	}
 	// Otherwise, we have to instantiate this object (this will register it to the project)
 	else
@@ -365,7 +365,7 @@ const Result_t CoreProject::Object(const Uuid &uuid, CoreObject* &object) throw(
 }
 
 
-const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject* &object) throw()
+const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject &object) throw()
 {
 	if( metaID == METAID_NONE ) return E_INVALID_USAGE;
 	// Must be in a write transaction
@@ -380,17 +380,16 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject* &ob
 	{
 		// Delete that object from storage
 		ASSERT( this->_storage->DeleteObject() == S_OK );
-		object = NULL;
 		return result;
 	}
 	ASSERT( object != NULL );
 	// Add the object into the created objects list of the transaction
-	this->_transactionList.front().createdObjects.push_back( object->Base());
+	this->_transactionList.front().createdObjects.push_back( object.get());
 	return S_OK;
 }
 
 
-const Result_t CoreProject::RootObject(CoreObject* &coreObject) throw()
+const Result_t CoreProject::RootObject(CoreObject &coreObject) throw()
 {
 	// Get the root object from the storage
 	Uuid uuid = Uuid::Null();

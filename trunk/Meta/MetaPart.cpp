@@ -10,7 +10,7 @@
 #define MGAMETAPART_PRIMARY		0x0001
 #define MGAMETAPART_LINKED		0x0002
 
-
+/*
 void MetaPart::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -20,7 +20,7 @@ void MetaPart::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	// Traverse any children
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_REGNODES_COLL);
 }
-
+*/
 
 const Result_t MetaPart::GetRole(MetaRole* &metaRole) const throw()
 {

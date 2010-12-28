@@ -363,6 +363,28 @@
 			5880203A12CA3A7800935308 /* PBXTextBookmark */ = 5880203A12CA3A7800935308 /* PBXTextBookmark */;
 			5880203B12CA3A7800935308 /* PBXTextBookmark */ = 5880203B12CA3A7800935308 /* PBXTextBookmark */;
 			5880203C12CA3A7800935308 /* PBXTextBookmark */ = 5880203C12CA3A7800935308 /* PBXTextBookmark */;
+			5880204712CA3B5100935308 /* PBXTextBookmark */ = 5880204712CA3B5100935308 /* PBXTextBookmark */;
+			5880204812CA3B5100935308 /* PBXTextBookmark */ = 5880204812CA3B5100935308 /* PBXTextBookmark */;
+			5880204912CA3B5100935308 /* PBXTextBookmark */ = 5880204912CA3B5100935308 /* PBXTextBookmark */;
+			5880204E12CA3D8C00935308 /* PBXTextBookmark */ = 5880204E12CA3D8C00935308 /* PBXTextBookmark */;
+			5880204F12CA3D8C00935308 /* PBXTextBookmark */ = 5880204F12CA3D8C00935308 /* PBXTextBookmark */;
+			5880205012CA3D8C00935308 /* PBXTextBookmark */ = 5880205012CA3D8C00935308 /* PBXTextBookmark */;
+			5880205112CA3D8C00935308 /* PBXTextBookmark */ = 5880205112CA3D8C00935308 /* PBXTextBookmark */;
+			5880205212CA3D8C00935308 /* PBXTextBookmark */ = 5880205212CA3D8C00935308 /* PBXTextBookmark */;
+			5880205312CA3D8C00935308 /* PBXTextBookmark */ = 5880205312CA3D8C00935308 /* PBXTextBookmark */;
+			5880205412CA3D8C00935308 /* PBXTextBookmark */ = 5880205412CA3D8C00935308 /* PBXTextBookmark */;
+			5880205512CA3D8C00935308 /* PBXTextBookmark */ = 5880205512CA3D8C00935308 /* PBXTextBookmark */;
+			5880205612CA3D8C00935308 /* PBXTextBookmark */ = 5880205612CA3D8C00935308 /* PBXTextBookmark */;
+			5880205912CA3DF300935308 /* PBXTextBookmark */ = 5880205912CA3DF300935308 /* PBXTextBookmark */;
+			5880205A12CA3DF300935308 /* PBXTextBookmark */ = 5880205A12CA3DF300935308 /* PBXTextBookmark */;
+			5880205B12CA3DF300935308 /* PBXTextBookmark */ = 5880205B12CA3DF300935308 /* PBXTextBookmark */;
+			5880205C12CA3DF300935308 /* PBXTextBookmark */ = 5880205C12CA3DF300935308 /* PBXTextBookmark */;
+			5880206112CA3E4300935308 /* PBXTextBookmark */ = 5880206112CA3E4300935308 /* PBXTextBookmark */;
+			5880207812CA3F3A00935308 /* PBXTextBookmark */ = 5880207812CA3F3A00935308 /* PBXTextBookmark */;
+			5880207912CA3F3A00935308 /* PBXTextBookmark */ = 5880207912CA3F3A00935308 /* PBXTextBookmark */;
+			5880207A12CA3F3A00935308 /* PBXTextBookmark */ = 5880207A12CA3F3A00935308 /* PBXTextBookmark */;
+			5880207B12CA3F3A00935308 /* PBXTextBookmark */ = 5880207B12CA3F3A00935308 /* PBXTextBookmark */;
+			5880207E12CA3FBE00935308 /* PBXTextBookmark */ = 5880207E12CA3FBE00935308 /* PBXTextBookmark */;
 			589749F812948FFD003FB158 = 589749F812948FFD003FB158 /* PBXTextBookmark */;
 			58974A141294D699003FB158 = 58974A141294D699003FB158 /* PBXTextBookmark */;
 			58C02FC3125D0A6800CFDE3E = 58C02FC3125D0A6800CFDE3E /* PBXTextBookmark */;
@@ -609,7 +631,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 134";
 		rLen = 0;
-		rLoc = 4482;
+		rLoc = 4424;
 		rType = 0;
 		vrLen = 2818;
 		vrLoc = 1580;
@@ -639,7 +661,7 @@
 		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
 		name = "CoreProject.cpp: 423";
 		rLen = 0;
-		rLoc = 12395;
+		rLoc = 12371;
 		rType = 0;
 		vrLen = 3548;
 		vrLoc = 10811;
@@ -649,7 +671,7 @@
 		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
 		name = "CoreObject.cpp: 207";
 		rLen = 0;
-		rLoc = 5206;
+		rLoc = 3870;
 		rType = 0;
 		vrLen = 1998;
 		vrLoc = 3523;
@@ -746,7 +768,7 @@
 		fRef = 5843908B12B9708D00F4AB58 /* MetaAttribute.h */;
 		name = "MetaAttribute.h: 46";
 		rLen = 0;
-		rLoc = 1740;
+		rLoc = 1742;
 		rType = 0;
 		vrLen = 1775;
 		vrLoc = 0;
@@ -766,7 +788,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 39";
 		rLen = 34;
-		rLoc = 862;
+		rLoc = 809;
 		rType = 0;
 		vrLen = 3759;
 		vrLoc = 355;
@@ -776,7 +798,7 @@
 		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
 		name = "MetaFolder.h: 63";
 		rLen = 0;
-		rLoc = 3714;
+		rLoc = 3617;
 		rType = 0;
 		vrLen = 3745;
 		vrLoc = 0;
@@ -796,7 +818,7 @@
 		fRef = 5843909812B9708D00F4AB58 /* MetaRegNode.h */;
 		name = "MetaRegNode.h: 54";
 		rLen = 0;
-		rLoc = 1777;
+		rLoc = 1675;
 		rType = 0;
 		vrLen = 1848;
 		vrLoc = 0;
@@ -836,7 +858,7 @@
 		fRef = 584390B612B970A300F4AB58 /* MetaFolder.cpp */;
 		name = "MetaFolder.cpp: 19";
 		rLen = 0;
-		rLoc = 555;
+		rLoc = 557;
 		rType = 0;
 		vrLen = 2954;
 		vrLoc = 0;
@@ -876,7 +898,7 @@
 		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
 		name = "CoreTypes.h: 65";
 		rLen = 0;
-		rLoc = 1353;
+		rLoc = 1371;
 		rType = 0;
 		vrLen = 2547;
 		vrLoc = 506;
@@ -886,7 +908,7 @@
 		fRef = 584390B212B970A300F4AB58 /* MetaBase.cpp */;
 		name = "MetaBase.cpp: 118";
 		rLen = 0;
-		rLoc = 3486;
+		rLoc = 3485;
 		rType = 0;
 		vrLen = 2563;
 		vrLoc = 2648;
@@ -916,7 +938,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 20";
 		rLen = 0;
-		rLoc = 318;
+		rLoc = 299;
 		rType = 0;
 		vrLen = 3314;
 		vrLoc = 0;
@@ -926,7 +948,7 @@
 		fRef = 584390BD12B970A300F4AB58 /* MetaRegNode.cpp */;
 		name = "MetaRegNode.cpp: 44";
 		rLen = 0;
-		rLoc = 1336;
+		rLoc = 1327;
 		rType = 0;
 		vrLen = 2369;
 		vrLoc = 0;
@@ -936,7 +958,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 110";
 		rLen = 0;
-		rLoc = 2382;
+		rLoc = 2394;
 		rType = 0;
 		vrLen = 3078;
 		vrLoc = 1922;
@@ -946,7 +968,7 @@
 		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
 		name = "MetaBase.h: 58";
 		rLen = 0;
-		rLoc = 1903;
+		rLoc = 1904;
 		rType = 0;
 		vrLen = 3080;
 		vrLoc = 0;
@@ -956,7 +978,7 @@
 		fRef = 584390B112B970A300F4AB58 /* MetaAttribute.cpp */;
 		name = "MetaAttribute.cpp: 39";
 		rLen = 0;
-		rLoc = 1236;
+		rLoc = 1240;
 		rType = 0;
 		vrLen = 2833;
 		vrLoc = 61;
@@ -1159,7 +1181,7 @@
 	};
 	5843905D12B96FF800F4AB58 /* platform.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {925, 1361}}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
 			sepNavSelRange = "{549, 0}";
 			sepNavVisRange = "{0, 953}";
 		};
@@ -1173,9 +1195,9 @@
 	};
 	5843906212B9701900F4AB58 /* CoreAttribute.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1147, 2184}}";
-			sepNavSelRange = "{4052, 0}";
-			sepNavVisRange = "{2658, 2061}";
+			sepNavIntBoundsRect = "{{0, 0}, {663, 2197}}";
+			sepNavSelRange = "{3994, 0}";
+			sepNavVisRange = "{3335, 723}";
 		};
 	};
 	5843906312B9701900F4AB58 /* CoreError.h */ = {
@@ -1208,37 +1230,43 @@
 	};
 	5843906712B9701900F4AB58 /* CoreObject.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1076, 2405}}";
-			sepNavSelRange = "{7021, 0}";
-			sepNavVisRange = "{1924, 3565}";
+			sepNavIntBoundsRect = "{{0, 0}, {964, 2509}}";
+			sepNavSelRange = "{342, 0}";
+			sepNavVisRange = "{172, 3141}";
 		};
 	};
 	5843906812B9701900F4AB58 /* CoreProject.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {992, 1573}}";
-			sepNavSelRange = "{615, 15}";
-			sepNavVisRange = "{233, 3508}";
+			sepNavIntBoundsRect = "{{0, 0}, {992, 1495}}";
+			sepNavSelRange = "{906, 0}";
+			sepNavVisRange = "{201, 3641}";
 		};
 	};
 	5843906912B9701900F4AB58 /* CoreStorage.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1543, 1534}}";
-			sepNavSelRange = "{4001, 0}";
-			sepNavVisRange = "{1862, 1723}";
+			sepNavIntBoundsRect = "{{0, 0}, {999, 1443}}";
+			sepNavSelRange = "{4937, 126}";
+			sepNavVisRange = "{368, 4898}";
 		};
 	};
 	5843906A12B9701900F4AB58 /* CoreTransactionItem.h */ = {
+		isa = PBXFileReference;
+		fileEncoding = 4;
+		lastKnownFileType = sourcecode.c.h;
+		name = CoreTransactionItem.h;
+		path = /Users/ghemingway/Documents/MGALib/trunk/Core/CoreTransactionItem.h;
+		sourceTree = "<absolute>";
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1135}}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
 			sepNavSelRange = "{0, 0}";
 			sepNavVisRange = "{0, 2530}";
 		};
 	};
 	5843906B12B9701900F4AB58 /* CoreTypes.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 3159}}";
-			sepNavSelRange = "{1616, 11}";
-			sepNavVisRange = "{541, 2441}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 2899}}";
+			sepNavSelRange = "{7067, 0}";
+			sepNavVisRange = "{3784, 3403}";
 		};
 	};
 	5843907712B9703300F4AB58 /* BinFile.cpp */ = {
@@ -1285,16 +1313,16 @@
 	};
 	5843907D12B9703300F4AB58 /* CoreObject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {900, 5161}}";
-			sepNavSelRange = "{5307, 0}";
-			sepNavVisRange = "{4339, 2493}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 3198}}";
+			sepNavSelRange = "{4292, 0}";
+			sepNavVisRange = "{2726, 2105}";
 		};
 	};
 	5843907E12B9703300F4AB58 /* CoreProject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {900, 9451}}";
-			sepNavSelRange = "{13253, 0}";
-			sepNavVisRange = "{14081, 2008}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 9347}}";
+			sepNavSelRange = "{13229, 0}";
+			sepNavVisRange = "{12019, 2434}";
 		};
 	};
 	5843907F12B9703300F4AB58 /* CoreStorage.cpp */ = {
@@ -1313,49 +1341,49 @@
 	};
 	5843908A12B9708D00F4AB58 /* MetaAspect.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1531, 1135}}";
-			sepNavSelRange = "{118, 50}";
-			sepNavVisRange = "{0, 1575}";
+			sepNavIntBoundsRect = "{{0, 0}, {1531, 1130}}";
+			sepNavSelRange = "{632, 0}";
+			sepNavVisRange = "{0, 1577}";
 		};
 	};
 	5843908B12B9708D00F4AB58 /* MetaAttribute.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1153, 1135}}";
-			sepNavSelRange = "{1740, 0}";
-			sepNavVisRange = "{0, 1775}";
+			sepNavIntBoundsRect = "{{0, 0}, {1153, 1130}}";
+			sepNavSelRange = "{633, 0}";
+			sepNavVisRange = "{0, 1777}";
 		};
 	};
 	5843908C12B9708D00F4AB58 /* MetaBase.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1314, 1599}}";
-			sepNavSelRange = "{3952, 0}";
-			sepNavVisRange = "{113, 3113}";
+			sepNavSelRange = "{830, 0}";
+			sepNavVisRange = "{206, 3036}";
 		};
 	};
 	5843908D12B9708D00F4AB58 /* MetaConnection.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
-			sepNavSelRange = "{710, 10}";
-			sepNavVisRange = "{0, 1224}";
+			sepNavSelRange = "{775, 0}";
+			sepNavVisRange = "{0, 1225}";
 		};
 	};
 	5843908E12B9708D00F4AB58 /* MetaConstraint.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1125, 780}}";
-			sepNavSelRange = "{2380, 0}";
-			sepNavVisRange = "{159, 2223}";
+			sepNavIntBoundsRect = "{{0, 0}, {1125, 1130}}";
+			sepNavSelRange = "{721, 0}";
+			sepNavVisRange = "{0, 2416}";
 		};
 	};
 	5843908F12B9708D00F4AB58 /* MetaEnumItem.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1048, 619}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 1130}}";
 			sepNavSelRange = "{1294, 0}";
 			sepNavVisRange = "{0, 1331}";
 		};
 	};
 	5843909012B9708D00F4AB58 /* MetaFCO.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1678, 1135}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1678, 1130}}";
 			sepNavSelRange = "{3169, 0}";
 			sepNavVisRange = "{0, 3240}";
 		};
@@ -1363,162 +1391,176 @@
 	5843909112B9708D00F4AB58 /* MetaFolder.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1440, 1130}}";
-			sepNavSelRange = "{3714, 0}";
-			sepNavVisRange = "{0, 3745}";
+			sepNavSelRange = "{3617, 0}";
+			sepNavVisRange = "{0, 3648}";
 		};
 	};
 	5843909212B9708D00F4AB58 /* MetaGeneric.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1612}}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1612}}";
 			sepNavSelRange = "{1981, 11}";
-			sepNavVisRange = "{823, 2876}";
+			sepNavVisRange = "{778, 2921}";
 		};
 	};
 	5843909312B9708D00F4AB58 /* MetaModel.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1020, 741}}";
-			sepNavSelRange = "{2477, 0}";
-			sepNavVisRange = "{115, 2431}";
+			sepNavIntBoundsRect = "{{0, 0}, {1020, 1130}}";
+			sepNavSelRange = "{601, 0}";
+			sepNavVisRange = "{0, 2548}";
 		};
 	};
 	5843909412B9708D00F4AB58 /* MetaPart.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1132, 741}}";
-			sepNavSelRange = "{2046, 0}";
-			sepNavVisRange = "{112, 1963}";
+			sepNavIntBoundsRect = "{{0, 0}, {1132, 1130}}";
+			sepNavSelRange = "{593, 0}";
+			sepNavVisRange = "{0, 2079}";
 		};
 	};
 	5843909512B9708D00F4AB58 /* MetaPointerSpec.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1167, 619}}";
-			sepNavSelRange = "{1317, 0}";
-			sepNavVisRange = "{0, 1394}";
+			sepNavIntBoundsRect = "{{0, 0}, {1167, 930}}";
+			sepNavSelRange = "{232, 0}";
+			sepNavVisRange = "{0, 1377}";
 		};
 	};
 	5843909612B9708D00F4AB58 /* MetaProject.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1157}}";
-			sepNavSelRange = "{396, 0}";
-			sepNavVisRange = "{0, 3376}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 1118}}";
+			sepNavSelRange = "{784, 0}";
+			sepNavVisRange = "{0, 2723}";
 		};
 	};
 	5843909712B9708D00F4AB58 /* MetaReference.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {925, 619}}";
-			sepNavSelRange = "{858, 0}";
-			sepNavVisRange = "{0, 933}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
+			sepNavSelRange = "{622, 0}";
+			sepNavVisRange = "{0, 935}";
 		};
 	};
 	5843909812B9708D00F4AB58 /* MetaRegNode.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1135}}";
-			sepNavSelRange = "{1777, 0}";
-			sepNavVisRange = "{0, 1848}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
+			sepNavSelRange = "{1675, 0}";
+			sepNavVisRange = "{0, 1746}";
 		};
 	};
 	5843909912B9708D00F4AB58 /* MetaRole.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1174, 619}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1174, 1130}}";
 			sepNavSelRange = "{1034, 0}";
 			sepNavVisRange = "{0, 1102}";
 		};
 	};
 	5843909A12B9708D00F4AB58 /* MetaSet.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {925, 619}}";
-			sepNavSelRange = "{856, 0}";
-			sepNavVisRange = "{0, 923}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
+			sepNavSelRange = "{593, 0}";
+			sepNavVisRange = "{0, 906}";
 		};
 	};
 	584390B012B970A300F4AB58 /* MetaAspect.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1135}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 1538}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1130}}";
+			sepNavSelRange = "{588, 0}";
+			sepNavVisRange = "{0, 1542}";
 		};
 	};
 	584390B112B970A300F4AB58 /* MetaAttribute.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1222}}";
-			sepNavSelRange = "{1236, 0}";
-			sepNavVisRange = "{61, 2833}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 1222}}";
+			sepNavSelRange = "{642, 0}";
+			sepNavVisRange = "{61, 2800}";
 		};
 	};
 	584390B212B970A300F4AB58 /* MetaBase.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {900, 3341}}";
-			sepNavSelRange = "{4288, 0}";
-			sepNavVisRange = "{4134, 2553}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 3250}}";
+			sepNavSelRange = "{6029, 0}";
+			sepNavVisRange = "{4943, 2387}";
 		};
 	};
 	584390B312B970A300F4AB58 /* MetaConnection.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 1135}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 1951}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 988}}";
+			sepNavSelRange = "{545, 0}";
+			sepNavVisRange = "{0, 1885}";
+		};
+	};
+	584390B412B970A300F4AB58 /* MetaConstraint.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 1170}}";
+			sepNavSelRange = "{233, 0}";
+			sepNavVisRange = "{0, 1809}";
 		};
 	};
 	584390B512B970A300F4AB58 /* MetaFCO.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 2054}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{1526, 2023}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 2015}}";
+			sepNavSelRange = "{3068, 0}";
+			sepNavVisRange = "{1526, 1791}";
 		};
 	};
 	584390B612B970A300F4AB58 /* MetaFolder.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1013, 2184}}";
-			sepNavSelRange = "{555, 0}";
-			sepNavVisRange = "{2802, 2729}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 2171}}";
+			sepNavSelRange = "{889, 0}";
+			sepNavVisRange = "{0, 2445}";
 		};
 	};
 	584390B712B970A300F4AB58 /* MetaGeneric.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 2756}}";
-			sepNavSelRange = "{1144, 11}";
-			sepNavVisRange = "{1098, 4037}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 2730}}";
+			sepNavSelRange = "{8974, 0}";
+			sepNavVisRange = "{5211, 3787}";
 		};
 	};
 	584390B812B970A300F4AB58 /* MetaModel.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 3952}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 2593}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 3991}}";
+			sepNavSelRange = "{711, 0}";
+			sepNavVisRange = "{0, 2164}";
+		};
+	};
+	584390B912B970A300F4AB58 /* MetaPart.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 1482}}";
+			sepNavSelRange = "{596, 0}";
+			sepNavVisRange = "{0, 1782}";
 		};
 	};
 	584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {663, 884}}";
-			sepNavSelRange = "{387, 0}";
-			sepNavVisRange = "{0, 747}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 936}}";
+			sepNavSelRange = "{473, 0}";
+			sepNavVisRange = "{0, 1775}";
 		};
 	};
 	584390BB12B970A300F4AB58 /* MetaProject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {684, 5577}}";
-			sepNavSelRange = "{3254, 0}";
-			sepNavVisRange = "{2827, 979}";
+			sepNavIntBoundsRect = "{{0, 0}, {670, 5668}}";
+			sepNavSelRange = "{1088, 0}";
+			sepNavVisRange = "{566, 839}";
 		};
 	};
 	584390BC12B970A300F4AB58 /* MetaReference.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {888, 1309}}";
-			sepNavSelRange = "{403, 0}";
-			sepNavVisRange = "{0, 949}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 930}}";
+			sepNavSelRange = "{464, 0}";
+			sepNavVisRange = "{0, 953}";
 		};
 	};
 	584390BD12B970A300F4AB58 /* MetaRegNode.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 2080}}";
-			sepNavSelRange = "{1336, 0}";
-			sepNavVisRange = "{0, 2369}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 2158}}";
+			sepNavSelRange = "{3035, 0}";
+			sepNavVisRange = "{2042, 1554}";
 		};
 	};
 	584390BE12B970A300F4AB58 /* MetaSet.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1543, 377}}";
-			sepNavSelRange = "{213, 10}";
-			sepNavVisRange = "{0, 819}";
+			sepNavIntBoundsRect = "{{0, 0}, {1147, 930}}";
+			sepNavSelRange = "{414, 0}";
+			sepNavVisRange = "{0, 825}";
 		};
 	};
 	584390CE12B970BF00F4AB58 /* MgaAttribute.h */ = {
@@ -1586,9 +1628,9 @@
 	};
 	584390D712B970BF00F4AB58 /* MgaTypes.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {898, 2405}}";
+			sepNavIntBoundsRect = "{{0, 0}, {900, 2405}}";
 			sepNavSelRange = "{398, 0}";
-			sepNavVisRange = "{0, 2012}";
+			sepNavVisRange = "{0, 1966}";
 		};
 	};
 	584390E312B970C900F4AB58 /* MgaError.cpp */ = {
@@ -1876,7 +1918,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 113";
 		rLen = 0;
-		rLoc = 2476;
+		rLoc = 2488;
 		rType = 0;
 		vrLen = 2925;
 		vrLoc = 2317;
@@ -2000,7 +2042,7 @@
 		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
 		name = "CoreTypes.h: 135";
 		rLen = 0;
-		rLoc = 3594;
+		rLoc = 3612;
 		rType = 0;
 		vrLen = 3387;
 		vrLoc = 2712;
@@ -2027,7 +2069,7 @@
 		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
 		name = "CoreTypes.h: 135";
 		rLen = 0;
-		rLoc = 3594;
+		rLoc = 3612;
 		rType = 0;
 		vrLen = 3516;
 		vrLoc = 2700;
@@ -2037,7 +2079,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 39";
 		rLen = 34;
-		rLoc = 862;
+		rLoc = 809;
 		rType = 0;
 		vrLen = 3711;
 		vrLoc = 355;
@@ -2077,7 +2119,7 @@
 		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
 		name = "CoreObject.cpp: 208";
 		rLen = 0;
-		rLoc = 5307;
+		rLoc = 3971;
 		rType = 0;
 		vrLen = 2405;
 		vrLoc = 4341;
@@ -2087,7 +2129,7 @@
 		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
 		name = "CoreProject.cpp: 385";
 		rLen = 0;
-		rLoc = 11059;
+		rLoc = 11057;
 		rType = 0;
 		vrLen = 3097;
 		vrLoc = 11225;
@@ -2107,7 +2149,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 126";
 		rLen = 0;
-		rLoc = 2888;
+		rLoc = 2900;
 		rType = 0;
 		vrLen = 2882;
 		vrLoc = 2654;
@@ -2147,7 +2189,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 126";
 		rLen = 0;
-		rLoc = 2888;
+		rLoc = 2900;
 		rType = 0;
 		vrLen = 2878;
 		vrLoc = 2654;
@@ -2177,7 +2219,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 20";
 		rLen = 0;
-		rLoc = 318;
+		rLoc = 299;
 		rType = 0;
 		vrLen = 3282;
 		vrLoc = 0;
@@ -2187,7 +2229,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 20";
 		rLen = 0;
-		rLoc = 318;
+		rLoc = 299;
 		rType = 0;
 		vrLen = 3282;
 		vrLoc = 0;
@@ -2197,7 +2239,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 96";
 		rLen = 57;
-		rLoc = 3516;
+		rLoc = 3463;
 		rType = 0;
 		vrLen = 3630;
 		vrLoc = 780;
@@ -2207,7 +2249,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 56";
 		rLen = 57;
-		rLoc = 1714;
+		rLoc = 1567;
 		rType = 0;
 		vrLen = 3342;
 		vrLoc = 0;
@@ -2227,7 +2269,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 140";
 		rLen = 0;
-		rLoc = 3469;
+		rLoc = 3483;
 		rType = 0;
 		vrLen = 2819;
 		vrLoc = 2883;
@@ -2277,7 +2319,7 @@
 		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
 		name = "CoreTypes.h: 190";
 		rLen = 0;
-		rLoc = 6216;
+		rLoc = 6234;
 		rType = 0;
 		vrLen = 3643;
 		vrLoc = 3467;
@@ -2324,7 +2366,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 75";
 		rLen = 0;
-		rLoc = 2870;
+		rLoc = 2723;
 		rType = 0;
 		vrLen = 3302;
 		vrLoc = 56;
@@ -2334,7 +2376,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 369";
 		rLen = 0;
-		rLoc = 11711;
+		rLoc = 11723;
 		rType = 0;
 		vrLen = 2047;
 		vrLoc = 11392;
@@ -2394,7 +2436,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 75";
 		rLen = 0;
-		rLoc = 2870;
+		rLoc = 2723;
 		rType = 0;
 		vrLen = 3330;
 		vrLoc = 28;
@@ -2404,7 +2446,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 75";
 		rLen = 0;
-		rLoc = 2870;
+		rLoc = 2723;
 		rType = 0;
 		vrLen = 3302;
 		vrLoc = 56;
@@ -2414,7 +2456,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 75";
 		rLen = 0;
-		rLoc = 2870;
+		rLoc = 2723;
 		rType = 0;
 		vrLen = 3302;
 		vrLoc = 56;
@@ -2574,7 +2616,7 @@
 		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
 		name = "CoreTypes.h: 75";
 		rLen = 11;
-		rLoc = 1616;
+		rLoc = 1634;
 		rType = 0;
 		vrLen = 2441;
 		vrLoc = 541;
@@ -2594,7 +2636,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 208";
 		rLen = 45;
-		rLoc = 5572;
+		rLoc = 5586;
 		rType = 0;
 		vrLen = 3004;
 		vrLoc = 5350;
@@ -2604,7 +2646,7 @@
 		fRef = 584390B612B970A300F4AB58 /* MetaFolder.cpp */;
 		name = "MetaFolder.cpp: 19";
 		rLen = 0;
-		rLoc = 555;
+		rLoc = 557;
 		rType = 0;
 		vrLen = 2729;
 		vrLoc = 2802;
@@ -2624,7 +2666,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 76";
 		rLen = 54;
-		rLoc = 2940;
+		rLoc = 2793;
 		rType = 0;
 		vrLen = 3338;
 		vrLoc = 28;
@@ -2634,7 +2676,7 @@
 		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
 		name = "MetaBase.h: 58";
 		rLen = 0;
-		rLoc = 1903;
+		rLoc = 1904;
 		rType = 0;
 		vrLen = 3565;
 		vrLoc = 913;
@@ -2644,7 +2686,7 @@
 		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
 		name = "MetaFolder.h: 63";
 		rLen = 0;
-		rLoc = 3714;
+		rLoc = 3617;
 		rType = 0;
 		vrLen = 3745;
 		vrLoc = 0;
@@ -2654,7 +2696,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 342";
 		rLen = 0;
-		rLoc = 10665;
+		rLoc = 10678;
 		rType = 0;
 		vrLen = 2620;
 		vrLoc = 9915;
@@ -2664,7 +2706,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 343";
 		rLen = 0;
-		rLoc = 10681;
+		rLoc = 10694;
 		rType = 0;
 		vrLen = 2668;
 		vrLoc = 9915;
@@ -2674,7 +2716,7 @@
 		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
 		name = "MetaFolder.h: 63";
 		rLen = 0;
-		rLoc = 3714;
+		rLoc = 3617;
 		rType = 0;
 		vrLen = 3745;
 		vrLoc = 0;
@@ -2684,7 +2726,7 @@
 		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
 		name = "MetaBase.h: 58";
 		rLen = 0;
-		rLoc = 1903;
+		rLoc = 1904;
 		rType = 0;
 		vrLen = 3457;
 		vrLoc = 1021;
@@ -2694,7 +2736,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 22";
 		rLen = 0;
-		rLoc = 396;
+		rLoc = 302;
 		rType = 0;
 		vrLen = 3318;
 		vrLoc = 28;
@@ -2704,7 +2746,7 @@
 		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
 		name = "CoreTypes.h: 75";
 		rLen = 11;
-		rLoc = 1616;
+		rLoc = 1634;
 		rType = 0;
 		vrLen = 2441;
 		vrLoc = 541;
@@ -2714,7 +2756,7 @@
 		fRef = 5843906712B9701900F4AB58 /* CoreObject.h */;
 		name = "CoreObject.h: 176";
 		rLen = 0;
-		rLoc = 7015;
+		rLoc = 6979;
 		rType = 0;
 		vrLen = 3686;
 		vrLoc = 3484;
@@ -2734,7 +2776,7 @@
 		fRef = 584390B212B970A300F4AB58 /* MetaBase.cpp */;
 		name = "MetaBase.cpp: 122";
 		rLen = 0;
-		rLoc = 3605;
+		rLoc = 3604;
 		rType = 0;
 		vrLen = 2142;
 		vrLoc = 2967;
@@ -2744,7 +2786,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 370";
 		rLen = 0;
-		rLoc = 11466;
+		rLoc = 11478;
 		rType = 0;
 		vrLen = 2423;
 		vrLoc = 10961;
@@ -2794,7 +2836,7 @@
 		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
 		name = "MetaFolder.h: 63";
 		rLen = 0;
-		rLoc = 3714;
+		rLoc = 3617;
 		rType = 0;
 		vrLen = 3745;
 		vrLoc = 0;
@@ -2804,7 +2846,7 @@
 		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
 		name = "MetaBase.h: 109";
 		rLen = 0;
-		rLoc = 3952;
+		rLoc = 3956;
 		rType = 0;
 		vrLen = 3490;
 		vrLoc = 911;
@@ -2834,7 +2876,7 @@
 		fRef = 5843906712B9701900F4AB58 /* CoreObject.h */;
 		name = "CoreObject.h: 177";
 		rLen = 0;
-		rLoc = 7021;
+		rLoc = 6987;
 		rType = 0;
 		vrLen = 3723;
 		vrLoc = 3371;
@@ -2844,7 +2886,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 96";
 		rLen = 57;
-		rLoc = 3516;
+		rLoc = 3463;
 		rType = 0;
 		vrLen = 3740;
 		vrLoc = 670;
@@ -2854,7 +2896,7 @@
 		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
 		name = "MetaFolder.h: 63";
 		rLen = 0;
-		rLoc = 3714;
+		rLoc = 3617;
 		rType = 0;
 		vrLen = 3745;
 		vrLoc = 0;
@@ -2864,7 +2906,7 @@
 		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
 		name = "MetaBase.h: 109";
 		rLen = 0;
-		rLoc = 3952;
+		rLoc = 3956;
 		rType = 0;
 		vrLen = 3467;
 		vrLoc = 934;
@@ -2874,7 +2916,7 @@
 		fRef = 5843909612B9708D00F4AB58 /* MetaProject.h */;
 		name = "MetaProject.h: 22";
 		rLen = 0;
-		rLoc = 396;
+		rLoc = 302;
 		rType = 0;
 		vrLen = 3376;
 		vrLoc = 0;
@@ -2894,7 +2936,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 117";
 		rLen = 35;
-		rLoc = 3616;
+		rLoc = 3630;
 		rType = 0;
 		vrLen = 2903;
 		vrLoc = 2227;
@@ -2984,7 +3026,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 31";
 		rLen = 15;
-		rLoc = 615;
+		rLoc = 562;
 		rType = 0;
 		vrLen = 3508;
 		vrLoc = 233;
@@ -2994,7 +3036,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 133";
 		rLen = 0;
-		rLoc = 4165;
+		rLoc = 4179;
 		rType = 0;
 		vrLen = 2985;
 		vrLoc = 2888;
@@ -3004,7 +3046,7 @@
 		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
 		name = "CoreObject.cpp: 208";
 		rLen = 0;
-		rLoc = 5307;
+		rLoc = 3971;
 		rType = 0;
 		vrLen = 2493;
 		vrLoc = 4339;
@@ -3034,7 +3076,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 157";
 		rLen = 0;
-		rLoc = 4544;
+		rLoc = 4486;
 		rType = 0;
 		vrLen = 2563;
 		vrLoc = 2140;
@@ -3114,7 +3156,7 @@
 		fRef = 584390B212B970A300F4AB58 /* MetaBase.cpp */;
 		name = "MetaBase.cpp: 259";
 		rLen = 0;
-		rLoc = 6980;
+		rLoc = 6974;
 		rType = 0;
 		vrLen = 2393;
 		vrLoc = 5523;
@@ -3154,7 +3196,7 @@
 		fRef = 584390BB12B970A300F4AB58 /* MetaProject.cpp */;
 		name = "MetaProject.cpp: 334";
 		rLen = 0;
-		rLoc = 11104;
+		rLoc = 11117;
 		rType = 0;
 		vrLen = 1935;
 		vrLoc = 10826;
@@ -3185,7 +3227,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		fallbackIsa = XCBuildMessageTextBookmark;
 		rLen = 1;
-		rLoc = 141;
+		rLoc = 138;
 		rType = 1;
 	};
 	5880202212CA397E00935308 /* PBXTextBookmark */ = {
@@ -3193,7 +3235,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 142";
 		rLen = 0;
-		rLoc = 4052;
+		rLoc = 3994;
 		rType = 0;
 		vrLen = 2061;
 		vrLoc = 2658;
@@ -3202,7 +3244,7 @@
 		isa = PBXTextBookmark;
 		fRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */;
 		rLen = 10;
-		rLoc = 213;
+		rLoc = 215;
 		rType = 0;
 	};
 	5880202512CA397E00935308 /* PBXTextBookmark */ = {
@@ -3210,7 +3252,7 @@
 		fRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */;
 		name = "MetaSet.cpp: 9";
 		rLen = 10;
-		rLoc = 213;
+		rLoc = 215;
 		rType = 0;
 		vrLen = 819;
 		vrLoc = 0;
@@ -3220,7 +3262,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 142";
 		rLen = 0;
-		rLoc = 4052;
+		rLoc = 3994;
 		rType = 0;
 		vrLen = 2061;
 		vrLoc = 2658;
@@ -3230,7 +3272,7 @@
 		fRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */;
 		name = "MetaSet.cpp: 9";
 		rLen = 10;
-		rLoc = 213;
+		rLoc = 215;
 		rType = 0;
 		vrLen = 819;
 		vrLoc = 0;
@@ -3240,7 +3282,7 @@
 		fRef = 5843908D12B9708D00F4AB58 /* MetaConnection.h */;
 		name = "MetaConnection.h: 30";
 		rLen = 10;
-		rLoc = 710;
+		rLoc = 712;
 		rType = 0;
 		vrLen = 907;
 		vrLoc = 317;
@@ -3259,7 +3301,7 @@
 		isa = PBXTextBookmark;
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		rLen = 10;
-		rLoc = 3924;
+		rLoc = 3869;
 		rType = 0;
 	};
 	5880202D12CA3A5000935308 /* PBXTextBookmark */ = {
@@ -3267,7 +3309,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 111";
 		rLen = 0;
-		rLoc = 4282;
+		rLoc = 4226;
 		rType = 0;
 		vrLen = 1467;
 		vrLoc = 2920;
@@ -3307,7 +3349,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 158";
 		rLen = 0;
-		rLoc = 4544;
+		rLoc = 4486;
 		rType = 0;
 		vrLen = 2419;
 		vrLoc = 0;
@@ -3317,7 +3359,7 @@
 		fRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */;
 		name = "MetaSet.cpp: 9";
 		rLen = 10;
-		rLoc = 213;
+		rLoc = 215;
 		rType = 0;
 		vrLen = 821;
 		vrLoc = 0;
@@ -3337,7 +3379,7 @@
 		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
 		name = "MetaFolder.h: 63";
 		rLen = 0;
-		rLoc = 3714;
+		rLoc = 3617;
 		rType = 0;
 		vrLen = 3745;
 		vrLoc = 0;
@@ -3347,7 +3389,7 @@
 		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
 		name = "MetaBase.h: 109";
 		rLen = 0;
-		rLoc = 3952;
+		rLoc = 3956;
 		rType = 0;
 		vrLen = 3113;
 		vrLoc = 113;
@@ -3357,7 +3399,7 @@
 		fRef = 5843906712B9701900F4AB58 /* CoreObject.h */;
 		name = "CoreObject.h: 177";
 		rLen = 0;
-		rLoc = 7021;
+		rLoc = 6987;
 		rType = 0;
 		vrLen = 3565;
 		vrLoc = 1924;
@@ -3367,7 +3409,7 @@
 		fRef = 5843908D12B9708D00F4AB58 /* MetaConnection.h */;
 		name = "MetaConnection.h: 30";
 		rLen = 10;
-		rLoc = 710;
+		rLoc = 712;
 		rType = 0;
 		vrLen = 1224;
 		vrLoc = 0;
@@ -3377,7 +3419,7 @@
 		fRef = 5843906812B9701900F4AB58 /* CoreProject.h */;
 		name = "CoreProject.h: 31";
 		rLen = 15;
-		rLoc = 615;
+		rLoc = 562;
 		rType = 0;
 		vrLen = 3508;
 		vrLoc = 233;
@@ -3397,10 +3439,230 @@
 		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
 		name = "CoreProject.cpp: 421";
 		rLen = 0;
-		rLoc = 13253;
+		rLoc = 13229;
 		rType = 0;
 		vrLen = 2008;
 		vrLoc = 14081;
+	};
+	5880204712CA3B5100935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
+		name = "CoreProject.cpp: 421";
+		rLen = 0;
+		rLoc = 13229;
+		rType = 0;
+		vrLen = 2342;
+		vrLoc = 12336;
+	};
+	5880204812CA3B5100935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906912B9701900F4AB58 /* CoreStorage.h */;
+		name = "CoreStorage.h: 98";
+		rLen = 126;
+		rLoc = 4937;
+		rType = 0;
+		vrLen = 4898;
+		vrLoc = 368;
+	};
+	5880204912CA3B5100935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
+		name = "CoreAttribute.h: 39";
+		rLen = 0;
+		rLoc = 929;
+		rType = 0;
+		vrLen = 2487;
+		vrLoc = 0;
+	};
+	5880204E12CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
+		name = "CoreAttribute.h: 39";
+		rLen = 0;
+		rLoc = 929;
+		rType = 0;
+		vrLen = 2487;
+		vrLoc = 0;
+	};
+	5880204F12CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */;
+		name = "MetaGeneric.cpp: 205";
+		rLen = 0;
+		rLoc = 8974;
+		rType = 0;
+		vrLen = 3787;
+		vrLoc = 5211;
+	};
+	5880205012CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843908D12B9708D00F4AB58 /* MetaConnection.h */;
+		name = "MetaConnection.h: 30";
+		rLen = 10;
+		rLoc = 712;
+		rType = 0;
+		vrLen = 1224;
+		vrLoc = 0;
+	};
+	5880205112CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843908E12B9708D00F4AB58 /* MetaConstraint.h */;
+		name = "MetaConstraint.h: 57";
+		rLen = 0;
+		rLoc = 2378;
+		rType = 0;
+		vrLen = 2417;
+		vrLoc = 0;
+	};
+	5880205212CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843909112B9708D00F4AB58 /* MetaFolder.h */;
+		name = "MetaFolder.h: 63";
+		rLen = 0;
+		rLoc = 3617;
+		rType = 0;
+		vrLen = 3745;
+		vrLoc = 0;
+	};
+	5880205312CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843908C12B9708D00F4AB58 /* MetaBase.h */;
+		name = "MetaBase.h: 109";
+		rLen = 0;
+		rLoc = 3956;
+		rType = 0;
+		vrLen = 3467;
+		vrLoc = 934;
+	};
+	5880205412CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906712B9701900F4AB58 /* CoreObject.h */;
+		name = "CoreObject.h: 51";
+		rLen = 0;
+		rLoc = 1053;
+		rType = 0;
+		vrLen = 3540;
+		vrLoc = 413;
+	};
+	5880205512CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
+		name = "CoreObject.cpp: 190";
+		rLen = 0;
+		rLoc = 5238;
+		rType = 0;
+		vrLen = 2847;
+		vrLoc = 3855;
+	};
+	5880205612CA3D8C00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
+		name = "CoreObject.cpp: 190";
+		rLen = 0;
+		rLoc = 5238;
+		rType = 0;
+		vrLen = 2818;
+		vrLoc = 3884;
+	};
+	5880205912CA3DF300935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843905D12B96FF800F4AB58 /* platform.h */;
+		name = "platform.h: 24";
+		rLen = 0;
+		rLoc = 549;
+		rType = 0;
+		vrLen = 953;
+		vrLoc = 0;
+	};
+	5880205A12CA3DF300935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */;
+		name = "CoreTypes.h: 20";
+		rLen = 0;
+		rLoc = 345;
+		rType = 0;
+		vrLen = 2032;
+		vrLoc = 0;
+	};
+	5880205B12CA3DF300935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
+		name = "CoreObject.cpp: 190";
+		rLen = 0;
+		rLoc = 5238;
+		rType = 0;
+		vrLen = 2818;
+		vrLoc = 3884;
+	};
+	5880205C12CA3DF300935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
+		name = "CoreObject.cpp: 190";
+		rLen = 0;
+		rLoc = 5238;
+		rType = 0;
+		vrLen = 2818;
+		vrLoc = 3884;
+	};
+	5880206112CA3E4300935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
+		name = "CoreObject.cpp: 190";
+		rLen = 0;
+		rLoc = 5238;
+		rType = 0;
+		vrLen = 2777;
+		vrLoc = 3784;
+	};
+	5880207812CA3F3A00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */;
+		name = "CoreObject.cpp: 190";
+		rLen = 0;
+		rLoc = 5238;
+		rType = 0;
+		vrLen = 2789;
+		vrLoc = 3784;
+	};
+	5880207912CA3F3A00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
+		name = "CoreAttribute.h: 39";
+		rLen = 0;
+		rLoc = 929;
+		rType = 0;
+		vrLen = 2570;
+		vrLoc = 2091;
+	};
+	5880207A12CA3F3A00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907812B9703300F4AB58 /* CoreAttribute.cpp */;
+		name = "CoreAttribute.cpp: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 2678;
+		vrLoc = 0;
+	};
+	5880207B12CA3F3A00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
+		name = "CoreProject.cpp: 420";
+		rLen = 0;
+		rLoc = 13229;
+		rType = 0;
+		vrLen = 2398;
+		vrLoc = 12115;
+	};
+	5880207E12CA3FBE00935308 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */;
+		name = "CoreProject.cpp: 420";
+		rLen = 0;
+		rLoc = 13229;
+		rType = 0;
+		vrLen = 2372;
+		vrLoc = 12109;
 	};
 	5883026D124BE8E1009251F4 /* Source Control */ = {
 		isa = PBXSourceControlManager;
@@ -3503,7 +3765,7 @@
 		fRef = 5843908D12B9708D00F4AB58 /* MetaConnection.h */;
 		name = "MetaConnection.h: 40";
 		rLen = 0;
-		rLoc = 1150;
+		rLoc = 1151;
 		rType = 0;
 		vrLen = 1224;
 		vrLoc = 0;
@@ -3513,7 +3775,7 @@
 		fRef = 5843908E12B9708D00F4AB58 /* MetaConstraint.h */;
 		name = "MetaConstraint.h: 57";
 		rLen = 0;
-		rLoc = 2380;
+		rLoc = 2378;
 		rType = 0;
 		vrLen = 2223;
 		vrLoc = 159;
@@ -3533,7 +3795,7 @@
 		fRef = 5843909312B9708D00F4AB58 /* MetaModel.h */;
 		name = "MetaModel.h: 51";
 		rLen = 0;
-		rLoc = 2477;
+		rLoc = 2479;
 		rType = 0;
 		vrLen = 2431;
 		vrLoc = 115;
@@ -3543,7 +3805,7 @@
 		fRef = 5843909412B9708D00F4AB58 /* MetaPart.h */;
 		name = "MetaPart.h: 54";
 		rLen = 0;
-		rLoc = 2046;
+		rLoc = 2048;
 		rType = 0;
 		vrLen = 1963;
 		vrLoc = 112;
@@ -3553,7 +3815,7 @@
 		fRef = 5843909512B9708D00F4AB58 /* MetaPointerSpec.h */;
 		name = "MetaPointerSpec.h: 39";
 		rLen = 0;
-		rLoc = 1317;
+		rLoc = 1300;
 		rType = 0;
 		vrLen = 1394;
 		vrLoc = 0;
@@ -3563,7 +3825,7 @@
 		fRef = 5843909712B9708D00F4AB58 /* MetaReference.h */;
 		name = "MetaReference.h: 34";
 		rLen = 0;
-		rLoc = 858;
+		rLoc = 860;
 		rType = 0;
 		vrLen = 933;
 		vrLoc = 0;
@@ -3583,7 +3845,7 @@
 		fRef = 5843909A12B9708D00F4AB58 /* MetaSet.h */;
 		name = "MetaSet.h: 37";
 		rLen = 0;
-		rLoc = 856;
+		rLoc = 839;
 		rType = 0;
 		vrLen = 923;
 		vrLoc = 0;
@@ -3747,7 +4009,7 @@
 		fRef = 584390BC12B970A300F4AB58 /* MetaReference.cpp */;
 		name = "MetaReference.cpp: 15";
 		rLen = 0;
-		rLoc = 403;
+		rLoc = 405;
 		rType = 0;
 		vrLen = 949;
 		vrLoc = 0;

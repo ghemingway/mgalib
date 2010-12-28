@@ -5,7 +5,7 @@
 // --------------------------- MetaConstraint --------------------------- //
 
 
-MetaConstraint::MetaConstraint(CoreObject* &coreObject, MetaProject* &metaProject) :
+MetaConstraint::MetaConstraint(CoreObject &coreObject, MetaProject* &metaProject) :
 	_coreObject(coreObject), _metaProject(metaProject)
 {
 	ASSERT(coreObject != NULL);

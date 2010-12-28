@@ -26,7 +26,7 @@ private:
 	MetaModel& operator=(const MetaModel &);				//!< Deny access to equals operator
 
 public:
-	static void Traverse(MetaProject *metaProject, CoreObject* &coreObject);
+//	static void Traverse(MetaProject *metaProject, CoreObject* &coreObject);
 
 	const Result_t GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw();
 	const Result_t GetRoles(std::list<MetaRole*> &roleList) const throw();

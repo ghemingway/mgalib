@@ -12,7 +12,6 @@ namespace MGA {
 
 /*** Class Predefinitions ***/
 class MetaRegNode;
-class CoreObject;
 class MetaProject;
 
 
@@ -22,9 +21,9 @@ class MetaProject;
 class MetaRegNodes
 {
 public:
-	static const Result_t GetRegistryNode(CoreObject* &coreObject, const std::string &path, MetaRegNode* &regNode);
-	static const Result_t GetRegistryValue(CoreObject* &coreObject, const std::string & path, std::string &value);
-	static const Result_t SetRegistryValue(CoreObject* &coreObject, const std::string & path, const std::string &value);
+	static const Result_t GetRegistryNode(CoreObject &coreObject, const std::string &path, MetaRegNode* &regNode);
+	static const Result_t GetRegistryValue(CoreObject &coreObject, const std::string & path, std::string &value);
+	static const Result_t SetRegistryValue(CoreObject &coreObject, const std::string & path, const std::string &value);
 };
 
 
@@ -34,9 +33,6 @@ public:
 class MetaRegNode : public MetaRegNodes
 {
 public:
-
-	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
-
 	inline const Result_t GetRegistryNode(const std::string &path, MetaRegNode* &regNode) const throw();
 //		{ return MetaRegNodes::GetRegistryNode(this, path, regNode); }
 	inline const Result_t GetRegistryValue(const std::string &path, std::string value) const throw();

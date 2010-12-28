@@ -6,7 +6,7 @@
 
 // --------------------------- Public MetaAttribute Methods --------------------------- //
 
-
+/*
 void MetaAttribute::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -17,7 +17,7 @@ void MetaAttribute::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ATTRLINK_ATTR_PTR);
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ENUMITEMS_COLL);
 }
-
+*/
 
 const Result_t MetaAttribute::GetDefinedIn(MetaFCO* &fco) const throw()
 {

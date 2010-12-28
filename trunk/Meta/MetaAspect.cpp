@@ -5,7 +5,7 @@
 
 // --------------------------- MetaAspect --------------------------- //
 
-
+/*
 void MetaAspect::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -16,7 +16,7 @@ void MetaAspect::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_PARTASPECT_PTR);
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ATTRLINK_USEDIN_PTR);
 }
-
+*/
 
 const Result_t MetaAspect::GetParentModel(MetaModel* &metaModel) const throw()
 {

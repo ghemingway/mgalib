@@ -9,7 +9,7 @@
 // --------------------------- MetaRegNodes --------------------------- //
 
 
-const Result_t MetaRegNodes::GetRegistryNode(CoreObject* &coreObject, const std::string &path, MetaRegNode* &regNode)
+const Result_t MetaRegNodes::GetRegistryNode(CoreObject &coreObject, const std::string &path, MetaRegNode* &regNode)
 {
 	ASSERT( coreObject != NULL );
 	CoreProject* coreProject;
@@ -21,7 +21,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject* &coreObject, const std:
 		int pos = path.find('/');
 		std::string name(path, 0, pos);
 		// Get the collection of backpointers to registry nodes
-		CoreObject* node = NULL;
+		CoreObject node;
 		std::list<Uuid> coreObjectIDs;
 		coreObject->GetAttributeValue(ATTRID_REGNODES_COLL, coreObjectIDs);
 		
@@ -29,7 +29,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject* &coreObject, const std:
 		while( idIter != coreObjectIDs.end() )
 		{
 			std::string tmpName;
-			CoreObject* tmpObject;
+			CoreObject tmpObject;
 			coreProject->Object(*idIter, tmpObject);
 			ASSERT(tmpObject != NULL);
 			tmpObject->GetAttributeValue(ATTRID_NAME, tmpName);
@@ -39,7 +39,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject* &coreObject, const std:
 				break;
 			}
 			// Make sure to delete the tmpObject
-			delete tmpObject;
+			tmpObject.reset();
 			// Move on to the next object
 			++idIter;
 		}
@@ -106,7 +106,7 @@ HRESULT CMgaMetaRegNodes::put_RegistryValue(IUnknown *me, BSTR path, BSTR p)
 
 // --------------------------- MetaRegNode --------------------------- //
 
-
+/*
 void MetaRegNode::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -114,7 +114,7 @@ void MetaRegNode::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	// Traverse any children
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_REGNODES_COLL);
 }
-
+*/
 
 const Result_t MetaRegNode::GetRegistryNodes(std::list<MetaRegNode*> &nodeList) const throw()
 {

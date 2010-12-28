@@ -14,13 +14,11 @@ namespace MGA {
 
 /*** Class Predefinitions ***/
 class CoreProject;
-class CoreObject;
-class CoreObjectBase;
 class ICoreStorage;
 
 
 /*** Type Definitions ***/
-//None
+// None
 
 
 // --------------------------- CoreObject ---------------------------
@@ -43,13 +41,13 @@ protected:
 	void CreateAttributes(void);
 
 public:
-	static const Result_t Create(CoreProject *project, const Uuid &uuid, CoreObject* &coreObject) throw();
+	static const Result_t Create(CoreProject *project, const Uuid &uuid, CoreObject &coreObject) throw();
 	virtual ~CoreObjectBase();
 
 	// ------- Hidden (Core only) Interface ------------ //
 
-	CoreObject* Reference(void);
-	void Release(void);
+//	CoreObject* Reference(void);
+//	void Release(void);
 	void RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase *attribute) throw();
 	void UnregisterAttribute(const AttrID_t &attrID) throw();
 	ICoreStorage* SetStorageObject(void) const;
@@ -127,7 +125,7 @@ public:
 	}
 };
 
-
+/*
 class CoreObject
 {
 private:
@@ -174,7 +172,7 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& out, const CoreObject *object) { return out << object->_base; }
 };
-
+*/
 
 /*** End of MGA Namespace ***/
 }
