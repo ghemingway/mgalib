@@ -77,14 +77,14 @@ public:
 	virtual const Result_t CommitTransaction(void) throw()=0;								//!< Commit transaction on project
 	virtual const Result_t AbortTransaction(void) throw()=0;								//!< Abort transaction on project
 
-	// --- CoreObject
+	// --- Object
 
 	virtual const Result_t OpenObject(const Uuid &uuid) throw()=0;							//!< Open an object in project
 	virtual const Result_t CloseObject(void) throw()=0;										//!< Close current object
 	virtual const Result_t CreateObject(const MetaID_t &metaID, Uuid &newUuid) throw()=0;	//!< Create a new object
 	virtual const Result_t DeleteObject(void) throw()=0;									//!< Delete current object
 
-	// --- CoreAttribute
+	// --- Attribute
 
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw()=0;			//!< Get long
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, double &value) throw()=0;			//!< Get real
@@ -94,7 +94,8 @@ public:
 
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()=0;	//!< Set long
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw()=0;	//!< Set real
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()=0;//!< Set string
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()=0;		//!< Set string
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw()=0;	//!< Set collection
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()=0;		//!< Set pointer (long or regular)
 };
 

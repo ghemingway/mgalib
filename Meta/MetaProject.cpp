@@ -32,28 +32,6 @@ MetaProject::MetaProject(CoreProject* &coreProject) : _coreProject(coreProject),
 }
 
 
-const Result_t MetaProject::RegisterMetaBase(const Uuid &uuid, MetaBase* obj)
-{
-	ASSERT( obj != NULL );
-	// Try to find uuid in the hash
-	if( this->_metaObjectHash.find(uuid) != this->_metaObjectHash.end() )
-		return E_METAREF;
-	// Update the value in the hash
-	this->_metaObjectHash[uuid] = obj;
-	return S_OK;
-}
-
-
-const Result_t MetaProject::UnregisterMetaBase(const Uuid &uuid, MetaBase* obj)
-{
-	ASSERT( obj != NULL );
-	ASSERT( this->_metaObjectHash.find(uuid) != this->_metaObjectHash.end() );
-	ASSERT( this->_metaObjectHash[uuid] == obj );
-	this->_metaObjectHash.erase(uuid);
-	return S_OK;
-}
-
-
 // --------------------------- Public MetaProject Methods --------------------------- //
 
 
@@ -61,15 +39,8 @@ MetaProject::~MetaProject()
 {
 	ASSERT( this->_rootObject != NULL );
 	ASSERT( this->_coreProject != NULL );
-	// Need to delete all objects in the metaObjHash
-	while (!this->_metaObjectHash.empty())
-	{
-		// Get a MetaBase object
-		MetaBase* metaBase = this->_metaObjectHash.begin()->second;
-		// Try to delete it
-		if (metaBase != NULL) delete metaBase;
-	}
-	ASSERT( this->_metaObjectHash.empty() );
+	// Need to delete the root object
+	delete this->_rootObject;
 	// Now we can delete the core project
 	delete this->_coreProject;
 }
@@ -335,29 +306,46 @@ const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 }
 
 
+const Result_t MetaProject::RootFolder(MetaFolder* &folder) throw()
+{
+	// Traverse and register the entire project (must be inside a transaction
+	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	// The rootObject is the rootFolder - just need to make a copy of it
+	CoreObject* rootObject;
+	Uuid rootUuid;
+	this->_rootObject->GetUuid(rootUuid);
+	this->_coreProject->Object(rootUuid, rootObject);
+	MetaProject* metaProject = this;
+	MetaBase* metaBase = new MetaBase(rootObject, metaProject);
+	ASSERT( metaBase != NULL );
+	folder = (MetaFolder*)metaBase;
+	ASSERT( folder != NULL );
+	// Wrap up the transaction
+	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	return S_OK;
+}
+
+
 const Result_t MetaProject::FindObject(const Uuid &uuid, MetaBase* &metaBase) throw()
 {
-	MetaObjectHashIterator metaHashIter = this->_metaObjectHash.find(uuid);
-	if( metaHashIter == this->_metaObjectHash.end() ) return E_NOTFOUND;
-	metaBase = metaHashIter->second;
+//	MetaObjectHashIterator metaHashIter = this->_metaObjectHash.find(uuid);
+//	if( metaHashIter == this->_metaObjectHash.end() ) return E_NOTFOUND;
+//	metaBase = metaHashIter->second;
 	ASSERT( metaBase != NULL );
 	return S_OK;
 }
 
-/*
-void MetaProject::CreateMetaBase(metaid_type metaid, CCoreObjectPtr &obj)
-{
-	ASSERT( obj == NULL );
-	ASSERT( coreproject != NULL );
 
-	COMTHROW( coreproject->CreateObject(metaid, PutOut(obj)) );
-	COMTHROW( obj->put_AttributeValue(ATTRID_METAREF, PutInVariant(max_metaref + 1)) );
-	CMgaMetaBase::Traverse(this, obj);
-	
-	++max_metaref;
+void MetaProject::CreateMetaBase(const MetaID_t &metaID, CoreObject* &object)
+{
+	ASSERT( this->_coreProject != NULL );
+//	ASSERT( obj == NULL );
+	ASSERT( this->_coreProject->CreateObject(metaID, object) == S_OK );
+//	COMTHROW( obj->put_AttributeValue(ATTRID_METAREF, PutInVariant(max_metaref + 1)) );
+//	MetaBase::Traverse(this, obj);
 }
 
-
+/*
 void MetaProject::CreateMetaObj(metaid_type metaid, CCoreObjectPtr &obj)
 {
 	ASSERT( obj == NULL );

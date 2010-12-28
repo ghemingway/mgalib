@@ -107,9 +107,8 @@ public:
 	virtual const Result_t GetDisplayedName(std::string &name) const throw();
 	virtual const Result_t GetObjType(ObjType_t &objType) const throw();
 	virtual const Result_t GetConstraints(std::list<MetaConstraint*> &cList) throw();
-//	virtual const Result_t SetMetaRef(const MetaRef_t &metaRef) throw();
-//	virtual const Result_t SetName(const std::string &name) throw();
-//	virtual const Result_t SetDisplayedName(const std::string &name) throw();
+	virtual const Result_t SetName(const std::string &name) throw();
+	virtual const Result_t SetDisplayedName(const std::string &name) throw();
 //	virtual const Result_t CreateConstraint(MetaConstraint* &constraint) throw();			// { return ComCreateMetaObj(GetUnknown(), METAID_METACONSTRAINT, ATTRID_CONSTRAINT_PTR, p); }
 //	virtual const Result_t Delete(void) throw();
 };

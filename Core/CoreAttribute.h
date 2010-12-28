@@ -21,7 +21,6 @@ class CoreObjectBase;
 
 
 class CoreAttributeBase
-//	: public class ICoreFinalTransactionItem
 {
 protected:
 	CoreObjectBase							*_parent;
@@ -33,11 +32,7 @@ protected:
 	static const Result_t Create(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute) throw();
 	ICoreStorage* SetStorageObject(void) const;
 
-	friend class CoreProject;
-	void CommitTransaction(void)	{ }
-	void UndoTransaction(void)		{ }
-	void RedoTransaction(void)		{ }
-	void Save(void)					{ }
+//	friend class CoreProject;
 
 	CoreAttributeBase();
 	CoreAttributeBase(const CoreAttributeBase &);
@@ -51,9 +46,12 @@ public:
 	inline CoreMetaAttribute* MetaAttribute(void) const throw()			{ return this->_metaAttribute; }
 	inline const Result_t AttributeID(AttrID_t &attrID) const throw()	{ return this->_metaAttribute->GetAttributeID(attrID); }
 	inline bool IsDirty(void) const throw()								{ return this->_isDirty; }
+	inline const Result_t GetValueType(ValueType &valueType) const throw(){ return this->_metaAttribute->GetValueType(valueType); }
 	inline void MarkDirty(void) throw();
 	bool InTransaction(void) const throw();
-	inline const Result_t GetValueType(ValueType &valueType) const throw(){ return this->_metaAttribute->GetValueType(valueType); }
+
+	virtual const Result_t CommitTransaction(void) throw()=0;
+	virtual const Result_t AbortTransaction(void) throw()=0;
 };
 
 
@@ -86,6 +84,7 @@ public:
 
 	inline const Result_t SetValue(const T &value) throw()
 	{
+		// Mark the parent as dirty and push the value
 		this->_parent->MarkDirty(); 
 		this->_values.push_back(value);
 		// Add attribute to the project transaction change list
@@ -116,13 +115,37 @@ public:
 	inline const Result_t GetLoadedValue(T &value) throw()
 	{
 		// TODO: Setup CoreStorage for a read
+		ASSERT(false);
 		value = this->_values.front();
 		return S_OK;
 	}
 
 	inline const Result_t GetPreviousValue(T &value) throw()
 	{
+		ASSERT(false);
 		return E_NOTFOUND;
+	}
+
+	virtual const Result_t CommitTransaction(void) throw()
+	{
+		// Set the storage to the parent object
+		ICoreStorage* storage = this->SetStorageObject();
+		// Write the value into storage
+		AttrID_t attrID;
+		ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+		T value = this->_values.back();
+		Result_t result = storage->SetAttributeValue(attrID, value);
+		if (result != S_OK) return result;
+		// Collapse the value list to one
+		this->_values.clear();
+		this->_values.push_back(value);
+		return S_OK;
+	}
+
+	virtual const Result_t AbortTransaction(void) throw()
+	{
+		ASSERT(false);
+		return S_OK;
 	}
 };
 
@@ -132,74 +155,8 @@ typedef CoreAttributeTemplateBase<int32_t>						CoreAttributeLong;
 typedef CoreAttributeTemplateBase<double>						CoreAttributeReal;
 typedef CoreAttributeTemplateBase<std::string>					CoreAttributeString;
 typedef CoreAttributeTemplateBase<Uuid>							CoreAttributeLongPointer;
-typedef CoreAttributeTemplateBase<std::list<Uuid> >				CoreAttributeCollection;
+typedef CoreAttributeTemplateBase< std::list<Uuid> >			CoreAttributeCollection;
 typedef CoreAttributeTemplateBase<Uuid>							CoreAttributePointer;
-
-
-// --------------------------- CoreDataAttribute
-
-/*
-template<class BASE, const int VALTYPE>
-class ATL_NO_VTABLE CCoreDataAttribute : 
-	public //typename// BASE,//z!
-	public CCoreTransactionItem,
-	public CCoreUndoItem
-{
-public:
-	typedef typename BASE::value_type value_type;
-
-// ------- Methods
-
-public:
-	virtual valtype_type GetValType() const throw() { return VALTYPE; }
-
-	STDMETHODIMP get_Value(VARIANT *p);
-	STDMETHODIMP put_Value(VARIANT p);
-	STDMETHODIMP get_LoadedValue(VARIANT *p);
-	STDMETHODIMP get_PreviousValue(VARIANT *p);
-
-	const value_type &GetValue() const { ASSERT( !values.empty() ); return values.front(); }
-
-	// if type mismatch then returns false
-	virtual bool DoesMatch(bool do_load, const VARIANT &v);
-
-// ------- Storage
-
-public:
-	void Save(value_type &value);
-
-	virtual void FillAfterCreateObject() throw();
-
-// ------- NestedTrItem
-
-public:
-	virtual bool IsDirty() const throw() { return CCoreAttribute::IsDirty(); }
-	virtual void ChangeDirty(bool dirty) throw() { CCoreAttribute::ChangeDirty(dirty); }
-
-	virtual void AbortNestedTransaction() throw();
-	virtual void DiscardPreviousValue() throw();
-
-// ------- FinalTrItem
-
-public:
-	virtual void AbortFinalTransaction() throw();
-	virtual void CommitFinalTransaction();
-	virtual void CommitFinalTransactionFinish(bool undo) throw();
-
-// ------- UndoItem
-
-public:
-	virtual void UndoTransaction();
-	virtual void UndoTransactionFinish() throw();
-
-	virtual void RedoTransaction();
-	virtual void RedoTransactionFinish() throw();
-
-	virtual void DiscardLastItem();
-	virtual void DiscardLastItemFinish() throw();
-	virtual void DiscardLastItemCancel() throw();
-};
-*/
 
 
 /*** End of MGA Namespace ***/

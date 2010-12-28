@@ -117,24 +117,15 @@ void MetaBase::TraverseCollection(MetaProject* &metaProject, CoreObject* &coreOb
 
 MetaBase::MetaBase(CoreObject* &coreObject, MetaProject* &metaProject) :
 _coreObject(coreObject), _metaProject(metaProject)
-{ 
+{
 	ASSERT(coreObject != NULL);
 	ASSERT(metaProject != NULL);
-	// Register this metaBase object from the metaProject
-	Uuid uuid = Uuid::Null();
-	ASSERT( coreObject->GetUuid(uuid) == S_OK );
-	this->_metaProject->RegisterMetaBase(uuid, this);
 }
 
 
 MetaBase::~MetaBase()
 {
 	ASSERT( this->_coreObject != NULL );
-	Uuid uuid = Uuid::Null();
-	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
-	// Unregister the metaBase object from the metaProject
-	ASSERT( this->_metaProject != NULL );
-	this->_metaProject->UnregisterMetaBase(uuid, this);
 	// Delete the coreObject
 	delete this->_coreObject;
 }
@@ -160,12 +151,6 @@ const Result_t MetaBase::GetUuid(Uuid &uuid) const throw()
 	return this->_coreObject->GetUuid(uuid);
 }
 
-/*
-const Result_t MetaBase::SetMetaRef(const MetaRef_t &metaRef) throw()
-{
-	return this->_coreObject->SetAttributeValue(ATTRID_METAREF, metaRef);
-}
-*/
 
 const Result_t MetaBase::GetMetaProject(MetaProject* &project) const throw()
 {
@@ -178,24 +163,24 @@ const Result_t MetaBase::GetName(std::string &name) const throw()
 	return this->_coreObject->GetAttributeValue(ATTRID_NAME, name);
 }
 
-/*
+
 const Result_t MetaBase::SetName(const std::string &name) throw()
 {
 	return this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
 }
-*/
+
 
 const Result_t MetaBase::GetDisplayedName(std::string &name) const throw()
 {
 	return this->_coreObject->GetAttributeValue(ATTRID_DISPNAME, name);
 }
 
-/*
+
 const Result_t MetaBase::SetDisplayedName(const std::string &name) throw()
 {
 	return this->_coreObject->SetAttributeValue(ATTRID_DISPNAME, name);
 }
-*/
+
 
 const Result_t MetaBase::GetObjType(ObjType_t &objType) const throw()
 {

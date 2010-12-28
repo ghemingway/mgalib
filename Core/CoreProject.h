@@ -103,12 +103,12 @@ public:
 	const Result_t RootObject(CoreObject* &rootObject) throw();
 	const Result_t DeleteObject(const Uuid &uuid) throw();
 
-	const Result_t UndoTransaction(void) throw();
-	const Result_t RedoTransaction(void) throw();
-	const Result_t FlushUndoQueue(void) throw();
-	const Result_t FlushRedoQueue(void) throw();
-	const Result_t UndoQueueSize(uint16_t &size) const throw();
-	const Result_t RedoQueueSize(uint16_t &size) const throw();
+//	const Result_t UndoTransaction(void) throw();
+//	const Result_t RedoTransaction(void) throw();
+//	const Result_t FlushUndoQueue(void) throw();
+//	const Result_t FlushRedoQueue(void) throw();
+//	const Result_t UndoQueueSize(uint16_t &size) const throw();
+//	const Result_t RedoQueueSize(uint16_t &size) const throw();
 };
 
 
