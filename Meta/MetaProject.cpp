@@ -22,7 +22,7 @@ static std::string _CurrentTime(void)
 
 
 MetaProject::MetaProject(CoreProject* &coreProject) : _coreProject(coreProject),
-	_rootObject(NULL), _namespace("")
+	_rootObject(), _namespace("")
 {
 	ASSERT( this->_coreProject != NULL );
 	// Setup the root object
@@ -39,8 +39,8 @@ MetaProject::~MetaProject()
 {
 	ASSERT( this->_rootObject != NULL );
 	ASSERT( this->_coreProject != NULL );
-	// Need to delete the root object
-	delete this->_rootObject;
+	// Remove the reference to the rootObject
+	delete this->_rootObject.get();
 	// Now we can delete the core project
 	delete this->_coreProject;
 }
@@ -66,7 +66,7 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 	ASSERT( metaProject != NULL );
 	// Traverse and register the entire project (must be inside a transaction
 	ASSERT( coreProject->BeginTransaction(true) == S_OK );
-	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
+//	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
 	ASSERT( coreProject->CommitTransaction() == S_OK );
 	project = metaProject;
 	return S_OK;
@@ -98,7 +98,7 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	metaProject->_rootObject->SetAttributeValue(ATTRID_CDATE, _CurrentTime());
 	metaProject->_rootObject->SetAttributeValue(ATTRID_MDATE, _CurrentTime());
 	metaProject->_rootObject->SetAttributeValue(ATTRID_NAME, std::string(""));
-	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
+//	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
 	ASSERT( metaProject->_coreProject->CommitTransaction() == S_OK );
 	// MetaProject is ready
 	project = metaProject;
@@ -311,7 +311,7 @@ const Result_t MetaProject::RootFolder(MetaFolder* &folder) throw()
 	// Traverse and register the entire project (must be inside a transaction
 	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
 	// The rootObject is the rootFolder - just need to make a copy of it
-	CoreObject* rootObject;
+	CoreObject rootObject;
 	Uuid rootUuid;
 	this->_rootObject->GetUuid(rootUuid);
 	this->_coreProject->Object(rootUuid, rootObject);
@@ -336,7 +336,7 @@ const Result_t MetaProject::FindObject(const Uuid &uuid, MetaBase* &metaBase) th
 }
 
 
-void MetaProject::CreateMetaBase(const MetaID_t &metaID, CoreObject* &object)
+void MetaProject::CreateMetaBase(const MetaID_t &metaID, CoreObject &object)
 {
 	ASSERT( this->_coreProject != NULL );
 //	ASSERT( obj == NULL );

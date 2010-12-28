@@ -73,7 +73,6 @@
 		5843907212B9701900F4AB58 /* CoreObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843906712B9701900F4AB58 /* CoreObject.h */; };
 		5843907312B9701900F4AB58 /* CoreProject.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843906812B9701900F4AB58 /* CoreProject.h */; };
 		5843907412B9701900F4AB58 /* CoreStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843906912B9701900F4AB58 /* CoreStorage.h */; };
-		5843907512B9701900F4AB58 /* CoreTransactionItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843906A12B9701900F4AB58 /* CoreTransactionItem.h */; };
 		5843907612B9701900F4AB58 /* CoreTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843906B12B9701900F4AB58 /* CoreTypes.h */; };
 		5843908012B9703300F4AB58 /* BinFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907712B9703300F4AB58 /* BinFile.cpp */; };
 		5843908112B9703300F4AB58 /* CoreAttribute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907812B9703300F4AB58 /* CoreAttribute.cpp */; };
@@ -128,7 +127,6 @@
 		5843906712B9701900F4AB58 /* CoreObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreObject.h; path = ../../Core/CoreObject.h; sourceTree = SOURCE_ROOT; };
 		5843906812B9701900F4AB58 /* CoreProject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreProject.h; path = ../../Core/CoreProject.h; sourceTree = SOURCE_ROOT; };
 		5843906912B9701900F4AB58 /* CoreStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreStorage.h; path = ../../Core/CoreStorage.h; sourceTree = SOURCE_ROOT; };
-		5843906A12B9701900F4AB58 /* CoreTransactionItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreTransactionItem.h; path = ../../Core/CoreTransactionItem.h; sourceTree = SOURCE_ROOT; };
 		5843906B12B9701900F4AB58 /* CoreTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreTypes.h; path = ../../Core/CoreTypes.h; sourceTree = SOURCE_ROOT; };
 		5843907712B9703300F4AB58 /* BinFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BinFile.cpp; path = ../../Core/BinFile.cpp; sourceTree = SOURCE_ROOT; };
 		5843907812B9703300F4AB58 /* CoreAttribute.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreAttribute.cpp; path = ../../Core/CoreAttribute.cpp; sourceTree = SOURCE_ROOT; };
@@ -380,7 +378,6 @@
 				5843906712B9701900F4AB58 /* CoreObject.h */,
 				5843906812B9701900F4AB58 /* CoreProject.h */,
 				5843906912B9701900F4AB58 /* CoreStorage.h */,
-				5843906A12B9701900F4AB58 /* CoreTransactionItem.h */,
 				5843906B12B9701900F4AB58 /* CoreTypes.h */,
 			);
 			name = Headers;
@@ -568,7 +565,6 @@
 				5843907212B9701900F4AB58 /* CoreObject.h in Headers */,
 				5843907312B9701900F4AB58 /* CoreProject.h in Headers */,
 				5843907412B9701900F4AB58 /* CoreStorage.h in Headers */,
-				5843907512B9701900F4AB58 /* CoreTransactionItem.h in Headers */,
 				5843907612B9701900F4AB58 /* CoreTypes.h in Headers */,
 				582BD67D12C8F2C900B18A19 /* MetaGeneric.h in Headers */,
 				582BD67E12C8F2CD00B18A19 /* MgaGeneric.h in Headers */,

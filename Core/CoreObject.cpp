@@ -31,70 +31,6 @@ CoreObjectBase::CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject,
 }
 
 /*
-STDMETHODIMP CoreObjectBase::get_Attributes(ICoreAttributes **p)
-{
-	CHECK_OUT(p);
-
-	COMTRY
-	{
-		typedef CCoreCollection<ICoreAttributes, std::vector<ICoreAttribute*>,
-			ICoreAttribute, CCoreAttribute> COMTYPE;
-
-		CComObjPtr<COMTYPE> q;
-		CreateComObject(q);
-
-		q->Fill(attributes.begin(), attributes.end());
-		MoveTo(q,p);
-	}
-	COMCATCH(;)
-}
-
-
-STDMETHODIMP CoreObjectBase::get_LoadedAttrValue(attrid_type attrid, VARIANT *p)
-{
-	CHECK_OUT(p);
-
-	if( IsZombie() )
-		COMRETURN(E_ZOMBIE);
-
-	CCoreAttribute *attribute = FindAttribute(attrid);
-	if( attribute == NULL )
-		return E_INVALIDARG;
-
-	return attribute->get_LoadedValue(p);
-}
-
-
-STDMETHODIMP CCoreObject::get_PreviousAttrValue(attrid_type attrid, VARIANT *p)
-{
-	CHECK_OUT(p);
-
-	if( IsZombie() )
-		COMRETURN(E_ZOMBIE);
-
-	CCoreAttribute *attribute = FindAttribute(attrid);
-	if( attribute == NULL )
-		return E_INVALIDARG;
-
-	return attribute->get_PreviousValue(p);
-}
-
-
-STDMETHODIMP CoreObjectBase::get_PeerLockValue(attrid_type attrid, locking_type *p)
-{
-	CHECK_OUT(p);
-
-	if( IsZombie() )
-		COMRETURN(E_ZOMBIE);
-
-	CCoreAttribute *attribute = FindAttribute(attrid);
-	if( attribute == NULL || attribute->GetValType() != VALTYPE_LOCK )
-		return E_INVALIDARG;
-
-	return ((CCoreLockAttribute*)attribute)->get_PeerLockValue(p);
-}
-
-
 STDMETHODIMP CoreObjectBase::SearchCollection(attrid_type coll_attrid, attrid_type search_attrid,
 	VARIANT search_value, ICoreObject **p)
 {
@@ -193,7 +129,7 @@ void CoreObjectBase::FillAfterCreateObject()
 // --------------------------- CoreObjectBase Public Methods ---------------------------
 
 
-const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, CoreObject* &coreObject) throw()
+const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, CoreObject &coreObject) throw()
 {
 	if( project == NULL ) return E_INVALID_USAGE;
 	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
@@ -211,7 +147,7 @@ const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, Co
 	CoreObjectBase* coreObjectBase = new CoreObjectBase(project, metaObject, uuid);
 	ASSERT( coreObjectBase != NULL );
 	// Create the CoreObject (refPointer) to the base object
-	coreObject = coreObjectBase->Reference();
+	coreObject = CoreObject(coreObjectBase);
 	return S_OK;
 }
 
@@ -232,7 +168,7 @@ CoreObjectBase::~CoreObjectBase()
 	this->_project->UnregisterObject(this->_uuid);
 }
 
-
+/*
 CoreObject* CoreObjectBase::Reference(void)
 {
 	// Increase refCount
@@ -251,7 +187,7 @@ void CoreObjectBase::Release(void)
 	// Is this object no longer needed
 	if (this->_refCount == 0) delete this;
 }
-
+*/
 
 void CoreObjectBase::RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase *attribute) throw()
 {
@@ -282,6 +218,7 @@ ICoreStorage* CoreObjectBase::SetStorageObject(void) const
 
 const Result_t CoreObjectBase::Attribute(const AttrID_t &attrID, CoreAttribute* &attribute) const throw()
 {
+	ASSERT(false);
 	// Make sure we are ready
 	if( attrID == ATTRID_NONE ) return E_INVALID_USAGE;
 	// Iterate through attrib list and find matchind ID
@@ -296,73 +233,6 @@ const Result_t CoreObjectBase::Attribute(const AttrID_t &attrID, CoreAttribute* 
 	return S_OK;
 }
 
-/*  
-void CoreObjectBase::GetAttributes(CoreLockAttribute *lockAttribute, std::list<CoreAttribute*> &controlled) throw()
-{
-//	ASSERT( lockAttribute != NULL );
-	ASSERT( controlled.empty() );
-//	AttrID_t attrID = lockAttribute->GetAttrID();
-	CoreAttributeListIterator i = this->_attributes.begin();
-	CoreAttributeListIterator e = this->_attributes.end();
-	while( i != e )
-	{
-//		AttrID_t lockattrid = ATTRID_NONE;
-//		if( (*i)->GetLockAttr() == lockAttribute )
-//		{
-//			ASSERT( lockattrid == lockAttribute->GetAttrID() );
-//			controlled.push_back( *i );
-//		}
-		++i;
-	}
-}
-
-
-void CoreObjectBase::LoadAttributes(CoreLockAttribute *lockAttribute)
-{
-	ASSERT( lockAttribute != NULL );
-	std::list<CoreAttribute*> controlled;
-	this->GetAttributes(lockAttribute, controlled);
-
-	CoreAttributeListIterator i = controlled.begin();
-	CoreAttributeListIterator e = controlled.end();
-
-	while( i != e )
-	{
-		(*i)->Load();
-		++i;
-	}
-//	catch(result_exception &)
-//	{
-//		e = i;
-//		i = controlled.begin();
-//		while( i != e )
-//		{
-//			(*i)->Unload();
-//			++i;
-//		}
-//		throw;
-//	}
-}
-
-
-void CoreObjectBase::UnloadAttributes(CoreLockAttribute *lockAttribute) throw()
-{
-	ASSERT( lockAttribute != NULL );
-
-	std::list<CoreAttribute*> controlled;
-	this->GetAttributes(lockAttribute, controlled);
-
-	CoreAttributeListIterator i = controlled.begin();
-	CoreAttributeListIterator e = controlled.end();
-	while( i != e )
-	{
-		(*i)->Unload();
-
-		++i;
-	}
-}
-*/
-
 
 const Result_t CoreObjectBase::InTransaction(bool &flag) const throw()
 {
@@ -370,33 +240,3 @@ const Result_t CoreObjectBase::InTransaction(bool &flag) const throw()
 	return this->_project->InTransaction(flag);
 }
 
-/*
-bool CoreObjectBase::InWriteTransaction(void) const throw()
-{
-	ASSERT( !IsZombie() );
-	ASSERT( this->_project != NULL );
-
-	return this->_project->InWriteTransaction();
-}
-
-
-bool CoreObjectBase::HasEmptyPointers(void) const throw()
-{
-	ASSERT( this->_project != NULL );
-	
-	CoreAttributeList::const_iterator i = this->_attributes.begin();
-	CoreAttributeList::const_iterator e = this->_attributes.end();
-	while( i != e )
-	{
-		if( (*i)->GetValueType() == ValueType::Pointer() )
-		{
-			if( !((CorePointerAttributeBase*)(*i))->IsEmpty() )
-				return false;
-		}
-
-		++i;
-	}
-
-	return true;
-}
-*/

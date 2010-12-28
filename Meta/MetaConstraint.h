@@ -25,11 +25,11 @@ private:
 	MetaConstraint& operator=(const MetaConstraint &);			//!< Deny access to equals operator
 
 protected:
-	CoreObject					*_coreObject;					//!<
+	CoreObject					_coreObject;					//!<
 	MetaProject					*_metaProject;					//!<
 	
 public:
-	MetaConstraint(CoreObject* &coreObject, MetaProject* &metaProject);
+	MetaConstraint(CoreObject &coreObject, MetaProject* &metaProject);
 
 	const Result_t GetName(std::string &name) const throw();
 	const Result_t GetDisplayedName(std::string &name) const throw();

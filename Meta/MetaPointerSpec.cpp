@@ -6,7 +6,7 @@
 
 // --------------------------- MetaPointerSpec --------------------------- //
 
-
+/*
 void MetaPointerSpec::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -14,7 +14,7 @@ void MetaPointerSpec::Traverse(MetaProject* &metaProject, CoreObject* &coreObjec
 	// Traverse any children
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_PTRITEMS_COLL);
 }
-
+*/
 /*
 bool MetaPointerSpec::CheckPath(CCoreObjectPtr &self, pathitems_type &pathitems, bool global)
 {

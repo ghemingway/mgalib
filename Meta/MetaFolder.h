@@ -14,7 +14,6 @@ namespace MGA {
 class MetaFCO;
 class MetaAttribute;
 class MgaProject;
-class CoreObject;
 
 
 // --------------------------- MetaFolder --------------------------- //
@@ -28,8 +27,6 @@ private:
 	MetaFolder& operator=(const MetaFolder &);				//!< Deny access to equals operator
 
 public:
-	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
-
 	const Result_t GetDefinedIn(MetaFolder* &folder) const throw();
 	const Result_t GetDefinedFolders(std::list<MetaFolder*> &folderList) const throw();
 	const Result_t GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw();

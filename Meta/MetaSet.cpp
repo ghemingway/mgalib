@@ -5,7 +5,7 @@
 
 // --------------------------- MetaSet --------------------------- //
 
-
+/*
 void MetaSet::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -13,7 +13,7 @@ void MetaSet::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
 	MetaFCO::Traverse(metaProject, coreObject);
 	MetaPointerSpec::Traverse(metaProject, coreObject);
 }
-
+*/
 
 const Result_t MetaSet::CheckPath(const std::string &path, bool &flag) const throw()
 {

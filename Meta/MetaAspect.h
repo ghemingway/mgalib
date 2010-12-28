@@ -27,7 +27,7 @@ private:
 	MetaAspect& operator=(const MetaAspect &);				//!< Deny access to equals operator
 
 public:
-	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
+//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
 
 	const Result_t GetParentModel(MetaModel* &metaModel) const throw();
 	const Result_t GetParts(std::list<MetaPart*> &partList)	const throw();

@@ -12,14 +12,12 @@ namespace MGA {
 
 /*** Class Predefinitions ***/
 class MetaBase;
-class CoreObject;
 class CoreProject;
 class MetaFolder;
 
 
 /*** Type Definitions ***/
-//typedef STDEXT::hash_map<Uuid,MetaBase*,Uuid_HashFunc> MetaObjectHash;
-//typedef MetaObjectHash::iterator MetaObjectHashIterator;
+//None
 
 
 // --------------------------- MetaProject --------------------------- //
@@ -30,14 +28,14 @@ class MetaProject
 private:
 //	MetaObjectHash				_metaObjectHash;
 	CoreProject					*_coreProject;
-	CoreObject					*_rootObject;
+	CoreObject					_rootObject;
 	std::string					_namespace;
 
 //	friend class MetaBase;
 //	const Result_t RegisterMetaBase(const Uuid &uuid, MetaBase* obj);
 //	const Result_t UnregisterMetaBase(const Uuid &uuid, MetaBase* obj);
 
-	void CreateMetaBase(const MetaID_t &metaID, CoreObject* &object);
+	void CreateMetaBase(const MetaID_t &metaID, CoreObject &object);
 //	void CreateMetaObj(MetaID_t metaid, CoreObject* &obj);
 //	void CreatePathItems(bstr_const_iterator i, bstr_const_iterator e, pathitems_type &pathitems);
 //	void CreateJointPaths(std::string paths, jointpaths_type &jointpaths);

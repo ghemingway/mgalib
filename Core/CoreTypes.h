@@ -17,6 +17,7 @@
 #else
 #include <ext/hash_map>
 #include <tr1/memory>
+#include <memory>
 #endif
 #include <assert.h>
 #include "CoreError.h"
@@ -203,6 +204,11 @@ public:
 		return out;
 	}
 };
+
+
+/*** Type Definitions ***/
+class CoreObjectBase;
+typedef std::tr1::shared_ptr<CoreObjectBase> CoreObject;
 
 
 /*** End of MGA Namespace ***/

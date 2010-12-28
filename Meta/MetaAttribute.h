@@ -25,7 +25,7 @@ private:
 	MetaAttribute& operator=(const MetaAttribute &);			//!< Deny access to equals operator
 
 public:
-	static void Traverse(MetaProject *metaproject, CoreObject* &coreObject);
+//	static void Traverse(MetaProject *metaproject, CoreObject* &coreObject);
 	
 	const Result_t GetDefinedIn(MetaFCO* &fco) const throw();
 	const Result_t GetEnumItems(std::list<MetaEnumItem*> &enumList) const throw();

@@ -12,7 +12,6 @@ namespace MGA {
 
 /*** Class Predefinitions ***/
 class MetaProject;
-class CoreObject;
 class MetaPointerSpec;
 
 
@@ -27,7 +26,7 @@ private:
 	MetaSet& operator=(const MetaSet &);					//!< Deny access to equals operator
 
 public:
-	static void Traverse(MetaProject *metaProject, CoreObject* &coreObject);
+//	static void Traverse(MetaProject *metaProject, CoreObject* &coreObject);
 
 	const Result_t GetMemberSpec(MetaPointerSpec* &metaPointerSpec) const throw();
 	const Result_t CheckPath(const std::string &path, bool &valid) const throw();

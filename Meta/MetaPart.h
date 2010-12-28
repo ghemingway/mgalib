@@ -26,7 +26,7 @@ private:
 	MetaPart& operator=(const MetaPart &);				//!< Deny access to equals operator
 
 public:
-	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
+//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
 
 	inline const Result_t GetDisplayedName(std::string &name) const throw()						{ return E_INVALID_USAGE; }
 	inline const Result_t GetConstraints(std::list<MetaConstraint*> *constraintList) throw()	{ return E_INVALID_USAGE; }

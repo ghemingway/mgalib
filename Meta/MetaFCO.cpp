@@ -117,7 +117,7 @@ HRESULT CMgaMetaFCO::get_DefinedAttributeByName(IMgaMetaFCO *me, BSTR name,
 	COMCATCH(;)
 }
 */
-
+/*
 void MetaFCO::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -128,7 +128,7 @@ void MetaFCO::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_DEFATTR_PTR);
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ATTRLINK_USEDIN_PTR);
 }
-
+*/
 /*
 HRESULT CMgaMetaFCO::get_AliasingEnabled(IMgaMetaFCO *me, VARIANT_BOOL *p)
 {

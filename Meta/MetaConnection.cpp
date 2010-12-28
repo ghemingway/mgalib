@@ -6,7 +6,7 @@
 
 // --------------------------- MetaConnection --------------------------- //
 
-
+/*
 void MetaConnection::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -16,7 +16,7 @@ void MetaConnection::Traverse(MetaProject* &metaProject, CoreObject* &coreObject
 	// Traverse any children
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_CONNJOINTS_COLL);
 }
-
+*/
 /*
 bool MetaConnection::CheckPaths(CCoreObjectPtr &self, jointpaths_type jointpaths)
 {

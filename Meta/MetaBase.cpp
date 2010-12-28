@@ -20,7 +20,7 @@
 
 // --------------------------- Protected MetaBase Methods --------------------------- //
 
-
+/*
 void MetaBase::TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -83,7 +83,6 @@ void MetaBase::TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject
 		else if( SUCCEEDED(QueryInterface(me, regnode)) )
 			CMgaMetaRegNode::Traverse(metaproject, me);
 	}
-*/
 }
 
 
@@ -110,12 +109,12 @@ void MetaBase::TraverseCollection(MetaProject* &metaProject, CoreObject* &coreOb
 		++idIter;
 	}
 }
-
+*/
 
 // --------------------------- Public MetaBase Methods --------------------------- //
 
 
-MetaBase::MetaBase(CoreObject* &coreObject, MetaProject* &metaProject) :
+MetaBase::MetaBase(CoreObject &coreObject, MetaProject* &metaProject) :
 _coreObject(coreObject), _metaProject(metaProject)
 {
 	ASSERT(coreObject != NULL);
@@ -127,7 +126,7 @@ MetaBase::~MetaBase()
 {
 	ASSERT( this->_coreObject != NULL );
 	// Delete the coreObject
-	delete this->_coreObject;
+	this->_coreObject.reset();
 }
 
 
@@ -208,7 +207,7 @@ const Result_t MetaBase::GetConstraints(std::list<MetaConstraint*> &constraintLi
 	while (idIter != idList.end())
 	{
 		// Get the coreObject from this uuid
-		CoreObject* object = NULL;
+		CoreObject object;
 		ASSERT( coreProject->Object(*idIter, object) == S_OK );
 		ASSERT( object != NULL );
 		// Create the MetaConstraint with the coreObject and metaProject
@@ -235,7 +234,7 @@ const Result_t MetaBase::Delete(void) throw()
 	return S_OK;
 }
 */
-
+/*
 void MetaBase::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -248,3 +247,4 @@ void MetaBase::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_REGNODES_COLL);
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_CONSTRAINT_PTR);
 }
+*/

@@ -7,7 +7,7 @@
 
 // --------------------------- MetaModel --------------------------- //
 
-
+/*
 void MetaModel::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -19,7 +19,7 @@ void MetaModel::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ROLES_COLL);
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ASPECTS_COLL);
 }
-
+*/
 
 const Result_t MetaModel::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {

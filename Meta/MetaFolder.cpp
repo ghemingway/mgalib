@@ -7,7 +7,7 @@
 
 // --------------------------- MetaFolder --------------------------- //
 
-
+/*
 void MetaFolder::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 {
 	ASSERT( metaProject != NULL );
@@ -21,7 +21,7 @@ void MetaFolder::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_FOLDERLINK_CHILD_PTR);
 	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ROOTOBJLINK_FOLDER_PTR);
 }
-
+*/
 
 const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
 {
