@@ -81,8 +81,8 @@ public:
 	~CoreProject();
 
 	// ------- ICoreProject Interface
-	static const Result_t CreateProject(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw();
-	static const Result_t OpenProject(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw();
+	static const Result_t Create(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw();
+	static const Result_t Open(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw();
 
 	inline const Result_t Storage(ICoreStorage* &storage) const throw()				{ storage = this->_storage; return S_OK; }
 	inline const Result_t MetaProject(CoreMetaProject* &metaProject) const throw()	{ metaProject = this->_coreMetaProject; return S_OK; }

@@ -11,8 +11,7 @@
 
 CoreProject::CoreProject(CoreMetaProject *coreMetaProject)
 	:	_storage(NULL), _coreMetaProject(coreMetaProject), _isDirty(false), _objectHash(),
-		_transactionList(), _undoList(),
-		_redoCount(0)
+		_transactionList(), _undoList(), _redoCount(0)
 {
 	ASSERT( coreMetaProject != NULL );
 }
@@ -126,7 +125,7 @@ CoreProject::~CoreProject()
 }
 
 
-const Result_t CoreProject::CreateProject(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw()
+const Result_t CoreProject::Create(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw()
 {
 	if( connection == "" ) return E_INVALID_USAGE;
 	if( coreMetaProject == NULL ) return E_INVALID_USAGE;
@@ -163,7 +162,7 @@ const Result_t CoreProject::CreateProject(const std::string &connection, CoreMet
 }
 
 
-const Result_t CoreProject::OpenProject(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw()
+const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw()
 {
 	if( connection == "" ) return E_INVALID_USAGE;
 	if( coreMetaProject == NULL ) return E_INVALID_USAGE;
@@ -384,7 +383,7 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject &obj
 	}
 	ASSERT( object != NULL );
 	// Add the object into the created objects list of the transaction
-	this->_transactionList.front().createdObjects.push_back( object.get());
+	this->_transactionList.front().createdObjects.push_back( object.operator->() );
 	return S_OK;
 }
 

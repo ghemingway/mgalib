@@ -206,9 +206,8 @@ public:
 };
 
 
-/*** Type Definitions ***/
-class CoreObjectBase;
-typedef std::tr1::shared_ptr<CoreObjectBase> CoreObject;
+/*** Class Predefinitions ***/
+class CoreObject;
 
 
 /*** End of MGA Namespace ***/

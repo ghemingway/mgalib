@@ -274,6 +274,8 @@
 								<string>58542F38129436FF00947FA9</string>
 								<string>5897494912947939003FB158</string>
 								<string>5897494812947934003FB158</string>
+								<string>58542F36129436E500947FA9</string>
+								<string>58542F391294370F00947FA9</string>
 								<string>5843398A125B8ABD00DD904D</string>
 								<string>58FBB21612AFF96D00953701</string>
 								<string>58FBB21812AFF98300953701</string>
@@ -283,8 +285,8 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>23</integer>
-									<integer>15</integer>
+									<integer>13</integer>
+									<integer>4</integer>
 									<integer>3</integer>
 									<integer>0</integer>
 								</array>
@@ -327,7 +329,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>CoreProject.cpp</string>
+								<string>CoreStorage.h</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -335,11 +337,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>CoreProject.cpp</string>
+										<string>CoreStorage.h</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>5880207E12CA3FBE00935308</string>
+										<string>5880213E12CA52E400935308</string>
 										<key>history</key>
 										<array>
 											<string>58E90A5F124CF67900B8E3CF</string>
@@ -376,13 +378,6 @@
 											<string>5843910D12B971D200F4AB58</string>
 											<string>5843911412B971D200F4AB58</string>
 											<string>587E262612BBC2430035DB9E</string>
-											<string>58D5037B12C1A73A00C8843F</string>
-											<string>58D5037F12C1A73A00C8843F</string>
-											<string>58D5038012C1A73A00C8843F</string>
-											<string>58D5038112C1A73A00C8843F</string>
-											<string>58D5038312C1A73A00C8843F</string>
-											<string>58D5038512C1A73A00C8843F</string>
-											<string>58D5038612C1A73A00C8843F</string>
 											<string>58D5038812C1A73A00C8843F</string>
 											<string>58D5038912C1A73A00C8843F</string>
 											<string>58D5038A12C1A73A00C8843F</string>
@@ -397,7 +392,6 @@
 											<string>58E371DD12C3F5D200BA324B</string>
 											<string>58E371E612C3F8F500BA324B</string>
 											<string>58E3721412C4E16600BA324B</string>
-											<string>582BD4C112C5134300B18A19</string>
 											<string>582BD4C212C5134300B18A19</string>
 											<string>582BD4C312C5134300B18A19</string>
 											<string>582BD4C412C5134300B18A19</string>
@@ -407,17 +401,10 @@
 											<string>582BD71A12C8FB5C00B18A19</string>
 											<string>582BD71B12C8FB5C00B18A19</string>
 											<string>582BD71C12C8FB5C00B18A19</string>
-											<string>582BD71F12C8FB5C00B18A19</string>
-											<string>582BD72012C8FB5C00B18A19</string>
-											<string>582BD72112C8FB5C00B18A19</string>
 											<string>582BD72712C8FB5C00B18A19</string>
-											<string>582BD72812C8FB5C00B18A19</string>
 											<string>582BD72D12C8FB5C00B18A19</string>
 											<string>582BD73412C8FB5C00B18A19</string>
 											<string>582BD74112C90E1100B18A19</string>
-											<string>582BD74412C90E1100B18A19</string>
-											<string>582BD74512C90E1100B18A19</string>
-											<string>582BD74612C90E1100B18A19</string>
 											<string>582BD75512C90FC700B18A19</string>
 											<string>58801DD112C9220300935308</string>
 											<string>58801DD212C9220300935308</string>
@@ -431,31 +418,46 @@
 											<string>58801DE312C9220300935308</string>
 											<string>58801E3812C926EA00935308</string>
 											<string>58801EC812C92D7D00935308</string>
-											<string>58801F4312C935F200935308</string>
 											<string>58801F4F12C93C1A00935308</string>
-											<string>58801FA412C9419D00935308</string>
-											<string>58801FAF12CA2A0600935308</string>
 											<string>58801FDF12CA328000935308</string>
-											<string>58801FE112CA328000935308</string>
-											<string>58801FE312CA328000935308</string>
-											<string>5880203012CA3A7800935308</string>
-											<string>5880203212CA3A7800935308</string>
 											<string>5880203412CA3A7800935308</string>
 											<string>5880203512CA3A7800935308</string>
-											<string>5880203A12CA3A7800935308</string>
-											<string>5880204812CA3B5100935308</string>
 											<string>5880204F12CA3D8C00935308</string>
-											<string>5880205012CA3D8C00935308</string>
-											<string>5880205112CA3D8C00935308</string>
-											<string>5880205212CA3D8C00935308</string>
-											<string>5880205312CA3D8C00935308</string>
-											<string>5880205412CA3D8C00935308</string>
 											<string>5880205912CA3DF300935308</string>
-											<string>5880205A12CA3DF300935308</string>
-											<string>5880207812CA3F3A00935308</string>
-											<string>5880207912CA3F3A00935308</string>
 											<string>5880207A12CA3F3A00935308</string>
-											<string>5880204712CA3B5100935308</string>
+											<string>588020C712CA452400935308</string>
+											<string>588020CA12CA452400935308</string>
+											<string>588020CB12CA452400935308</string>
+											<string>588020CC12CA452400935308</string>
+											<string>588020CD12CA452400935308</string>
+											<string>588020CE12CA452400935308</string>
+											<string>588020CF12CA452400935308</string>
+											<string>588020D012CA452400935308</string>
+											<string>588020D112CA452400935308</string>
+											<string>588020D212CA452400935308</string>
+											<string>588020D312CA452400935308</string>
+											<string>588020D412CA452400935308</string>
+											<string>588020D512CA452400935308</string>
+											<string>588020D612CA452400935308</string>
+											<string>588020D712CA452400935308</string>
+											<string>588020D812CA452400935308</string>
+											<string>588020D912CA452400935308</string>
+											<string>588020DA12CA452400935308</string>
+											<string>588020DB12CA452400935308</string>
+											<string>588020DC12CA452400935308</string>
+											<string>588020DD12CA452400935308</string>
+											<string>588020E012CA452400935308</string>
+											<string>588020E112CA452400935308</string>
+											<string>5880212112CA507000935308</string>
+											<string>5880213512CA52E400935308</string>
+											<string>5880213612CA52E400935308</string>
+											<string>5880213712CA52E400935308</string>
+											<string>5880213812CA52E400935308</string>
+											<string>5880213912CA52E400935308</string>
+											<string>5880213A12CA52E400935308</string>
+											<string>5880213B12CA52E400935308</string>
+											<string>5880213C12CA52E400935308</string>
+											<string>5880213D12CA52E400935308</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -658,8 +660,8 @@
 		<string>58801DE912C9220300935308</string>
 		<string>1C78EAAD065D492600B07095</string>
 		<string>1CD10A99069EF8BA00B06720</string>
-		<string>/Users/ghemingway/Documents/MGALib/trunk/Build/XCode/MGALib.xcodeproj</string>
 		<string>5883026B124BE8E1009251F4</string>
+		<string>/Users/ghemingway/Documents/MGALib/trunk/Build/XCode/MGALib.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
 	<string>0 46 1285 1532 0 0 2560 1578 </string>
@@ -678,14 +680,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>CoreProject.cpp</string>
+								<string>MetaRegNode.h</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -702,6 +702,8 @@
 							<string>962pt</string>
 						</dict>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>

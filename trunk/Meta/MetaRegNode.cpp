@@ -39,7 +39,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject &coreObject, const std::
 				break;
 			}
 			// Make sure to delete the tmpObject
-			tmpObject.reset();
+			tmpObject = NULL;
 			// Move on to the next object
 			++idIter;
 		}
