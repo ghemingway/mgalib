@@ -1,5 +1,6 @@
 /*** Included Header Files ***/
 #include "XmpParser.h"
+#include "../Meta/MetaProject.h"
 
 
 XMLCh* XmpParser::TAG_Folder = NULL;
@@ -47,9 +48,11 @@ XMLCh* XmpParser::ATTR_Linked = NULL;
 
 const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &mtaFile) throw()
 {
+	MetaProject* metaProject = NULL;
+
 	// Initialize Xerces infrastructure
 	XMLPlatformUtils::Initialize();
-	
+
 	// Get XML strings ready
 	XmpParser::TAG_Folder		= XMLString::transcode("folder");
 	XmpParser::TAG_Comment		= XMLString::transcode("comment");
@@ -136,7 +139,10 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 		tmpChar = XMLString::transcode(xmlch);
 		std::string mdate = tmpChar;
 		XMLString::release(&tmpChar);		
-		
+
+		// Create the MetaProject
+		// ...
+
 		// Look one level nested within "paradigm"
 		DOMNodeList* children = elementRoot->getChildNodes();
 		const XMLSize_t nodeCount = children->getLength();
@@ -181,6 +187,8 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 		char* message = xercesc::XMLString::transcode( e.getMessage() );
 		std::cout << "Error parsing file: " << message << std::endl;
 		XMLString::release( &message );
+		// Delete the metaProject (if it exists)
+		if (metaProject != NULL) delete metaProject;
 		// Clean up all of the XML strings
 		XmpParser::CleanUp();
 		return E_INVALID_USAGE;
@@ -216,6 +224,10 @@ MetaFolder* XmpParser::ParseFolder(DOMElement* element)
 	tmpChar = XMLString::transcode(xmlch);
 	std::string rootObjectsStr = tmpChar;
 	XMLString::release(&tmpChar);
+
+	// Now create the MetaFolder
+	MetaFolder* metaFolder = NULL;
+	// ...
 
 	// Look one level nested within "folder"
 	DOMNodeList* children = element->getChildNodes();
@@ -262,8 +274,8 @@ MetaFolder* XmpParser::ParseFolder(DOMElement* element)
 			
 		}
 	}
-
-	return NULL;
+	// All done, return the folder
+	return metaFolder;
 }
 
 
@@ -281,6 +293,67 @@ std::string XmpParser::ParseAuthor(DOMElement* element)
 
 MetaConstraint* XmpParser::ParseConstraint(DOMElement* element)
 {
+	// Get the name
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
+	char* tmpChar = XMLString::transcode(xmlch);
+	std::string constraintName = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the metaRef
+	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string metaRefStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the attributes
+	xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string attributesStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the eventmask
+	xmlch = element->getAttribute(XmpParser::ATTR_Eventmask);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string eventMaskStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the depth
+	xmlch = element->getAttribute(XmpParser::ATTR_Depth);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string depthStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the priority
+	xmlch = element->getAttribute(XmpParser::ATTR_Priority);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string priorityStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the type
+	xmlch = element->getAttribute(XmpParser::ATTR_Type);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string typeStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Look one level nested within "constraint"
+	DOMNodeList* children = element->getChildNodes();
+	const XMLSize_t nodeCount = children->getLength();
+	// For all nodes, children of folder in the XML tree.
+	for(XMLSize_t i = 0; i < nodeCount; ++i)
+	{
+		DOMNode* currentNode = children->item(i);
+		if( currentNode->getNodeType() &&  // true is not NULL
+		   currentNode->getNodeType() == DOMNode::ELEMENT_NODE ) // is element
+		{
+			// Found node which is an Element. Re-cast node as element
+			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Dispname) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+			}
+		}
+	}
+
 	return NULL;
 }
 
@@ -293,6 +366,48 @@ std::string XmpParser::ParseDispname(DOMElement* element)
 
 void XmpParser::ParseAttrdef(DOMElement* element)
 {
+	// Get the name
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
+	char* tmpChar = XMLString::transcode(xmlch);
+	std::string constraintName = tmpChar;
+	XMLString::release(&tmpChar);
+	
+	// Get the metaRef
+	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string metaRefStr = tmpChar;
+	XMLString::release(&tmpChar);
+	
+	// Get the ValueType
+	xmlch = element->getAttribute(XmpParser::ATTR_Valuetype);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string valueTypeStr = tmpChar;
+	XMLString::release(&tmpChar);
+	
+	// Get the Default Value
+	xmlch = element->getAttribute(XmpParser::ATTR_Defvalue);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string defaultValueStr = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Look one level nested within "constraint"
+	DOMNodeList* children = element->getChildNodes();
+	const XMLSize_t nodeCount = children->getLength();
+	// For all nodes, children of folder in the XML tree.
+	for(XMLSize_t i = 0; i < nodeCount; ++i)
+	{
+		DOMNode* currentNode = children->item(i);
+		if( currentNode->getNodeType() &&  // true is not NULL
+		   currentNode->getNodeType() == DOMNode::ELEMENT_NODE ) // is element
+		{
+			// Found node which is an Element. Re-cast node as element
+			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Dispname) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+			}
+		}
+	}
 }
 
 

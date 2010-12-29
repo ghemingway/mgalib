@@ -51,7 +51,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject &coreObject, const std::
 			if ( result == E_TRANSACTION ) return E_NOTFOUND;
 			if ( result != S_OK ) return result;
 			ASSERT( node != NULL );
-			node->SetAttributeValue(ATTRID_REGNODES_COLL, coreObject);
+//			node->SetAttributeValue(ATTRID_REGNODES_COLL, coreObject);
 			node->SetAttributeValue(ATTRID_NAME, name);
 		}
 		ASSERT( node != NULL );

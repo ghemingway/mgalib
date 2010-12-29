@@ -36,11 +36,11 @@ const Result_t CoreAttributeBase::Create(CoreObjectBase *parent, CoreMetaAttribu
 	else if (valueType == ValueType::String())
 		attribute = new CoreAttributeString(parent, metaAttribute);
 	else if (valueType == ValueType::LongPointer())
-		attribute = new CoreAttributeLongPointer(parent, metaAttribute);
+		attribute = new CoreAttributeTemplateBase<Uuid>(parent, metaAttribute);
 	else if (valueType == ValueType::Collection())
 		attribute = new CoreAttributeCollection(parent, metaAttribute);
 	else if (valueType == ValueType::Pointer())
-		attribute = new CoreAttributePointer(parent, metaAttribute);
+		attribute = new CoreAttributeTemplateBase<Uuid>(parent, metaAttribute);
 
 	ASSERT( attribute != NULL );
 	// All must be good
