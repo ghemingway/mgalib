@@ -145,7 +145,13 @@ public:
 		return S_OK;
 	}
 };
-
+/*
+template <>
+const Result_t CoreAttributeTemplateBase::SetValue<Uuid>(const Uuid &value) throw()
+{
+	return S_OK;
+}
+*/
 
 /*** Simple Attribute Type Definitions ***/
 typedef CoreAttributeTemplateBase<int32_t>						CoreAttributeLong;

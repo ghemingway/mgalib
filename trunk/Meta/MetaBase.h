@@ -98,9 +98,6 @@ public:
 	MetaBase(CoreObject &coreObject, MetaProject* &metaProject);
 	virtual ~MetaBase();
 
-//	static void TraverseCollection(MetaProject* &metaProject, CoreObject* &coreObject, const AttrID_t &attrID);
-//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
-
 	virtual const Result_t GetUuid(Uuid &uuid) const throw();
 	virtual const Result_t GetMetaProject(MetaProject* &project) const throw();
 	virtual const Result_t GetName(std::string &name) const throw();
@@ -109,7 +106,7 @@ public:
 	virtual const Result_t GetConstraints(std::list<MetaConstraint*> &cList) throw();
 	virtual const Result_t SetName(const std::string &name) throw();
 	virtual const Result_t SetDisplayedName(const std::string &name) throw();
-//	virtual const Result_t CreateConstraint(MetaConstraint* &constraint) throw();			// { return ComCreateMetaObj(GetUnknown(), METAID_METACONSTRAINT, ATTRID_CONSTRAINT_PTR, p); }
+	virtual const Result_t CreateConstraint(MetaConstraint* &constraint) throw();
 //	virtual const Result_t Delete(void) throw();
 };
 

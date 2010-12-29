@@ -9,5 +9,3 @@
 
 #endif // __META_PROJECT_TESTING_H__
 
-
-

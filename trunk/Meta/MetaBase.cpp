@@ -130,20 +130,6 @@ MetaBase::~MetaBase()
 }
 
 
-/*
-const Result_t MetaBase::PutMetaRef(const MetaRef_t &metaRef) throw()
-{
-	ASSERT( this->_metaProject != NULL );
-	if( metaRef == this->_metaRef ) return S_OK;
-	// Swap metaBase registrations
-	this->_metaProject->RegisterMetaBase(metaRef, this);
-	this->_metaProject->UnregisterMetaBase(this->_metaRef, this);
-	// Update the metaRef value
-	this->_metaRef = metaRef;
-	return S_OK;
-}
-*/
-
 const Result_t MetaBase::GetUuid(Uuid &uuid) const throw()
 {
 	ASSERT( this->_coreObject != NULL );
@@ -159,25 +145,37 @@ const Result_t MetaBase::GetMetaProject(MetaProject* &project) const throw()
 
 const Result_t MetaBase::GetName(std::string &name) const throw()
 {
-	return this->_coreObject->GetAttributeValue(ATTRID_NAME, name);
+	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_NAME, name);
+	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	return result;
 }
 
 
 const Result_t MetaBase::SetName(const std::string &name) throw()
 {
-	return this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
+	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
+	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	return result;
 }
 
 
 const Result_t MetaBase::GetDisplayedName(std::string &name) const throw()
 {
-	return this->_coreObject->GetAttributeValue(ATTRID_DISPNAME, name);
+	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_DISPNAME, name);
+	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	return result;
 }
 
 
 const Result_t MetaBase::SetDisplayedName(const std::string &name) throw()
 {
-	return this->_coreObject->SetAttributeValue(ATTRID_DISPNAME, name);
+	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_DISPNAME, name);
+	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	return result;
 }
 
 
@@ -220,31 +218,33 @@ const Result_t MetaBase::GetConstraints(std::list<MetaConstraint*> &constraintLi
 	return S_OK;
 }
 
-/*
 const Result_t MetaBase::CreateConstraint(MetaConstraint* &constraint) throw()
 {
-	//		{ return ComCreateMetaObj(GetUnknown(), METAID_METACONSTRAINT, ATTRID_CONSTRAINT_PTR, p); }
+	// Get the associated coreProject
+	CoreProject* coreProject = NULL;
+	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	ASSERT( coreProject != NULL );
+	// Start a transaction
+	ASSERT( coreProject->BeginTransaction(false) == S_OK );
+	// Create a METAID_METACONSTRAINT object
+	CoreObject coreObject;
+	ASSERT( coreProject->CreateObject(METAID_METACONSTRAINT, coreObject) == S_OK );
+	// Link the new child to this object as parent
+	Uuid uuid;
+	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
+	ASSERT( coreObject->SetAttributeValue(ATTRID_CONSTRAINT_PTR, uuid) == S_OK );
+	// Commit transaction at the CoreProject level
+	coreProject->CommitTransaction();
+	// Now use the core object to create a MetaConstraint
+	constraint = new MetaConstraint(coreObject, this->_metaProject);
+	ASSERT( constraint != NULL );
 	return S_OK;
 }
 
-
+/*
 const Result_t MetaBase::Delete(void) throw()
 {
 	// { return ComDeleteObject(GetUnknown()); }
 	return S_OK;
-}
-*/
-/*
-void MetaBase::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	Uuid uuid;
-	// Create the metaBase object with this attrID (that will register it with the metaProject)
-//	ASSERT( coreObject->GetAttributeValue(ATTRID_METAREF, uuid) == S_OK );
-	MetaBase* metaBase = new MetaBase(coreObject, metaProject);
-	ASSERT( metaBase != NULL );
-	// Traverse all children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_REGNODES_COLL);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_CONSTRAINT_PTR);
 }
 */

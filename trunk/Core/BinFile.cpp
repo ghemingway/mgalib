@@ -1356,7 +1356,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	}
 	else if (binAttribute->GetValueType() == ValueType::Pointer())
 	{
-		// Make sure value is valid (either a valid object or NONE pair - and pointed to has good backpointer collection)
+		// Make sure value is valid (either a valid object or NULL - and pointed to has good backpointer collection)
 		BinAttributeCollection *newCollection = NULL;
 		if (value != Uuid::Null())
 		{
