@@ -41,6 +41,7 @@ std::string core_descs[] =
 	"Invalid binary file storage",
 	"Project has no name",
 	"String is not valid UTF-8 encoded"
+	"Write attempt in a read-only transaction"
 };
 
 

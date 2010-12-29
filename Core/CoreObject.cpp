@@ -54,6 +54,7 @@ STDMETHODIMP CoreObjectBase::SearchCollection(attrid_type coll_attrid, attrid_ty
 	COMCATCH(;)
 }
 
+
 STDMETHODIMP CoreObjectBase::get_IsDeleted(VARIANT_BOOL *p)
 {
 	CHECK_OUT(p);
@@ -104,25 +105,6 @@ void CoreObjectBase::Delete()
 			++i;
 	}
 		COMTHROW( lock->put_Value(PutInVariant(locking_type(LOCKING_NONE))) );
-}
-
-
-// ------- Creation 
-
-
-void CoreObjectBase::FillAfterCreateObject()
-{
-	ASSERT( !attributes.empty() );
-
-	attributes_iterator i = attributes.begin();
-	attributes_iterator e = attributes.end();
-	while( i != e )
-	{
-		(*i)->FillAfterCreateObject();
-		++i;
-	}
-
-	RegisterFinalTrItem();
 }
 */
 
@@ -216,7 +198,16 @@ const Result_t CoreObjectBase::Attribute(const AttrID_t &attrID, CoreAttribute* 
 
 const Result_t CoreObjectBase::InTransaction(bool &flag) const throw()
 {
+	// Just call to the parent project to find out
 	ASSERT( this->_project != NULL );
 	return this->_project->InTransaction(flag);
+}
+
+
+const Result_t CoreObjectBase::InWriteTransaction(bool &flag) const throw()
+{
+	// Just call to the parent project to find out
+	ASSERT( this->_project != NULL );
+	return this->_project->InWriteTransaction(flag);
 }
 

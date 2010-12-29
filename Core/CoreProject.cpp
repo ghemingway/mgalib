@@ -9,11 +9,11 @@
 // --------------------------- Private CoreProject Functions ---------------------------
 
 
-CoreProject::CoreProject(CoreMetaProject *coreMetaProject)
-	:	_storage(NULL), _coreMetaProject(coreMetaProject), _isDirty(false), _objectHash(),
-		_transactionList(), _undoList(), _redoCount(0)
+CoreProject::CoreProject(CoreMetaProject* &coreMetaProject, ICoreStorage* &storage)
+	:	_storage(storage), _coreMetaProject(coreMetaProject), _isDirty(false), _objectHash(), _transactionList()
 {
 	ASSERT( coreMetaProject != NULL );
+	ASSERT( storage != NULL );
 }
 
 
@@ -129,9 +129,6 @@ const Result_t CoreProject::Create(const std::string &connection, CoreMetaProjec
 {
 	if( connection == "" ) return E_INVALID_USAGE;
 	if( coreMetaProject == NULL ) return E_INVALID_USAGE;
-	// Create the new CoreProject
-	CoreProject* coreProject = new CoreProject(coreMetaProject);
-	ASSERT( coreProject != NULL );
 	// What type of file are we trying to open
 	std::string con = CoreProject::GetFirstToken(connection);
 	ICoreStorage* coreStorage = NULL;
@@ -142,22 +139,17 @@ const Result_t CoreProject::Create(const std::string &connection, CoreMetaProjec
 		cleanFileName.erase(0, 4);
 		// Create the CoreStorage for the project
 		Result_t retVal = ICoreStorage::Create(con, cleanFileName, coreMetaProject, coreStorage);
-		if ( retVal != S_OK )
-		{
-			delete coreProject;
-			return retVal;
-		}
+		if ( retVal != S_OK ) return retVal;
 	}
 	else ASSERT( false );	
 	if( coreStorage == NULL )
 	{
 		// Do something to signal a failure to create CoreStorage
-		delete coreProject;
 		return E_EXCEPTION;
 	}
-	// Have good storage...moving on
-	coreProject->_storage = coreStorage;
-	project = coreProject;
+	// Create the new CoreProject
+	project = new CoreProject(coreMetaProject, coreStorage);
+	ASSERT( project != NULL );	
 	return S_OK;
 }
 
@@ -166,9 +158,6 @@ const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject*
 {
 	if( connection == "" ) return E_INVALID_USAGE;
 	if( coreMetaProject == NULL ) return E_INVALID_USAGE;
-	// Create the new CoreProject
-	CoreProject* coreProject = new CoreProject(coreMetaProject);
-	ASSERT( coreProject != NULL );
 	// Now figure out what CoreStorage to use
 	std::string con = CoreProject::GetFirstToken(connection);
 	ICoreStorage* coreStorage = NULL;
@@ -179,22 +168,17 @@ const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject*
 		cleanFileName.erase(0, 4);
 		// Open the CoreStorage for the project
 		Result_t retVal = ICoreStorage::Open(con, cleanFileName, coreMetaProject, coreStorage);
-		if ( retVal != S_OK )
-		{
-			delete coreProject;
-			return retVal;
-		}
+		if ( retVal != S_OK ) return retVal;
 	}
 	else
 		ASSERT( false );
 	// Make sure we have a valid storage object
 	if( coreStorage == NULL ) {
-		delete coreProject;
 		return E_EXCEPTION;
 	}
-	// Set the storage - will also set project's coreMetaProject pointer
-	coreProject->_storage = coreStorage;
-	project = coreProject;
+	// Create the new CoreProject
+	project = new CoreProject(coreMetaProject, coreStorage);
+	ASSERT( project != NULL );
 	return S_OK;
 }
 
@@ -212,44 +196,14 @@ const Result_t CoreProject::Save(const std::string &filename) throw()
 const Result_t CoreProject::BeginTransaction(const bool &readOnly) throw()
 {
 	ASSERT( this->_storage != NULL );
-	// Is this a nested transaction
-	if( !this->_transactionList.empty() )
-	{
-/*
-		// Make sure a read-write transaction is not being requested inside of a read-only
-		// ...
-		TransactionItemsListIterator itemsIter = this->_transactions.front().items.begin();
-		TransactionItemsListIterator itemsEnd = this->_transactions.front().items.end();
-		while( itemsIter != itemsEnd )
-		{
-			// Make sure the transaction item is dirty
-			ASSERT( (*itemsIter)->IsDirty() );
-			(*itemsIter)->ChangeDirty(false);
-			ASSERT( !(*itemsIter)->IsDirty() );
-			// Move to the next transaction item
-			++itemsIter;
-		}
-		//
-		this->_transactions.push_front( TransactionTypes() );
-		this->_transactions.front().readonly = false;
-*/
-	}
-	// Must be a final transaction
-	else
-	{
-		// If this is a read/write transaction then flush the redo queue
-//		if( !readOnly )
-//		{
-//			while( this->_redoCount > 0 ) this->DiscardUndo();
-//			ASSERT( this->_redoCount == 0 );
-//		}
-		// Start the transaction at the storage level
-		this->_storage->BeginTransaction();
-		// Create the new transaction item and put it on top of the list
-		this->_transactionList.push_front( Transaction() );
-		// Set the transaction read/write type
-		this->_transactionList.front().readOnly = readOnly;
-	}
+	// Make sure a read-write transaction is not being requested nested inside of a read-only
+	if( !this->_transactionList.empty() && this->_transactionList.front().readOnly && !readOnly) return E_READONLY;
+	// Start the transaction at the storage level
+	this->_storage->BeginTransaction();
+	// Create the new transaction item and put it on top of the list
+	this->_transactionList.push_front( Transaction() );
+	// Set the transaction read/write type
+	this->_transactionList.front().readOnly = readOnly;
 	return S_OK;
 }
 
@@ -257,47 +211,32 @@ const Result_t CoreProject::BeginTransaction(const bool &readOnly) throw()
 const Result_t CoreProject::CommitTransaction(void) throw()
 {
 	ASSERT( this->_storage != NULL );
-	if( this->_transactionList.empty() ) return E_INVALID_USAGE;
+	if( this->_transactionList.empty() ) return S_OK;
 	// Is this a nested commit transaction
 	if( this->_transactionList.size() > 1 )
 	{
-		ASSERT(false);
-/*
-		Transaction &currentTransaction = this->_transactionList.front();
-		TransactionTypesListIterator previous = ++this->_transactions.begin();
-		
-		TransactionItemsListIterator i = (*previous).items.begin();
-		TransactionItemsListIterator e = (*previous).items.end();
-		while( i != e )
-		{
-			if( (*i)->IsDirty() )
-			{
-				(*i)->DiscardPreviousValue();
-			}
-			else
-			{
-				(*i)->ChangeDirty(true);
-				current.items.push_front( (*i) );
-			}
-			ASSERT( (*i)->IsDirty() );
-			++i;
-		}
-		
-		// don't forget to set the read-only flag;
-		current.readonly = previous->readonly;
-		this->_transactions.erase(previous);
-*/
+		// Get the transaction and remove it from the list
+		Transaction transaction = this->_transactionList.front();
+		this->_transactionList.pop_front();
+		// Get the parent transaction
+		Transaction &parentTransaction = this->_transactionList.front();
+		// Append nested transaction onto end of parent transaction
+		parentTransaction.createdObjects.splice(parentTransaction.createdObjects.begin(), transaction.createdObjects);
+		parentTransaction.attributes.splice(parentTransaction.attributes.begin(), transaction.attributes);
+		parentTransaction.deletedObjects.splice(parentTransaction.deletedObjects.begin(), transaction.deletedObjects);
 	}
 	// This is a final commit
 	else
 	{
-		// Get the transaction and process (don't need to worry about CreateObjects since they are already in storage)
+		// Get the transaction and process
 		Transaction &transaction = this->_transactionList.front();
+		// Don't need to worry about CreateObjects since they are already in storage)
+		transaction.createdObjects.clear();
 		// Go through all attribute changes and write into storage
 		std::list<CoreAttributeBase*>::iterator attrIter = transaction.attributes.begin();
 		while( attrIter != transaction.attributes.end() )
 		{
-			// Force it to write to storage
+			// Force it to write to storage and condense its values list
 			(*attrIter)->CommitTransaction();
 			++attrIter;
 		}
@@ -317,26 +256,43 @@ const Result_t CoreProject::CommitTransaction(void) throw()
 		this->_transactionList.pop_front();
 		ASSERT( this->_transactionList.empty() );
 	}
+	// All is good
 	return S_OK;
 }
 
 
 const Result_t CoreProject::AbortTransaction(void) throw()
 {
-	ASSERT(false);
-//	if( this->_storage == NULL || transactionType == TransactionType::Any() || !this->InTransaction() ||
-//	   (limited_size(this->_transactions, 2) == 1 && transactionType == TransactionType::First() ) )
-//	{
-//		ASSERT(false);	//E_INVALID_USAGE
-//	}
-//	if( limited_size(this->_transactions, 2) >= 2 )
-//	{
-//		this->AbortNestedTransaction();
-//	}
-//	else
-//	{
-//		this->AbortFinalTransaction();
-//	}
+	ASSERT( this->_storage != NULL );
+	if( this->_transactionList.empty() ) return S_OK;
+
+	// Get the transaction and process
+	Transaction &transaction = this->_transactionList.front();
+	// Go through all attribute changes and abort them
+	std::list<CoreAttributeBase*>::iterator attrIter = transaction.attributes.begin();
+	while( attrIter != transaction.attributes.end() )
+	{
+		// Revert this value change in the attribute
+		(*attrIter)->AbortTransaction();
+		++attrIter;
+	}
+	// Nothing needs to be done for deleted since they are reconnected via attribute reversions
+	transaction.deletedObjects.clear();
+	// Go through all created objects and delete from storage
+	std::list<Uuid>::iterator createdIter = transaction.createdObjects.begin();
+	while( createdIter != transaction.createdObjects.end() )
+	{
+		// Set storage to this object and delete it
+		ASSERT( this->_storage->OpenObject(*createdIter) == S_OK );
+		ASSERT( this->_storage->DeleteObject() == S_OK );
+		// Move on to the next created object
+		++createdIter;
+	}
+	// Remove the transaction and move on
+	this->_transactionList.pop_front();
+	// If this was the last transaction, call AbortTransaction on storage
+	if (this->_transactionList.empty()) this->_storage->AbortTransaction();
+	// All is good
 	return S_OK;
 }
 
@@ -368,7 +324,8 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject &obj
 {
 	if( metaID == METAID_NONE ) return E_INVALID_USAGE;
 	// Must be in a write transaction
-	if( this->_transactionList.empty() || this->_transactionList.front().readOnly ) return E_TRANSACTION;
+	if( this->_transactionList.empty() ) return E_TRANSACTION;
+	if( this->_transactionList.front().readOnly ) return E_READONLY;
 	// Create an object of the specified MetaID (call to ICoreStorage)
 	Uuid uuid =  Uuid::Null();
 	Result_t result = this->_storage->CreateObject(metaID, uuid);
@@ -383,7 +340,7 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject &obj
 	}
 	ASSERT( object != NULL );
 	// Add the object into the created objects list of the transaction
-	this->_transactionList.front().createdObjects.push_back( object.operator->() );
+	this->_transactionList.front().createdObjects.push_back( uuid );
 	return S_OK;
 }
 
@@ -402,7 +359,8 @@ const Result_t CoreProject::DeleteObject(const Uuid &uuid) throw()
 {
 	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	// Must be in a write transaction
-	if( this->_transactionList.empty() || this->_transactionList.front().readOnly ) return E_TRANSACTION;
+	if( this->_transactionList.empty() ) return E_TRANSACTION;
+	if( this->_transactionList.front().readOnly ) return E_READONLY;
 	// Is this object in the objectHash?  Don't allow delete if so
 	if( this->_objectHash.find(uuid) != this->_objectHash.end() ) return E_LOCK_VIOLATION;
 	// Open the object with the specified Uuid (call to ICoreStorage)
@@ -414,327 +372,5 @@ const Result_t CoreProject::DeleteObject(const Uuid &uuid) throw()
 	// Add object to deleted objects list of the transaction
 	this->_transactionList.front().deletedObjects.push_back(uuid);
 	return S_OK;
-}
-
-/*
-const Result_t CoreProject::UndoTransaction(void) throw()
-{
-//	ASSERT( (int) undos.size() >= redo_count && redo_count >= 0 );
-//
-//	if( storage == NULL || InTransaction() || (int) undos.size() <= redo_count )
-//		COMRETURN(E_INVALID_USAGE);
-//
-//	COMTRY
-//	{
-//		TryUndoTransaction();
-//	}
-//	COMCATCH(;)
-	return S_OK;
-}
-
-
-const Result_t CoreProject::RedoTransaction(void) throw()
-{
-//	ASSERT( (int) undos.size() >= redo_count && redo_count >= 0 );
-//	if( storage == NULL || InTransaction() || redo_count <= 0 )
-//		COMRETURN(E_INVALID_USAGE);
-//	COMTRY
-//	{
-//		TryRedoTransaction();
-//	}
-//	COMCATCH(;)
-	return S_OK;
-}
-
-
-const Result_t CoreProject::FlushUndoQueue(void) throw()
-{
-//	ASSERT( (int) undos.size() >= redo_count && redo_count >= 0 );
-//	if( storage == NULL || InTransaction() )
-//		COMRETURN(E_INVALID_USAGE);
-//	COMTRY
-//	{
-//		while( !undos.empty() )
-//			DiscardUndo();
-//	}
-//	COMCATCH(;)
-	return S_OK;
-}
-
-
-const Result_t CoreProject::FlushRedoQueue(void) throw()
-{
-//	ASSERT( (int) undos.size() >= redo_count && redo_count >= 0 );
-//	if( storage == NULL || InTransaction() )
-//		COMRETURN(E_INVALID_USAGE);
-//	COMTRY
-//	{
-//		while( redo_count > 0 )
-//			DiscardUndo();
-//	}
-//	COMCATCH(;)
-	return S_OK;
-}
-
-
-const Result_t CoreProject::UndoQueueSize(uint16_t &size) const throw()
-{
-//	ASSERT( (int)this->_undos.size() >= this->_redoCount );
-//	size = undos.size() - redo_count - (InTransaction() ? 1 : 0);
-//	ASSERT( *p >= 0 );
-	return S_OK;
-}
-
-
-const Result_t CoreProject::RedoQueueSize(uint16_t &size) const throw()
-{
-//	ASSERT( (int) undos.size() >= redo_count );
-//	size = redo_count;
-	return S_OK;
-}
-
-/*
-void CoreProject::RegisterFinalTransactionItem(CoreFinalTransactionItem *modified) throw()
-{
-	ASSERT( this->InTransaction() );
-	ASSERT( modified != NULL );
-
-#ifdef DEBUG_CONTAINERS
-	ASSERT( find(this->_finalTransactionItems.begin(), this->_finalTransactionItems.end(), modified) ==
-		this->_finalTransactionItems.end() );
-#endif
-
-	this->_finalTransactionItems.push_front(modified);
-}
-
-
-void CoreProject::RegisterUndoItem(CoreUndoItem *modified) throw()
-{
-	ASSERT( this->InWriteTransaction() );
-	ASSERT( modified != NULL );
-	ASSERT( !this->_undos.empty() );
-
-#ifdef DEBUG_CONTAINERS
-	ASSERT( find(this->_undos.front().begin(), this->_undos.front().end(), modified) ==
-		this->_undos.front().end() );
-#endif
-
-	this->_undos.front().push_front(modified);
-}
-
-/*
-void CCoreProject::TryUndoTransaction()
-{
-	ASSERT( !InTransaction() );
-	ASSERT( transactions.empty() );
-	ASSERT( finaltr_items.empty() );
-
-	try
-	{
-		ASSERT( storage );
-		COMTHROW( storage->BeginTransaction() );
-
-		transactions.push_front(transaction_type());
-		transactions.front().readonly = true;
-
-		ASSERT( !undos.empty() );
-
-		undo_items_iterator i = undos.front().begin();
-		undo_items_iterator e = undos.front().end();
-		while( i != e )
-		{
-			ASSERT( (*i) != NULL );
-			(*i)->UndoTransaction();
-
-			++i;
-		}
-
-		ASSERT( transactions.size() == 1 );
-		ASSERT( transactions.front().items.empty() );
-		ASSERT( finaltr_items.empty() );
-
-		transactions.pop_front();
-
-		ASSERT( storage );
-		COMTHROW( storage->CommitTransaction() );
-
-		// nothing will throw here
-
-		i = undos.front().begin();
-		ASSERT( e == undos.front().end() );
-		while( i != e )
-		{
-			ASSERT( (*i) != NULL );
-			(*i)->UndoTransactionFinish();
-
-			++i;
-		}
-
-		++redo_count;
-		undos.splice(undos.end(), undos, undos.begin());
-	}
-	catch(hresult_exception &)
-	{
-		ASSERT(false);
-
-		if( !transactions.empty() )
-		{
-			ASSERT( transactions.front().items.empty() );
-			transactions.pop_front();
-		}
-		ASSERT( transactions.empty() );
-
-		ASSERT( storage );
-		storage->AbortTransaction();
-	}
-
-	ASSERT( transactions.empty() );
-	ASSERT( finaltr_items.empty() );
-}
-
-
-void CCoreProject::TryRedoTransaction()
-{
-	ASSERT( !InTransaction() );
-	ASSERT( transactions.empty() );
-	ASSERT( finaltr_items.empty() );
-	ASSERT( !undos.empty() );
-
-	try
-	{
-		ASSERT( storage );
-		COMTHROW( storage->BeginTransaction() );
-
-		transactions.push_front(transaction_type());
-		transactions.front().readonly = true;
-
-		undo_items_iterator i = undos.back().begin();
-		undo_items_iterator e = undos.back().end();
-		while( i != e )
-		{
-			ASSERT( (*i) != NULL );
-			(*i)->RedoTransaction();
-
-			++i;
-		}
-
-		ASSERT( transactions.size() == 1 );
-		ASSERT( transactions.front().items.empty() );
-		ASSERT( finaltr_items.empty() );
-
-		transactions.pop_front();
-
-		ASSERT( storage );
-		COMTHROW( storage->CommitTransaction() );
-
-		// nothing will throw here
-
-		i = undos.back().begin();
-		ASSERT( e == undos.back().end() );
-		while( i != e )
-		{
-			ASSERT( (*i) != NULL );
-			(*i)->RedoTransactionFinish();
-
-			++i;
-		}
-
-		--redo_count;
-		undos.splice(undos.begin(), undos, --undos.end());
-	}
-	catch(hresult_exception &)
-	{
-		if( !transactions.empty() )
-		{
-			ASSERT( transactions.front().items.empty() );
-			transactions.pop_front();
-		}
-		ASSERT( transactions.empty() );
-
-		ASSERT( storage );
-		storage->AbortTransaction();
-	}
-
-	ASSERT( transactions.empty() );
-	ASSERT( finaltr_items.empty() );
-}
-*/
-
-void CoreProject::DiscardUndo(void)
-{
-	ASSERT( this->_transactionList.empty() );
-	if (this->_undoList.empty() )return;
-
-	UndoItemsList discarded;
-/*
-//	try
-//	{
-//		ASSERT( this->_storage );
-		this->_storage->BeginTransaction();
-
-		this->_transactions.push_front( TransactionTypes() );
-		this->_transactions.front().readonly = true;
-
-		UndoItemsListIterator undoIter = this->_undos.back().begin();
-		UndoItemsListIterator undoEnd = this->_undos.back().end();
-		while( undoIter != undoEnd )
-		{
-			ASSERT( (*undoIter) != NULL );
-			(*undoIter)->DiscardLastItem();
-			discarded.push_front(*undoIter);
-			++undoIter;
-		}
-
-		ASSERT( this->_transactions.size() == 1 );
-		ASSERT( this->_transactions.front().items.empty() );
-
-		// now the final transaction items contain the modified locks
-
-		FinalTransactionItemsListIterator finalIter = this->_finalTransactionItems.begin();
-		FinalTransactionItemsListIterator finalEnd = this->_finalTransactionItems.end();
-		while( finalIter != finalEnd )
-		{
-			(*finalIter)->CommitFinalTransaction();
-			++finalEnd;
-		}
-
-		this->_transactions.pop_front();
-
-		ASSERT( this->_storage );
-		this->_storage->CommitTransaction();
-
-		// nothing will throw here
-
-		// we clear undo info at attributes, before 
-		undoIter = discarded.begin();
-		undoEnd = discarded.end();
-		while( undoIter != undoEnd )
-		{
-			ASSERT( (*undoIter) != NULL );
-			(*undoIter)->DiscardLastItemFinish();
-			++undoIter;
-		}
-
-		discarded.clear();
-
-		// unloading by locking attributes
-		finalIter = this->_finalTransactionItems.begin();
-		ASSERT( finalEnd == this->_finalTransactionItems.end() );
-		while( finalIter != finalEnd )
-		{
-			(*finalIter)->CommitFinalTransactionFinish(false);
-			++finalEnd;
-		}
-
-		this->_finalTransactionItems.clear();
-
-		if( --this->_redoCount < 0 )
-			this->_redoCount = 0;
-
-		this->_undos.pop_back();
-	}
-*/
-	ASSERT( this->_transactionList.empty() );
-	ASSERT( discarded.empty() );
 }
 

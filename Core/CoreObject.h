@@ -60,6 +60,7 @@ public:
 	inline const Result_t IsDirty(bool &flag) const throw()				{ flag = this->_isDirty; return S_OK; }
 	inline const Result_t MarkDirty(void) throw()						{ this->_isDirty = true; return S_OK; }
 	const Result_t InTransaction(bool &flag) const throw();
+	const Result_t InWriteTransaction(bool &flag) const throw();
 
 	const Result_t Attributes(std::list<CoreAttribute*> &controlled) throw();
 	const Result_t Attribute(const AttrID_t &attrID, CoreAttribute* &attribute) const throw();
@@ -67,22 +68,18 @@ public:
 	template<class T>
 	const Result_t SetAttributeValue(const AttrID_t &attrID, const T &value) throw()
 	{
-		bool inTransaction;
-		ASSERT( this->InTransaction(inTransaction) == S_OK );
-		if (!inTransaction) return E_TRANSACTION;
-		CoreAttributeBase *attribute = this->_attributeMap.find(attrID)->second;
-		if( attribute == NULL ) return E_ATTRID;
-		((CoreAttributeTemplateBase<T>*)attribute)->SetValue(value);
-		return S_OK;
+		// Make sure we can find the desired attribute
+		std::map<AttrID_t,CoreAttributeBase*>::const_iterator mapIter = this->_attributeMap.find(attrID);
+		if (mapIter == this->_attributeMap.end()) return E_ATTRID;
+		CoreAttributeBase *attribute = mapIter->second;
+		ASSERT( attribute != NULL );
+		// Set the value
+		return ((CoreAttributeTemplateBase<T>*)attribute)->SetValue(value);
 	}
 
 	template<class T>
 	const Result_t GetAttributeValue(const AttrID_t &attrID, T &value) const throw()
 	{
-		// Make sure we are in a transaction
-		bool inTransaction;
-		ASSERT( this->InTransaction(inTransaction) == S_OK );
-		if (!inTransaction) return E_TRANSACTION;
 		// Make sure we can find the desired attribute
 		std::map<AttrID_t,CoreAttributeBase*>::const_iterator mapIter = this->_attributeMap.find(attrID);
 		if (mapIter == this->_attributeMap.end()) return E_ATTRID;
@@ -95,27 +92,29 @@ public:
 	template<class T>
 	const Result_t LoadedAttributeValue(const AttrID_t &attrID, const T &value) throw()
 	{
-		bool inTransaction;
-		ASSERT( this->InTransaction(inTransaction) == S_OK );
-		if (!inTransaction) return E_TRANSACTION;
-		CoreAttributeBase *attribute = this->_attributeMap.find(attrID)->second;
-		if( attribute == NULL ) return E_ATTRID;
+		// Make sure we can find the desired attribute
+		std::map<AttrID_t,CoreAttributeBase*>::const_iterator mapIter = this->_attributeMap.find(attrID);
+		if (mapIter == this->_attributeMap.end()) return E_ATTRID;
+		CoreAttributeBase *attribute = mapIter->second;
+		ASSERT( attribute != NULL );
+		// Get the loaded value
 		return ((CoreAttributeTemplateBase<T>*)attribute)->GetLoadedValue(value);
 	}
 
 	template<class T>
 	const Result_t PreviousAttributeValue(const AttrID_t &attrID, const T &value) throw()
 	{
-		bool inTransaction;
-		ASSERT( this->InTransaction(inTransaction) == S_OK );
-		if (!inTransaction) return E_TRANSACTION;
-		CoreAttributeBase *attribute = this->_attributeMap.find(attrID)->second;
-		if( attribute == NULL ) return E_ATTRID;
+		// Make sure we can find the desired attribute
+		std::map<AttrID_t,CoreAttributeBase*>::const_iterator mapIter = this->_attributeMap.find(attrID);
+		if (mapIter == this->_attributeMap.end()) return E_ATTRID;
+		CoreAttributeBase *attribute = mapIter->second;
+		ASSERT( attribute != NULL );
+		// Get the previous value
 		return ((CoreAttributeTemplateBase<T>*)attribute)->GetPreviousValue(value);
 	}
 
-	template<class T>
-	const Result_t SearchCollection(const AttrID_t &collectionAttrID, const AttrID_t &attrID, const T &value, CoreObjectBase* &object) throw();
+//	template<class T>
+//	const Result_t SearchCollection(const AttrID_t &collectionAttrID, const AttrID_t &attrID, const T &value, CoreObjectBase* &object) throw();
 
 	friend std::ostream& operator<<(std::ostream& out, const CoreObjectBase *object)
 	{
