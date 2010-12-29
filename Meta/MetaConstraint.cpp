@@ -76,13 +76,63 @@ const Result_t MetaConstraint::GetType(constraint_type_enum *p) const throw()
 }
 */
 
+
+const Result_t MetaConstraint::SetName(const std::string &name) throw()
+{ 
+//	return ComPutAttrValue(GetUnknown(), ATTRID_NAME, p);
+	return S_OK;
+}
+
+
+const Result_t MetaConstraint::SetDisplayedName(const std::string &name) throw()
+{
+//	return ComPutAttrValue(GetUnknown(), ATTRID_DISPNAME, p);
+	return S_OK;
+}
+
+
+const Result_t MetaConstraint::SetExpression(const std::string &expression) throw()
+{
+//	return ComPutAttrValue(GetUnknown(), ATTRID_CONSEXPR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaConstraint::SetEventMask(const unsigned long &mask) throw()
+{
+//	return ComPutAttrValue(GetUnknown(), ATTRID_CONSMASK, (long)p);
+	return S_OK;
+}
+
+
+const Result_t MetaConstraint::SetDepth(const ConstraintDepth &depth) throw()
+{
+//	return ComPutAttrValue(GetUnknown(), ATTRID_CONSDEPTH, static_cast<long>(p));
+	return S_OK;
+}
+
+
+const Result_t MetaConstraint::SetPriority(const long &priority) throw()
+{
+//	return ComPutAttrValue(GetUnknown(), ATTRID_CONSPRIORITY, p);
+	return S_OK;
+}
+
+
+const Result_t MetaConstraint::SetType(const ConstraintType &type) throw()
+{
+//	return ComPutAttrValue(GetUnknown(), ATTRID_CONSTYPE, static_cast<long>(p));
+	return S_OK;
+}
+
+/*
 const Result_t MetaConstraint::GetDefinedForNamespace(std::string &value) const throw()
 {
 //	return ComGetAttrValue(GetUnknown(), ATTRID_CONSNAMESPC, pStr);
 	return S_OK;
 }
 
-/*
+
 STDMETHODIMP CMgaMetaConstraint::SetDefinedForNamespace( BSTR pStr)
 {
 	return ComPutAttrValue(GetUnknown(), ATTRID_CONSNAMESPC, pStr);

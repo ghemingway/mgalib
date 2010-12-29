@@ -90,6 +90,9 @@
 		58801D4912C91E5E00935308 /* CoreMetaTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F612B970F400F4AB58 /* CoreMetaTesting.cpp */; };
 		58801D4A12C91E6300935308 /* CoreTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390FA12B970F400F4AB58 /* CoreTesting.cpp */; };
 		58801D5412C91EA700935308 /* MetaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */; };
+		5880222512CA857800935308 /* XmpParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 5880222312CA857800935308 /* XmpParser.h */; };
+		5880222612CA857800935308 /* XmpParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5880222412CA857800935308 /* XmpParser.cpp */; };
+		5880224212CAD92500935308 /* XmpParserTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5880224112CAD92500935308 /* XmpParserTesting.cpp */; };
 		58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 		58F92C2A125FABD200FAF4C6 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 /* End PBXBuildFile section */
@@ -204,6 +207,10 @@
 		58542D8B1291F25D00947FA9 /* MGALib.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MGALib.py; path = Interfaces/MGALib.py; sourceTree = "<group>"; };
 		587E25BD12BBB8050035DB9E /* CoreTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreTypes.cpp; path = ../../Core/CoreTypes.cpp; sourceTree = SOURCE_ROOT; };
 		587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		5880222312CA857800935308 /* XmpParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XmpParser.h; path = ../../Parser/XmpParser.h; sourceTree = SOURCE_ROOT; };
+		5880222412CA857800935308 /* XmpParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XmpParser.cpp; path = ../../Parser/XmpParser.cpp; sourceTree = SOURCE_ROOT; };
+		5880224012CAD92500935308 /* XmpParserTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XmpParserTesting.h; path = ../../Testing/XmpParserTesting.h; sourceTree = SOURCE_ROOT; };
+		5880224112CAD92500935308 /* XmpParserTesting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XmpParserTesting.cpp; path = ../../Testing/XmpParserTesting.cpp; sourceTree = SOURCE_ROOT; };
 		58E371BD12C3F56F00BA324B /* MetaProjectTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaProjectTesting.h; path = ../../Testing/MetaProjectTesting.h; sourceTree = SOURCE_ROOT; };
 		58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaProjectTesting.cpp; path = ../../Testing/MetaProjectTesting.cpp; sourceTree = SOURCE_ROOT; };
 		58E90A1F124CEFFF00B8E3CF /* MGALib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MGALib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -253,6 +260,7 @@
 				58542C1012919A7900947FA9 /* Interfaces */,
 				58542F38129436FF00947FA9 /* Meta */,
 				58542F36129436E500947FA9 /* MGA */,
+				5880222012CA853E00935308 /* Parser */,
 				5843398A125B8ABD00DD904D /* Testing */,
 				034768DDFF38A45A11DB9C8B /* Products */,
 				58E90A20124CEFFF00B8E3CF /* MGALib-Info.plist */,
@@ -276,6 +284,7 @@
 				58FB9FEB129ADF0200953701 /* Core */,
 				58FB9FEC129ADF1300953701 /* MGA */,
 				58FBB21612AFF96D00953701 /* Meta */,
+				5880223D12CAD8E800935308 /* Parser */,
 			);
 			name = Testing;
 			sourceTree = "<group>";
@@ -347,6 +356,56 @@
 				584390EA12B970C900F4AB58 /* MgaTerritory.cpp */,
 			);
 			name = Source;
+			sourceTree = "<group>";
+		};
+		5880222012CA853E00935308 /* Parser */ = {
+			isa = PBXGroup;
+			children = (
+				5880222212CA854F00935308 /* Headers */,
+				5880222112CA854A00935308 /* Source */,
+			);
+			name = Parser;
+			sourceTree = "<group>";
+		};
+		5880222112CA854A00935308 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				5880222412CA857800935308 /* XmpParser.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		5880222212CA854F00935308 /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				5880222312CA857800935308 /* XmpParser.h */,
+			);
+			name = Headers;
+			sourceTree = "<group>";
+		};
+		5880223D12CAD8E800935308 /* Parser */ = {
+			isa = PBXGroup;
+			children = (
+				5880223F12CAD8FC00935308 /* Headers */,
+				5880223E12CAD8F600935308 /* Source */,
+			);
+			name = Parser;
+			sourceTree = "<group>";
+		};
+		5880223E12CAD8F600935308 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				5880224112CAD92500935308 /* XmpParserTesting.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		5880223F12CAD8FC00935308 /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				5880224012CAD92500935308 /* XmpParserTesting.h */,
+			);
+			name = Headers;
 			sourceTree = "<group>";
 		};
 		5883029C124BEAA9009251F4 /* Source */ = {
@@ -585,6 +644,7 @@
 				582BD6E012C8F7E200B18A19 /* MetaRegNode.h in Headers */,
 				582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */,
 				582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */,
+				5880222512CA857800935308 /* XmpParser.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -691,6 +751,7 @@
 				58801D4912C91E5E00935308 /* CoreMetaTesting.cpp in Sources */,
 				58801D4A12C91E6300935308 /* CoreTesting.cpp in Sources */,
 				58801D5412C91EA700935308 /* MetaProjectTesting.cpp in Sources */,
+				5880224212CAD92500935308 /* XmpParserTesting.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -726,6 +787,7 @@
 				582BD6D112C8F7D600B18A19 /* MetaReference.cpp in Sources */,
 				582BD6D212C8F7D700B18A19 /* MetaRegNode.cpp in Sources */,
 				582BD6D312C8F7D700B18A19 /* MetaSet.cpp in Sources */,
+				5880222612CA857800935308 /* XmpParser.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -282,7 +282,7 @@ public:
 
 class BinAttributeLongPointer : public BinAttributeBase<Uuid> {
 public:
-	BinAttributeLongPointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid()) { }
+	BinAttributeLongPointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::LongPointer(); }
 	virtual inline uint32_t Size(void) const			{ return sizeof(Uuid); }
 	virtual void StreamRead(char* &stream);
@@ -310,7 +310,7 @@ public:
 
 class BinAttributePointer : public BinAttributeBase<Uuid> {
 public:
-	BinAttributePointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid()) { }
+	BinAttributePointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Pointer(); }
 	inline const bool IsConnected(void) const			{ return (this->_value != Uuid::Null()); }
 	virtual inline uint32_t Size(void) const			{ return sizeof(Uuid); }
