@@ -26,16 +26,20 @@ private:
 	CoreAttributeBase(const CoreAttributeBase &);
 	
 protected:
-	CoreObjectBase							*_parent;
-	CoreMetaAttribute						*_metaAttribute;	
-	bool									_isDirty;
-	uint32_t								_refCount;
+	CoreObjectBase							*_parent;			//!<
+	CoreMetaAttribute						*_metaAttribute;	//!<
+	bool									_isDirty;			//!<
+	uint32_t								_refCount;			//!<
 
 	friend class CoreObjectBase;
 	static const Result_t Create(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute) throw();
-	ICoreStorage* SetStorageObject(void) const;
-	void RegisterTransactionItem(void);
-	CoreAttributeBase(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute);
+
+	ICoreStorage* SetStorageObject(void) const;										//!<
+	void RegisterTransactionItem(void);												//!<
+	void MarkDirty(void) throw();													//!<
+	const Result_t InTransaction(bool &flag) const throw();							//!<
+	const Result_t InWriteTransaction(bool &flag) const throw();					//!<
+	CoreAttributeBase(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute);	//!<
 
 public:
 	virtual ~CoreAttributeBase();
@@ -44,8 +48,6 @@ public:
 	inline const Result_t AttributeID(AttrID_t &attrID) const throw()	{ return this->_metaAttribute->GetAttributeID(attrID); }
 	inline bool IsDirty(void) const throw()								{ return this->_isDirty; }
 	inline const Result_t GetValueType(ValueType &valueType) const throw(){ return this->_metaAttribute->GetValueType(valueType); }
-	inline void MarkDirty(void) throw();
-	bool InTransaction(void) const throw();
 
 	virtual const Result_t CommitTransaction(void) throw()=0;
 	virtual const Result_t AbortTransaction(void) throw()=0;
@@ -83,7 +85,7 @@ public:
 	{
 		// Make sure we are in a write transaction
 		bool flag;
-		ASSERT( this->_parent->InWriteTransaction(flag) == S_OK ); 
+		ASSERT( this->InWriteTransaction(flag) == S_OK ); 
 		if (!flag) return E_READONLY;
 		// First, make sure the storage value has been loaded
 		if (this->_values.empty())
@@ -95,8 +97,8 @@ public:
 		if (value == this->_values.back()) return S_OK;
 		// Set the value
 		this->_values.push_back(value);
-		// Mark the parent as dirty
-		this->_parent->MarkDirty();
+		// Mark the attribute as dirty
+		this->MarkDirty();
 		// Add attribute to the project transaction change list
 		this->RegisterTransactionItem();
 		return S_OK;
@@ -106,7 +108,7 @@ public:
 	{
 		// Make sure we are in a transaction
 		bool flag;
-		ASSERT( this->_parent->InTransaction(flag) == S_OK ); 
+		ASSERT( this->InTransaction(flag) == S_OK ); 
 		if (!flag) return E_TRANSACTION;
 		// Have we not read this attribute previously
 		if (this->_values.empty())
@@ -141,6 +143,7 @@ public:
 	virtual const Result_t CommitTransaction(void) throw()
 	{
 		ASSERT( !this->_values.empty() );
+		ASSERT( this->_isDirty );
 		// Are there changes, if not we are good
 		if (this->_values.size() == 1) return S_OK;
 		// Set the storage to the parent object
@@ -162,29 +165,72 @@ public:
 	{
 		// There must be more than one value here (loaded + change)
 		ASSERT( this->_values.size() > 1 );
+		ASSERT( this->_isDirty );
 		// Just remove the back value
 		this->_values.pop_back();
 		return S_OK;
 	}
 };
 
-/*
+
 // Specialization of the SetValue method for Uuid (Pointer and LongPointer)
 template<>
-const Result_t CoreAttributeTemplateBase<Uuid>::SetValue(const Uuid &value) throw()
+inline const Result_t CoreAttributeTemplateBase<Uuid>::SetValue(const Uuid &value) throw()
 {
 	// Make sure we are in a write transaction
+	bool flag;
+	ASSERT( this->InWriteTransaction(flag) == S_OK ); 
+	if (!flag) return E_READONLY;
+	// First, make sure the storage value has been loaded
+	if (this->_values.empty())
+	{
+		Uuid tmpValue = Uuid::Null();
+		ASSERT( this->GetValue(tmpValue) == S_OK );
+	}
+	// Is the value actually changing?
+	if (value == this->_values.back()) return S_OK;
+	// Now, are we dealing with a pointer or longPointer
+	ValueType valueType = ValueType::None();
+	ASSERT( this->_metaAttribute->GetValueType(valueType) == S_OK );
+	// Long pointers are like all other valueTypes.  Just set it and forget it.
+	if (valueType == ValueType::LongPointer())
+	{
+		// Set the value
+		this->_values.push_back(value);
+		// Mark the parent as dirty
+		this->MarkDirty();
+		// Add attribute to the project transaction change list
+		this->RegisterTransactionItem();
+		return S_OK;
+	}
+	// But pointers, those are special because we also have to change the backpointer collection
+	else if (valueType == ValueType::Pointer())
+	{
+		ASSERT(false);
+		// We are all done
+		return S_OK;
+	}
+	// Or we have an error condition
+	return E_ATTVALTYPE;
+}
+
+
+// Specialization of the SetValue method for std::list<Uuid> (Collection)
+template<>
+inline const Result_t CoreAttributeTemplateBase<std::list<Uuid> >::SetValue(const std::list<Uuid> &value) throw()
+{
+	// You are never allowed to set these values...bad programmer
+	ASSERT(false);
 	return S_OK;
 }
-*/	
 
 /*** Simple Attribute Type Definitions ***/
 typedef CoreAttributeTemplateBase<int32_t>						CoreAttributeLong;
 typedef CoreAttributeTemplateBase<double>						CoreAttributeReal;
 typedef CoreAttributeTemplateBase<std::string>					CoreAttributeString;
-//typedef CoreAttributeTemplateBase<Uuid>							CoreAttributeLongPointer;
+typedef CoreAttributeTemplateBase<Uuid>							CoreAttributeLongPointer;
 typedef CoreAttributeTemplateBase< std::list<Uuid> >			CoreAttributeCollection;
-//typedef CoreAttributeTemplateBase<Uuid>							CoreAttributePointer;
+typedef CoreAttributeTemplateBase<Uuid>							CoreAttributePointer;
 
 
 /*** End of MGA Namespace ***/

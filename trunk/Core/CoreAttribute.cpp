@@ -7,18 +7,6 @@
 // --------------------------- Private CoreAttributeBase Methods --------------------------- //
 
 
-CoreAttributeBase::CoreAttributeBase(CoreObjectBase* parent, CoreMetaAttribute *metaAttribute) :
-	_parent(parent), _metaAttribute(metaAttribute), _isDirty(false), _refCount(0)
-{
-	ASSERT( parent != NULL );
-	ASSERT( metaAttribute != NULL );
-	// Register the attribute
-	AttrID_t attrID;
-	ASSERT( metaAttribute->GetAttributeID(attrID) == S_OK );
-	parent->RegisterAttribute(attrID, this);
-}
-
-
 const Result_t CoreAttributeBase::Create(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute) throw()
 {
 	// Make sure we have good inputs
@@ -57,10 +45,47 @@ ICoreStorage* CoreAttributeBase::SetStorageObject(void) const
 
 
 void CoreAttributeBase::RegisterTransactionItem(void)
-{ 
+{
+	// Get to the parent CoreProject
 	CoreProject* coreProject;
 	ASSERT( this->_parent->Project(coreProject) == S_OK );
+	// And, register this attribute as changing
 	coreProject->RegisterTransactionItem(this);
+}
+
+
+void CoreAttributeBase::MarkDirty(void) throw()
+{
+	// Mark this attribute as dirty
+	this->_isDirty = true;
+	// And, mark the parent object as dirty
+	this->_parent->MarkDirty();
+}
+
+
+const Result_t CoreAttributeBase::InTransaction(bool &flag) const throw()
+{
+	// Just call to the parent
+	return this->_parent->InTransaction(flag);
+}
+
+
+const Result_t CoreAttributeBase::InWriteTransaction(bool &flag) const throw()
+{
+	// Just call to the parent
+	return this->_parent->InWriteTransaction(flag);
+}
+
+
+CoreAttributeBase::CoreAttributeBase(CoreObjectBase* parent, CoreMetaAttribute *metaAttribute) :
+_parent(parent), _metaAttribute(metaAttribute), _isDirty(false), _refCount(0)
+{
+	ASSERT( parent != NULL );
+	ASSERT( metaAttribute != NULL );
+	// Register the attribute
+	AttrID_t attrID;
+	ASSERT( metaAttribute->GetAttributeID(attrID) == S_OK );
+	parent->RegisterAttribute(attrID, this);
 }
 
 
@@ -70,7 +95,7 @@ void CoreAttributeBase::RegisterTransactionItem(void)
 CoreAttributeBase::~CoreAttributeBase()
 {
 	ASSERT( this->_metaAttribute != NULL );
-	ASSERT( !this->_isDirty );
+	ASSERT( this->_parent != NULL );
 	// Unregister the attribute from the parent
 	AttrID_t attrID;
 	ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );	
