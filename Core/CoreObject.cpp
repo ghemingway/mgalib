@@ -155,7 +155,7 @@ void CoreObjectBase::RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase
 {
 	ASSERT( attrID != ATTRID_NONE );
 	ASSERT( attribute != NULL );
-	// We should really make sure this attribute belongs and is not already in the list
+	// TODO: We should really make sure this attribute belongs and is not already in the list
 	ASSERT( this->_attributeMap.insert( std::make_pair(attrID, attribute) ).second );
 }
 
@@ -165,6 +165,7 @@ void CoreObjectBase::UnregisterAttribute(const AttrID_t &attrID) throw()
 	ASSERT( attrID != ATTRID_NONE );
 	// Try to find the attribute
 	std::map<AttrID_t,CoreAttributeBase*>::iterator attrIter = this->_attributeMap.find(attrID);
+	// TODO: Turn this into an non-S_OK return
 	ASSERT( attrIter != this->_attributeMap.end() );
 	// Remove the attribute from the Map
 	this->_attributeMap.erase(attrIter);
