@@ -1390,7 +1390,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 		// Update the actual pointer value
 		attribute->Set(value);
 		// Update the pointed-to object's backpointer collection (if it points to something valid)
-		if (newCollection != NULL) newCollection->Add(this->_openedObject->first);		
+		if (newCollection != NULL) newCollection->Add(this->_openedObject->first);
 	}
 	// All is good...
 	return S_OK;

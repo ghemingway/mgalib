@@ -93,31 +93,25 @@ TEST(StaticICoreStorageTest,Open)
 /*
 TEST_F(ICoreStorageTest,OpenObject)
 {
-	MetaObjIDPair idPair(METAID_NONE, OBJID_NONE);
+	Uuid uuid = Uuid::Null();
 	// OpenObject outside of transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->OpenObject(idPair), E_TRANSACTION);
+	EXPECT_EQ( storage->OpenObject(uuid), E_TRANSACTION);
 
-	// OpenObject with transaction but with METAID_NONE (Expect E_INVALID_USAGE)
+	// OpenObject with transaction but with Uuid == NULL (Expect E_INVALID_USAGE)
 	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), E_INVALID_USAGE);
+	EXPECT_EQ( storage->OpenObject(uuid), E_INVALID_USAGE);
 
-	// OpenObject with transaction but with OBJID_NONE (Expect E_INVALID_USAGE)
-	idPair.metaID = METAID_ROOT;
-	EXPECT_EQ( storage->OpenObject(idPair), E_INVALID_USAGE);
+	// OpenObject with transaction but with invalid Uuid (Expect E_NOTFOUND)
+	uuid = Uuid("{12345678-1234-1234-1234-123412341234}");
+	EXPECT_EQ( storage->OpenObject(uuid), E_NOTFOUND);
 
-	// OpenObject with transaction but with invalid idPair (Expect E_NOTFOUND)
-	idPair.metaID = 150;
-	idPair.objID = 272734;
-	EXPECT_EQ( storage->OpenObject(idPair), E_NOTFOUND);
-
-	// OpenObject with transaction and valid idPair (Expect S_OK)
-	idPair.metaID = 102;
-	idPair.objID = 27;
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
+	// OpenObject with transaction and valid uuid (Expect S_OK)
+	uuid = Uuid("{9D3F9884-FE60-409C-8FC1-45789193989B}");
+	EXPECT_EQ( storage->OpenObject(uuid), S_OK);
 	EXPECT_EQ( storage->CommitTransaction(), S_OK);
 }
 
-
+/*
 TEST_F(ICoreStorageTest,CloseObject)
 {
 	MetaObjIDPair idPair(METAID_NONE, OBJID_NONE);

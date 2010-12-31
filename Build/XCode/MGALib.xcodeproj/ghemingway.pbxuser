@@ -598,14 +598,14 @@
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1125, 4433}}";
 			sepNavSelRange = "{14742, 0}";
-			sepNavVisRange = "{1106, 3662}";
+			sepNavVisRange = "{11341, 4394}";
 		};
 	};
 	5843906212B9701900F4AB58 /* CoreAttribute.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {929, 3237}}";
-			sepNavSelRange = "{885, 14}";
-			sepNavVisRange = "{0, 3013}";
+			sepNavIntBoundsRect = "{{0, 0}, {929, 3055}}";
+			sepNavSelRange = "{1897, 0}";
+			sepNavVisRange = "{0, 3279}";
 		};
 	};
 	5843906312B9701900F4AB58 /* CoreError.h */ = {
@@ -617,7 +617,7 @@
 	};
 	5843906412B9701900F4AB58 /* CoreMetaAttribute.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {957, 1130}}";
+			sepNavIntBoundsRect = "{{0, 0}, {957, 1320}}";
 			sepNavSelRange = "{1645, 0}";
 			sepNavVisRange = "{0, 2205}";
 		};
@@ -639,13 +639,13 @@
 	5843906712B9701900F4AB58 /* CoreObject.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1013, 2119}}";
-			sepNavSelRange = "{2052, 14}";
-			sepNavVisRange = "{0, 3881}";
+			sepNavSelRange = "{1264, 0}";
+			sepNavVisRange = "{2055, 4035}";
 		};
 	};
 	5843906812B9701900F4AB58 /* CoreProject.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {992, 1325}}";
+			sepNavIntBoundsRect = "{{0, 0}, {992, 1320}}";
 			sepNavSelRange = "{2705, 0}";
 			sepNavVisRange = "{0, 3526}";
 		};
@@ -660,22 +660,22 @@
 	5843906B12B9701900F4AB58 /* CoreTypes.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1104, 2886}}";
-			sepNavSelRange = "{7068, 0}";
-			sepNavVisRange = "{3403, 3748}";
+			sepNavSelRange = "{1700, 17}";
+			sepNavVisRange = "{142, 2736}";
 		};
 	};
 	5843907712B9703300F4AB58 /* BinFile.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1293, 17498}}";
-			sepNavSelRange = "{45010, 12}";
-			sepNavVisRange = "{42493, 4623}";
+			sepNavIntBoundsRect = "{{0, 0}, {964, 17628}}";
+			sepNavSelRange = "{49793, 1912}";
+			sepNavVisRange = "{47191, 4560}";
 		};
 	};
 	5843907812B9703300F4AB58 /* CoreAttribute.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {901, 4719}}";
-			sepNavSelRange = "{2356, 0}";
-			sepNavVisRange = "{0, 3180}";
+			sepNavIntBoundsRect = "{{0, 0}, {908, 2106}}";
+			sepNavSelRange = "{5703, 0}";
+			sepNavVisRange = "{1976, 3727}";
 		};
 	};
 	5843907912B9703300F4AB58 /* CoreError.cpp */ = {
@@ -708,9 +708,9 @@
 	};
 	5843907D12B9703300F4AB58 /* CoreObject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {897, 2977}}";
-			sepNavSelRange = "{1699, 0}";
-			sepNavVisRange = "{0, 2914}";
+			sepNavIntBoundsRect = "{{0, 0}, {897, 2756}}";
+			sepNavSelRange = "{5589, 0}";
+			sepNavVisRange = "{3010, 3490}";
 		};
 	};
 	5843907E12B9703300F4AB58 /* CoreProject.cpp */ = {
@@ -904,9 +904,9 @@
 	};
 	584390B712B970A300F4AB58 /* MetaGeneric.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {900, 2730}}";
+			sepNavIntBoundsRect = "{{0, 0}, {897, 2730}}";
 			sepNavSelRange = "{8196, 21}";
-			sepNavVisRange = "{5235, 3763}";
+			sepNavVisRange = "{553, 4580}";
 		};
 	};
 	584390B812B970A300F4AB58 /* MetaModel.cpp */ = {
@@ -932,9 +932,9 @@
 	};
 	584390BB12B970A300F4AB58 /* MetaProject.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {897, 5226}}";
-			sepNavSelRange = "{9934, 0}";
-			sepNavVisRange = "{7661, 3645}";
+			sepNavIntBoundsRect = "{{0, 0}, {897, 5460}}";
+			sepNavSelRange = "{5123, 0}";
+			sepNavVisRange = "{3803, 3347}";
 		};
 	};
 	584390BC12B970A300F4AB58 /* MetaReference.cpp */ = {
@@ -1946,9 +1946,9 @@
 	};
 	58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1797, 1325}}";
-			sepNavSelRange = "{483, 0}";
-			sepNavVisRange = "{0, 2214}";
+			sepNavIntBoundsRect = "{{0, 0}, {1797, 1322}}";
+			sepNavSelRange = "{616, 0}";
+			sepNavVisRange = "{0, 2265}";
 		};
 	};
 	58E371DA12C3F5D200BA324B /* PBXTextBookmark */ = {
@@ -1996,7 +1996,7 @@
 		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
 		name = "BinFile.cpp: 1398";
 		rLen = 0;
-		rLoc = 51751;
+		rLoc = 51749;
 		rType = 0;
 		vrLen = 4580;
 		vrLoc = 47173;
@@ -2076,7 +2076,7 @@
 		fRef = 58E371BE12C3F56F00BA324B /* MetaProjectTesting.cpp */;
 		name = "MetaProjectTesting.cpp: 15";
 		rLen = 0;
-		rLoc = 483;
+		rLoc = 501;
 		rType = 0;
 		vrLen = 2214;
 		vrLoc = 0;
@@ -2096,7 +2096,7 @@
 		fRef = 5843906712B9701900F4AB58 /* CoreObject.h */;
 		name = "CoreObject.h: 112";
 		rLen = 0;
-		rLoc = 4291;
+		rLoc = 4297;
 		rType = 0;
 		vrLen = 4703;
 		vrLoc = 1312;
@@ -2106,7 +2106,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 185";
 		rLen = 24;
-		rLoc = 7004;
+		rLoc = 7241;
 		rType = 0;
 		vrLen = 3110;
 		vrLoc = 2623;
@@ -2116,7 +2116,7 @@
 		fRef = 5843906212B9701900F4AB58 /* CoreAttribute.h */;
 		name = "CoreAttribute.h: 133";
 		rLen = 0;
-		rLoc = 3907;
+		rLoc = 3903;
 		rType = 0;
 		vrLen = 1473;
 		vrLoc = 2559;

@@ -17,11 +17,7 @@ class CoreProject;
 class ICoreStorage;
 
 
-/*** Type Definitions ***/
-// None
-
-
-// --------------------------- CoreObject ---------------------------
+// --------------------------- CoreObjectBase --------------------------- //
 
 
 class CoreObjectBase
@@ -46,6 +42,7 @@ protected:
 	void RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase *attribute) throw();
 	void UnregisterAttribute(const AttrID_t &attrID) throw();
 	ICoreStorage* SetStorageObject(void) const;
+	const Result_t Attribute(const AttrID_t &attrID, CoreAttributeBase* &attribute) const throw();
 
 public:
 	static const Result_t Create(CoreProject *project, const Uuid &uuid, CoreObject &coreObject) throw();
@@ -61,9 +58,6 @@ public:
 	inline const Result_t MarkDirty(void) throw()						{ this->_isDirty = true; return S_OK; }
 	const Result_t InTransaction(bool &flag) const throw();
 	const Result_t InWriteTransaction(bool &flag) const throw();
-
-	const Result_t Attributes(std::list<CoreAttribute*> &controlled) throw();
-	const Result_t Attribute(const AttrID_t &attrID, CoreAttribute* &attribute) const throw();
 
 	template<class T>
 	const Result_t SetAttributeValue(const AttrID_t &attrID, const T &value) throw()
@@ -113,15 +107,15 @@ public:
 		return ((CoreAttributeTemplateBase<T>*)attribute)->GetPreviousValue(value);
 	}
 
-//	template<class T>
-//	const Result_t SearchCollection(const AttrID_t &collectionAttrID, const AttrID_t &attrID, const T &value, CoreObjectBase* &object) throw();
-
 	friend std::ostream& operator<<(std::ostream& out, const CoreObjectBase *object)
 	{
 		out << "(" << object->_refCount << ")" << object->_metaObject;
 		return out;
 	}
 };
+
+
+// --------------------------- CoreObject --------------------------- //
 
 
 class CoreObject

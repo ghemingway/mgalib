@@ -39,6 +39,7 @@ protected:
 	void MarkDirty(void) throw();													//!<
 	const Result_t InTransaction(bool &flag) const throw();							//!<
 	const Result_t InWriteTransaction(bool &flag) const throw();					//!<
+	const Result_t ResolveBackpointer(const AttrID_t &attrID, const Uuid &newValue, const Uuid &oldValue) throw(); //!<
 	CoreAttributeBase(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute);	//!<
 
 public:
@@ -54,20 +55,6 @@ public:
 };
 
 
-// --------------------------- CoreAttribute --------------------------- //
-
-
-class CoreAttribute
-{
-private:
-	CoreAttributeBase			*_base;
-public:
-	CoreAttribute(CoreObjectBase* parent, const AttrID_t &attributeID) : _base(NULL)
-	{
-	}
-};
-
-
 // --------------------------- CoreAttributeTemplateBase --------------------------- //
 
 
@@ -75,6 +62,7 @@ template<class T>
 class CoreAttributeTemplateBase : public CoreAttributeBase
 {
 protected:
+	friend class CoreAttributeBase;
 	std::list<T>					_values;
 
 public:
@@ -192,26 +180,26 @@ inline const Result_t CoreAttributeTemplateBase<Uuid>::SetValue(const Uuid &valu
 	// Now, are we dealing with a pointer or longPointer
 	ValueType valueType = ValueType::None();
 	ASSERT( this->_metaAttribute->GetValueType(valueType) == S_OK );
-	// Long pointers are like all other valueTypes.  Just set it and forget it.
-	if (valueType == ValueType::LongPointer())
+	if (valueType != ValueType::LongPointer() && valueType != ValueType::Pointer()) return E_ATTVALTYPE;
+	// Pointers, those are special because we also have to change the backpointer collection
+	if (valueType == ValueType::Pointer())
 	{
-		// Set the value
-		this->_values.push_back(value);
-		// Mark the parent as dirty
-		this->MarkDirty();
-		// Add attribute to the project transaction change list
-		this->RegisterTransactionItem();
-		return S_OK;
+		AttrID_t attrID = ATTRID_NONE;
+		ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+		// Get the current value
+		Uuid oldValue = this->_values.back();
+		// Resolve all backpointer issues
+		Result_t result = this->ResolveBackpointer(attrID, value, oldValue);
+		if (result != S_OK) return result;
 	}
-	// But pointers, those are special because we also have to change the backpointer collection
-	else if (valueType == ValueType::Pointer())
-	{
-		ASSERT(false);
-		// We are all done
-		return S_OK;
-	}
+	// Set the value
+	this->_values.push_back(value);
+	// Mark the attribute as dirty
+	this->MarkDirty();
+	// Add attribute to the project transaction change list
+	this->RegisterTransactionItem();
 	// Or we have an error condition
-	return E_ATTVALTYPE;
+	return S_OK;
 }
 
 
@@ -219,8 +207,9 @@ inline const Result_t CoreAttributeTemplateBase<Uuid>::SetValue(const Uuid &valu
 template<>
 inline const Result_t CoreAttributeTemplateBase<std::list<Uuid> >::SetValue(const std::list<Uuid> &value) throw()
 {
-	// You are never allowed to set these values...bad programmer
-	ASSERT(false);
+	// Just take the new value - no questions asked
+	this->_values.clear();
+	this->_values.push_back(value);
 	return S_OK;
 }
 

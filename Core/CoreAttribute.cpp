@@ -77,6 +77,63 @@ const Result_t CoreAttributeBase::InWriteTransaction(bool &flag) const throw()
 }
 
 
+const Result_t CoreAttributeBase::ResolveBackpointer(const AttrID_t &attrID, const Uuid &newValue, const Uuid &oldValue) throw()
+{
+	CoreProject* coreProject = NULL;
+	ASSERT( this->_parent->Project(coreProject) == S_OK );
+	// Make sure value is valid (either a valid object or NULL - and pointed to has good backpointer collection)
+	CoreAttributeTemplateBase< std::list<Uuid> >* attribute = NULL;
+	if (newValue != Uuid::Null())
+	{
+		// Can we get object - if not it is an error
+		CoreObject backpointerObject;
+		Result_t result = coreProject->Object(newValue, backpointerObject);
+		if (result != S_OK) return result;
+		// Does the object have a correct backpointer collection
+		CoreAttributeBase *basePointer;
+		result = backpointerObject->Attribute(attrID + ATTRID_COLLECTION, basePointer);
+		// Make sure the backpointer collection exists
+		if (result != S_OK) return result;
+		// Get the attribute
+		attribute = (CoreAttributeTemplateBase< std::list<Uuid> >*)basePointer;
+	}
+	
+	// Update the current pointed-to object's backpointer collection (if idPair is valid)
+	if (oldValue != Uuid::Null())
+	{
+		// Can we get object - if not it is an error
+		CoreObject oldObject;
+		Result_t result = coreProject->Object(oldValue, oldObject);
+		if (result != S_OK) return result;
+		// Does the object have a correct backpointer collection
+		CoreAttributeBase *basePointer;
+		result = oldObject->Attribute(attrID + ATTRID_COLLECTION, basePointer);
+		// Make sure the backpointer collection exists
+		if (result != S_OK) return result;
+		CoreAttributeTemplateBase< std::list<Uuid> >* oldAttr = (CoreAttributeTemplateBase< std::list<Uuid> >*)basePointer;
+		// Make sure attribute's values have been loaded
+		std::list<Uuid> tmpList;
+		ASSERT( oldAttr->GetValue(tmpList) == S_OK );
+		// Remove oldValue from backpointerCollection and set attribute in oldObject (all by reference)
+		std::list<Uuid> &oldList = oldAttr->_values.back();
+		oldList.remove(oldValue);
+	}
+	// Update the pointed-to object's backpointer collection (if it points to something valid)
+	if (attribute != NULL)
+	{
+		// Make sure attribute's values have been loaded
+		std::list<Uuid> tmpList;
+		ASSERT( attribute->GetValue(tmpList) == S_OK );
+		// Get the attributes list of backpointers (notice it is by reference)
+		std::list<Uuid> &bpList = attribute->_values.back();
+		// Add newValue to backpointer list (still by reference here)
+		bpList.push_back(newValue);
+	}
+	// We are all done
+	return S_OK;
+}
+
+
 CoreAttributeBase::CoreAttributeBase(CoreObjectBase* parent, CoreMetaAttribute *metaAttribute) :
 _parent(parent), _metaAttribute(metaAttribute), _isDirty(false), _refCount(0)
 {
@@ -102,292 +159,3 @@ CoreAttributeBase::~CoreAttributeBase()
 	this->_parent->UnregisterAttribute(attrID);
 }
 
-
-/*
-STDMETHODIMP CCoreAttribute::get_Object(ICoreObject **p)
-{
-	CHECK_OUT(p);
-
-	CopyTo(GetObject(), p);
-
-	return S_OK;
-}
-
-
-inline bool CCoreAttribute::InTransaction() const
-{
-	return GetObject()->InTransaction();
-}
-
- 
-inline bool CCoreAttribute::InWriteTransaction() const
-{
-	return GetObject()->InWriteTransaction();
-}
-
-
-// ------- Methods
-
-template<class BASE, const int VALTYPE>
-STDMETHODIMP CCoreDataAttribute<BASE, VALTYPE>::get_Value(VARIANT *p)
-{
-	CHECK_OUT(p);
-	CHECK_ZOMBIE();
-
-	COMTRY
-	{
-		if( InTransaction() )
-		{
-			if( LOCKING_GETVALUE > LOCKING_NONE )
-				GetTerritory()->RaiseLocking(GetLockAttr(), LOCKING_GETVALUE);
-
-			if( !IsLoaded() )
-				GetLockAttr()->Load();
-
-            // BGY: this hack makes sure that the sourcecontrol status is always
-            // read from the storage.
-			if( GetValType() == VALTYPE_LONG)
-			{
-				ICoreStorage *storage = SetStorageThisAttribute();
-				ASSERT( storage != NULL );
-				COMTHROW( storage->LockObject() );
-
-				attrid_type a_id;
-				COMTHROW( storage->get_AttrID( &a_id));
-				if( a_id == ATTRID_FILESTATUS)
-				{
-					COMTHROW( storage->get_AttributeValue( p));
-					return S_OK;
-				}
-			}
-        }
-		else
-		{
-//			if( GetTerritory()->GetLocking(GetLockAttr()) == LOCKING_NONE )
-//				HR_THROW(E_NOTLOCKED);
-
-			if( !IsLoaded() )
-				HR_THROW(E_NOTLOCKED);
-		}
-
-		ASSERT( !values.empty() );
-		UserCopyTo(values.front(), p);
-	}
-	COMCATCH(;)
-}
-
-template<class BASE, const int VALTYPE>
-STDMETHODIMP CCoreDataAttribute<BASE, VALTYPE>::put_Value(VARIANT p)
-{
-	CHECK_ZOMBIE();
-
-	if( !InWriteTransaction() )
-		COMRETURN(E_TRANSACTION);
-
-	COMTRY
-	{
-		if( LOCKING_PUTVALUE > LOCKING_NONE )
-			GetTerritory()->RaiseLocking(GetLockAttr(), LOCKING_PUTVALUE);
-
-		if( !IsLoaded() )
-			GetLockAttr()->Load();
-
-		ASSERT( !values.empty() );
-
-		if( !IsDirty() )
-		{
-			InsertFrontValue(p);
-
-			// nothing will throw here
-
-			GetObject()->RegisterFinalTrItem();
-			GetProject()->RegisterTransactionItem(this);
-			SetDirty();
-		}
-		else
-			ChangeFrontValue(p);
-	}
-	COMCATCH(;)
-}
-
-template<class BASE, const int VALTYPE>
-STDMETHODIMP CCoreDataAttribute<BASE, VALTYPE>::get_LoadedValue(VARIANT *p)
-{
-	CHECK_OUT(p);
-	CHECK_ZOMBIE();
-
-	COMTRY
-	{
-		if( values.empty() )
-			HR_THROW(E_NOTLOCKED);
-
-		UserCopyTo(values.front(), p);
-	}
-	COMCATCH(;)
-}
-
-template<class BASE, const int VALTYPE>
-STDMETHODIMP CCoreDataAttribute<BASE, VALTYPE>::get_PreviousValue(VARIANT *p)
-{
-	CHECK_OUT(p);
-	CHECK_ZOMBIE();
-
-	COMTRY
-	{
-		if( GetTerritory()->GetLocking(GetLockAttr()) == LOCKING_NONE )
-			HR_THROW(E_NOTLOCKED);
-
-		if( IsDirty() )
-		{
-			ASSERT( values.size() >= 2 );
-			UserCopyTo(*(++values.begin()), p);
-		}
-		else
-		{
-			ASSERT( !values.empty() );
-			UserCopyTo(values.front(), p);
-		}
-	}
-	COMCATCH(;)
-}
-
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::Save(value_type &value)
-{
-	ASSERT( !IsZombie() );
-
-	ICoreStorage *storage = SetStorageThisAttribute();
-	ASSERT( storage != NULL );
-
-	CComVariant v;
-	StorageCopyTo(value, &v);
-
-	COMTHROW( storage->put_AttributeValue(v) );
-}
-
-
-// ------- NestedTrItem
-
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::AbortNestedTransaction()
-{
-	ASSERT( IsDirty() );
-	ASSERT( values.size() >= 2 );
-
-	RemoveValueDo(values.begin());
-
-	ResetDirty();
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::DiscardPreviousValue()
-{
-	ASSERT( IsDirty() );
-	ASSERT( values.size() >= 3 );
-
-	RemoveValueDo(++values.begin());
-}
-
-// ------- FinalTrItem
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::AbortFinalTransaction()
-{
-	ASSERT( IsDirty() );
-	ASSERT( values.size() >= 2 );
-
-	// RemoveValueDo may call Unload back
-	// so we have to reset dirty first
-
-	ResetDirty();
-
-	RemoveValueDo(values.begin());
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::CommitFinalTransaction()
-{
-	ASSERT( IsDirty() );
-	ASSERT( values.size() >= 2 );
-
-	Save( values.front() );
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::CommitFinalTransactionFinish(bool undo)
-{
-	ASSERT( IsDirty() );
-	ASSERT( values.size() >= 2 );
-
-	GetProject()->RegisterUndoItem(this);
-
-	ResetDirty();
-}
-
-// ------- UndoItem
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::UndoTransaction()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	Save( *(++values.begin()) );
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::UndoTransactionFinish()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	SpliceValue(values.end(), values.begin());
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::RedoTransaction()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	Save( values.back() );
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::RedoTransactionFinish()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	SpliceValue(values.begin(), --values.end());
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::DiscardLastItem()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	RemoveValueTry(--values.end());
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::DiscardLastItemFinish()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	RemoveValueFinish(--values.end());
-}
-
-template<class BASE, const int VALTYPE>
-void CCoreDataAttribute<BASE, VALTYPE>::DiscardLastItemCancel()
-{
-	ASSERT( values.size() >= 2 );
-	ASSERT( !IsDirty() );
-
-	RemoveValueCancel(--values.end());
-}
-*/
