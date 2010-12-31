@@ -927,7 +927,7 @@ const Result_t BinFile::BeginTransaction(void) throw()
 }
 
 
-const Result_t BinFile::CommitTransaction(void) throw()
+const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	// Close any opened object - and mark as no longer in transaction
@@ -1393,6 +1393,53 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 		if (newCollection != NULL) newCollection->Add(this->_openedObject->first);
 	}
 	// All is good...
+	return S_OK;
+}
+
+
+const Result_t BinFile::Undo(void) throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+const Result_t BinFile::Redo(void) throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+const Result_t BinFile::UndoCount(const uint32_t &count) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t BinFile::RedoCount(const uint32_t &count) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t BinFile::TransactionJournal(const uint32_t &maxJournalSize, std::list<Uuid> &journal) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t BinFile::BeginJournal(void) throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t BinFile::EndJournal(void) throw()
+{
+	ASSERT(false);
 	return S_OK;
 }
 
