@@ -198,7 +198,7 @@ public:
 	virtual const Result_t RootUuid(Uuid &uuid) const throw();								//!< Get the root Uuid of the project
 	virtual const Result_t Save(const std::string &filename, const bool &v3=true) throw();	//!< Save the project to filename (overwrites if same as _filename)
 	virtual const Result_t BeginTransaction(void) throw();									//!< Begin a transaction (no nesting allowed)
-	virtual const Result_t CommitTransaction(void) throw();									//!< Commit a transaction
+	virtual const Result_t CommitTransaction(const Uuid tag=Uuid::Null()) throw();			//!< Commit a transaction (with optional transaction tag)
 	virtual const Result_t AbortTransaction(void) throw();									//!< Abort a transaction and rollback all changes
 
 	virtual const Result_t OpenObject(const Uuid &uuid) throw();							//!< Open an object
@@ -217,6 +217,14 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw();	//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
+
+	virtual const Result_t Undo(void) throw();															//!<
+	virtual const Result_t Redo(void) throw();															//!<
+	virtual const Result_t UndoCount(const uint32_t &count) const throw();								//!<
+	virtual const Result_t RedoCount(const uint32_t &count) const throw();								//!<
+	virtual const Result_t TransactionJournal(const uint32_t &maxJournalSize, std::list<Uuid> &journal) const throw();//!<
+	virtual const Result_t BeginJournal(void) throw();													//!<
+	virtual const Result_t EndJournal(void) throw();													//!<
 };
 
 

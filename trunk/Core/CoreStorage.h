@@ -74,7 +74,7 @@ public:
 	virtual const Result_t RootUuid(Uuid &uuid) const throw()=0;							//!< Get the root Uuid of the project
 	virtual const Result_t Save(const std::string &filename, const bool &v3=true) throw()=0;//!< Save project to file
 	virtual const Result_t BeginTransaction(void) throw()=0;								//!< Begin transaction on project
-	virtual const Result_t CommitTransaction(void) throw()=0;								//!< Commit transaction on project
+	virtual const Result_t CommitTransaction(const Uuid tag=Uuid::Null()) throw()=0;		//!< Commit transaction on project (with optional transaction tag)
 	virtual const Result_t AbortTransaction(void) throw()=0;								//!< Abort transaction on project
 
 	// --- Object
