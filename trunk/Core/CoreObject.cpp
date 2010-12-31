@@ -1,12 +1,10 @@
 /*** Included Header Files ***/
 #include "CoreObject.h"
-#include "CoreAttribute.h"
 #include "CoreProject.h"
 #include "CoreMetaProject.h"
-#include "CoreMetaObject.h"
 
 
-// --------------------------- CoreObject Private Methods ---------------------------
+// --------------------------- CoreObjectBase Private Methods ---------------------------
 
 
 CoreObjectBase::CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject, const Uuid &uuid) :
@@ -30,83 +28,6 @@ CoreObjectBase::CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject,
 	}
 }
 
-/*
-STDMETHODIMP CoreObjectBase::SearchCollection(attrid_type coll_attrid, attrid_type search_attrid,
-	VARIANT search_value, ICoreObject **p)
-{
-	CHECK_OUT(p);
-
-	if( IsZombie() )
-		COMRETURN(E_ZOMBIE);
-
-	CCoreAttribute *attribute = FindAttribute(coll_attrid);
-	if( attribute == NULL || attribute->GetValType() != VALTYPE_COLLECTION )
-		return E_INVALIDARG;
-
-	COMTRY
-	{
-		CCoreCollectionAttribute *collection = 
-			static_cast<CCoreCollectionAttribute*>(attribute);
-		
-		CComObjPtr<CCoreObject> ret = collection->SearchCollection(search_attrid, search_value);
-		MoveTo(ret, p);
-	}
-	COMCATCH(;)
-}
-
-
-STDMETHODIMP CoreObjectBase::get_IsDeleted(VARIANT_BOOL *p)
-{
-	CHECK_OUT(p);
-
-	if( IsZombie() )
-		COMRETURN(E_ZOMBIE);
-
-	*p = VARIANT_FALSE;
-
-	COMTRY
-	{
-		CCoreAttribute *lock = FindAttribute(ATTRID_LOCK);
-		ASSERT( lock != NULL && lock->GetValType() == VALTYPE_LOCK );
-		
-		if( static_cast<CCoreLockAttribute*>(lock)->IsLoaded() &&
-			HasEmptyPointers() && 
-			(objid != OBJID_ROOT || GetMetaID() != METAID_ROOT) )
-		{
-			*p = VARIANT_TRUE;
-		}
-	}
-	COMCATCH(;)
-}
-
-
-void CoreObjectBase::Delete()
-{
-	ASSERT( !this->IsZombie() );
-	CoreAttribute *lock = this->Attribute(ATTRID_LOCK);
-	ASSERT( lock != NULL && lock->GetValType() == VALTYPE_LOCK );
-	COMTHROW( lock->put_Value(PutInVariant(locking_type(LOCKING_EXCLUSIVE))) );
-	attributes_iterator i = attributes.begin();
-	attributes_iterator e = attributes.end();
-	while( i != e )
-	{
-		if( (*i)->GetValueType() == ValueType::Collection() )
-		{
-			if( !((CCoreCollectionAttribute*)(*i))->IsEmptyFromStorage() )
-				HR_THROW(E_NONEMPTY_COLL);
-		}
-			++i;
-	}
-		i = attributes.begin();
-	while( i != e )
-	{
-		if( (*i)->GetValueType() == ValueType::Pointer() )
-			COMTHROW( (*i)->put_Value(PutInVariant((IDispatch*)NULL)) );
-			++i;
-	}
-		COMTHROW( lock->put_Value(PutInVariant(locking_type(LOCKING_NONE))) );
-}
-*/
 
 // --------------------------- CoreObjectBase Public Methods ---------------------------
 
@@ -179,20 +100,17 @@ ICoreStorage* CoreObjectBase::SetStorageObject(void) const
 }
 
 
-const Result_t CoreObjectBase::Attribute(const AttrID_t &attrID, CoreAttribute* &attribute) const throw()
+const Result_t CoreObjectBase::Attribute(const AttrID_t &attrID, CoreAttributeBase* &attribute) const throw()
 {
-	ASSERT(false);
 	// Make sure we are ready
 	if( attrID == ATTRID_NONE ) return E_INVALID_USAGE;
 	// Iterate through attrib list and find matchind ID
 	std::map<AttrID_t,CoreAttributeBase*>::const_iterator attrIter = this->_attributeMap.find(attrID);
 	if (attrIter == this->_attributeMap.end()) return E_NOTFOUND;
-/*
 	// Found it, now create a nice CoreAttribute object that points at it
-	attribute = new CoreAttribute(attrIter->second);
+	attribute = attrIter->second;
 	ASSERT( attribute != NULL );
-*/
-	// Never found it, return error
+	// All is good
 	return S_OK;
 }
 

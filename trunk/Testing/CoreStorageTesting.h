@@ -25,9 +25,9 @@ protected:
 public:
 	static void SetUpTestCase()
 	{
-//		// Get everything up to storage ready
-//		CoreMetaProject	*coreMetaProject;
-//		Result_t result = CreateMGACoreMetaProject(true, coreMetaProject);
+		// Get everything up to storage ready
+//		CoreMetaProject	*coreMetaProject = NULL;
+//		Result_t result = CreateMGACoreMetaProject(coreMetaProject);
 //		ASSERT_EQ( result, S_OK );
 //		ASSERT_TRUE( coreMetaProject != NULL );
 //		result = CoreProject::OpenProject("MGA=ESMoLv3.mga", coreMetaProject, ICoreStorageTest::coreProject);
@@ -38,10 +38,10 @@ public:
 	
 	static void TearDownTestCase()
 	{
-//		// Close the projects and delete the objects
-//		delete ICoreStorageTest::coreProject;
-//		ICoreStorageTest::storage = NULL;
-//		ICoreStorageTest::coreProject = NULL;
+		// Close the projects and delete the objects
+		if (ICoreStorageTest::coreProject != NULL) delete ICoreStorageTest::coreProject;
+		ICoreStorageTest::storage = NULL;
+		ICoreStorageTest::coreProject = NULL;
 	}
 };
 

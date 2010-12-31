@@ -117,7 +117,6 @@ CoreProject::~CoreProject()
 		}
 	}
 	ASSERT( this->_transactionList.empty() );
-//	ASSERT( this->_undoList.empty() );
 	// Delete any storage
 	if (this->_storage != NULL) delete this->_storage;
 	// Delete the CoreMetaProject
