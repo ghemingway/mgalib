@@ -935,7 +935,8 @@
 				HEADER_SEARCH_PATHS = (
 					../..,
 					../../Include,
-					../../Include/utf8_v2_3/source,
+					../../Include/utf8/source,
+					../../Include/cryptopp,
 				);
 				INFOPLIST_FILE = "MGALib-Info.plist";
 				INSTALL_PATH = /Library/Frameworks;
