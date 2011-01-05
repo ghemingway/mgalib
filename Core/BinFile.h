@@ -65,7 +65,6 @@ typedef struct IndexEntry
 typedef STDEXT::hash_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
 
-
 typedef struct AttributeChangeBase
 {
 	Uuid									uuid;
@@ -79,6 +78,15 @@ struct AttributeChange : public AttributeChangeBase
 };
 typedef std::list<AttributeChangeBase*> ChangedObjectsList;
 typedef ChangedObjectsList::iterator ChangedObjectsListIterator;
+
+typedef struct JournalEntry
+{
+	std::streampos							position;
+	uint32_t								sizeB;
+	Uuid									uuid;
+	bool									inScratch;
+};
+typedef std::list<JournalEntry> JournalList;
 
 
 // --------------------------- BinAttribute ---------------------------
@@ -155,16 +163,23 @@ private:
 	Uuid								_rootUuid;					//!< Uuid of the root object for the graph
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
-	// Input, Scratch and Cache Hash/Queue Variables
+	bool								_isCompressed;				//!<
+	bool								_isEncrypted;				//!<
+	// Index and Cache Queue Variables
 	IndexHash							_indexHash;					//!< Hash of objects residing in memory cache
 	std::list<Uuid>						_cacheQueue;				//!< Most-recently-used queue of memory cache
 	uint64_t							_maxCacheSize;				//!< Maximum size (in bytes) of memory cache
-	// Cursor Variables
+	// Cursor Variable
 	IndexHashIterator					_openedObject;				//!< Iterator to currently opened object
 	// Transaction Variables
 	std::list<Uuid>						_createdObjects;			//!< List of all objects created in current transaction
 	ChangedObjectsList					_changedObjects;			//!< List of all object changes from current transaction
 	std::list<std::pair<Uuid,IndexEntry> >	_deletedObjects;		//!< List of all objects deleted in current transaction
+	// Undo/Redo Variables
+	bool								_isJournaling;				//!<
+	uint32_t							_maxUndo;					//!<
+	JournalList							_undoList;					//!<
+	JournalList							_redoList;					//!<
 
 private:
 	BinFile();														//!< Deny access to default constructor
@@ -218,13 +233,14 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
 
-	virtual const Result_t Undo(void) throw();															//!<
-	virtual const Result_t Redo(void) throw();															//!<
-	virtual const Result_t UndoCount(const uint32_t &count) const throw();								//!<
-	virtual const Result_t RedoCount(const uint32_t &count) const throw();								//!<
-	virtual const Result_t TransactionJournal(const uint32_t &maxJournalSize, std::list<Uuid> &journal) const throw();//!<
-	virtual const Result_t BeginJournal(void) throw();													//!<
-	virtual const Result_t EndJournal(void) throw();													//!<
+	virtual const Result_t Undo(Uuid &tag) throw();											//!<
+	virtual const Result_t Redo(Uuid &tag) throw();											//!<
+	virtual inline const Result_t UndoCount(uint32_t &count) const throw()					{ count = this->_undoList.size(); return S_OK; }
+	virtual inline const Result_t RedoCount(uint32_t &count) const throw()					{ count = this->_redoList.size(); return S_OK; }
+	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
+									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw();
+	virtual const Result_t BeginJournal(void) throw();										//!<
+	virtual const Result_t EndJournal(void) throw();										//!<
 };
 
 
