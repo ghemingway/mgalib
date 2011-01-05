@@ -5,9 +5,9 @@
 #include <utf8.h>
 
 
-/*** Internally Defined Symbols ***/
-#define COREBIN_DEFAULTCACHESIZE			10000000
-#define COREBIN_FILEBUFFERSIZE_BYTES		8096
+/*** Internally Defined Constants ***/
+#define BINFILE_DEFAULTCACHESIZE			10000000
+#define BINFILE_DEFAULTMAXUNDO
 
 
 // --------------------------- IOStream Access  --------------------------- //
@@ -424,8 +424,9 @@ BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
 	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(),
-	_indexHash(),_cacheQueue(), _maxCacheSize(COREBIN_DEFAULTCACHESIZE),
-	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects()
+	_indexHash(),_cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
+	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
+	_isJournaling(true), _maxUndo(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList()
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
@@ -1091,9 +1092,14 @@ const Result_t BinFile::OpenObject(const Uuid &uuid) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
-	// If there is already an open object, close it
+	// If there is already an open object...
 	if( this->_openedObject != this->_indexHash.end() )
+	{
+		// Make sure the desired object is not already open
+		if (this->_openedObject->first == uuid) return S_OK;
+		// Otherwise, close the object
 		this->CloseObject();
+	}
 	// Fetch the object - make sure we got it
 	this->_openedObject = this->FetchObject(uuid);
 	if( this->_openedObject == this->_indexHash.end() ) return E_NOTFOUND;
@@ -1397,33 +1403,21 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 }
 
 
-const Result_t BinFile::Undo(void) throw()
+const Result_t BinFile::Undo(Uuid &tag) throw()
 {
 	ASSERT(false);
 	return S_OK;
 }
 
-const Result_t BinFile::Redo(void) throw()
-{
-	ASSERT(false);
-	return S_OK;
-}
-
-const Result_t BinFile::UndoCount(const uint32_t &count) const throw()
+const Result_t BinFile::Redo(Uuid &tag) throw()
 {
 	ASSERT(false);
 	return S_OK;
 }
 
 
-const Result_t BinFile::RedoCount(const uint32_t &count) const throw()
-{
-	ASSERT(false);
-	return S_OK;
-}
-
-
-const Result_t BinFile::TransactionJournal(const uint32_t &maxJournalSize, std::list<Uuid> &journal) const throw()
+const Result_t BinFile::JournalInfo(const uint32_t &undoSize, const uint32_t redoSize,
+									std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()
 {
 	ASSERT(false);
 	return S_OK;
@@ -1432,6 +1426,8 @@ const Result_t BinFile::TransactionJournal(const uint32_t &maxJournalSize, std::
 
 const Result_t BinFile::BeginJournal(void) throw()
 {
+	// Nothing to be done if we already are journaling
+	if (this->_isJournaling) return S_OK;
 	ASSERT(false);
 	return S_OK;
 }
@@ -1439,6 +1435,8 @@ const Result_t BinFile::BeginJournal(void) throw()
 
 const Result_t BinFile::EndJournal(void) throw()
 {
+	// Nothing to be done if we already are not journaling
+	if (!this->_isJournaling) return S_OK;
 	ASSERT(false);
 	return S_OK;
 }
