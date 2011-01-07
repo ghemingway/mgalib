@@ -126,11 +126,12 @@ private:
 	Uuid								_uuid;						//!< Uuid for identification
 	CoreMetaObject						*_metaObject;				//!< MetaObject for this object
 	std::list<BinAttribute*>			_attributes;				//!< List of attributes
-	bool								_isDirty;					//!< Flag for if object attributes have been changed0
+	bool								_isDirty;					//!< Flag for if object attributes have been changed
+	std::map<std::string,std::string>	_dictionary;				//!< String::String dictionary
 private:
 	BinObject();													//!< Deny access to default constructor
 	BinObject(CoreMetaObject* &metaObject, const Uuid &uuid) :
-		_uuid(uuid), _metaObject(metaObject), _attributes(), _isDirty(false) { }
+		_uuid(uuid), _metaObject(metaObject), _attributes(), _isDirty(false), _dictionary() { }
 	void CreateAttributes(CoreMetaObject *metaobject);				//!< Uses metaObject to create empty attributes
 	bool IsConnected(void) const;									//!< Are any forward pointers connected?
 

@@ -59,7 +59,6 @@
 		582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909912B9708D00F4AB58 /* MetaRole.h */; };
 		582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909A12B9708D00F4AB58 /* MetaSet.h */; };
 		5843399C125B8B5400DD904D /* MGALib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58E90A1F124CEFFF00B8E3CF /* MGALib.framework */; };
-		5843905812B96FD900F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
 		5843905A12B96FEB00F4AB58 /* highres_timing.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843905912B96FEB00F4AB58 /* highres_timing.h */; };
 		5843905E12B96FF800F4AB58 /* highres_timing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843905B12B96FF800F4AB58 /* highres_timing.cpp */; };
 		5843905F12B96FF800F4AB58 /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843905C12B96FF800F4AB58 /* platform.cpp */; };
@@ -83,7 +82,6 @@
 		5843908612B9703300F4AB58 /* CoreObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */; };
 		5843908712B9703300F4AB58 /* CoreProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */; };
 		5843908812B9703300F4AB58 /* CoreStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907F12B9703300F4AB58 /* CoreStorage.cpp */; };
-		5843913E12B9749600F4AB58 /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5843905712B96FD900F4AB58 /* libxerces-c.a */; };
 		587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 587E25BD12BBB8050035DB9E /* CoreTypes.cpp */; };
 		587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */; };
 		58801D4312C91E4900935308 /* CoreStorageTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F812B970F400F4AB58 /* CoreStorageTesting.cpp */; };
@@ -95,6 +93,10 @@
 		5880224212CAD92500935308 /* XmpParserTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5880224112CAD92500935308 /* XmpParserTesting.cpp */; };
 		58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
 		58F92C2A125FABD200FAF4C6 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */; };
+		58FDB4F512D79746008BED8A /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58FDB4F412D79746008BED8A /* libxerces-c.a */; };
+		58FDB50612D797A8008BED8A /* libcryptopp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58FDB50512D797A8008BED8A /* libcryptopp.a */; };
+		58FDB50712D797A8008BED8A /* libcryptopp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58FDB50512D797A8008BED8A /* libcryptopp.a */; };
+		58FDB50812D797AD008BED8A /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58FDB4F412D79746008BED8A /* libxerces-c.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,7 +118,6 @@
 
 /* Begin PBXFileReference section */
 		5843398F125B8AFC00DD904D /* MGALibTestHarness */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MGALibTestHarness; sourceTree = BUILT_PRODUCTS_DIR; };
-		5843905712B96FD900F4AB58 /* libxerces-c.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libxerces-c.a"; path = "../../Lib/libxerces-c.a"; sourceTree = SOURCE_ROOT; };
 		5843905912B96FEB00F4AB58 /* highres_timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = highres_timing.h; path = ../../Arch/highres_timing.h; sourceTree = SOURCE_ROOT; };
 		5843905B12B96FF800F4AB58 /* highres_timing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = highres_timing.cpp; path = ../../Arch/osx/highres_timing.cpp; sourceTree = SOURCE_ROOT; };
 		5843905C12B96FF800F4AB58 /* platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = platform.cpp; path = ../../Arch/osx/platform.cpp; sourceTree = SOURCE_ROOT; };
@@ -216,6 +217,8 @@
 		58E90A1F124CEFFF00B8E3CF /* MGALib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MGALib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		58E90A20124CEFFF00B8E3CF /* MGALib-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MGALib-Info.plist"; sourceTree = "<group>"; };
 		58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		58FDB4F412D79746008BED8A /* libxerces-c.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libxerces-c.a"; path = "../../Lib/libxerces-c.a"; sourceTree = SOURCE_ROOT; };
+		58FDB50512D797A8008BED8A /* libcryptopp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcryptopp.a; path = ../../Lib/libcryptopp.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,8 +228,9 @@
 			files = (
 				5843399C125B8B5400DD904D /* MGALib.framework in Frameworks */,
 				58EE448112906D6C0026976D /* CoreServices.framework in Frameworks */,
-				5843913E12B9749600F4AB58 /* libxerces-c.a in Frameworks */,
 				587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */,
+				58FDB50712D797A8008BED8A /* libcryptopp.a in Frameworks */,
+				58FDB50812D797AD008BED8A /* libxerces-c.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,7 +239,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				58F92C2A125FABD200FAF4C6 /* CoreServices.framework in Frameworks */,
-				5843905812B96FD900F4AB58 /* libxerces-c.a in Frameworks */,
+				58FDB4F512D79746008BED8A /* libxerces-c.a in Frameworks */,
+				58FDB50612D797A8008BED8A /* libcryptopp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -538,7 +543,8 @@
 		58F92B28125FAAF500FAF4C6 /* External */ = {
 			isa = PBXGroup;
 			children = (
-				5843905712B96FD900F4AB58 /* libxerces-c.a */,
+				58FDB50512D797A8008BED8A /* libcryptopp.a */,
+				58FDB4F412D79746008BED8A /* libxerces-c.a */,
 				587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */,
 				58F92B5B125FAB3D00FAF4C6 /* CoreServices.framework */,
 			);
@@ -859,7 +865,7 @@
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../Lib\"";
-				OTHER_LDFLAGS = "-fvisibility=hidden";
+				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
 				PRODUCT_NAME = MGALibTestHarness;
 				RUN_CLANG_STATIC_ANALYZER = NO;
@@ -927,16 +933,17 @@
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
 					../..,
 					../../Include,
 					../../Include/utf8/source,
-					../../Include/cryptopp,
 				);
 				INFOPLIST_FILE = "MGALib-Info.plist";
 				INSTALL_PATH = /Library/Frameworks;
@@ -968,6 +975,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Lib\"",
 					"\"$(SRCROOT)/../../Lib\"",
+					"\"$(SRCROOT)/../../Include/cryptopp\"",
 				);
 				OTHER_LDFLAGS = (
 					"-framework",
