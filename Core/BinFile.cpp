@@ -3,12 +3,16 @@
 #include "CoreMetaObject.h"
 #include "CoreMetaProject.h"
 #include <utf8.h>
+#include <cryptopp/zlib.h>
+#include <cryptopp/gcm.h>
+#include <cryptopp/aes.h>
 
 
 /*** Internally Defined Constants ***/
 #define BINFILE_DEFAULTCACHESIZE			10000000
 #define BINFILE_DEFAULTMAXUNDO				10000000
-#define BINFILE_DEFAULTCOMPRESSION			true
+#define BINFILE_DEFAULTJOURNALING			false
+#define BINFILE_DEFAULTCOMPRESSION			false
 #define BINFILE_DEFAULTENCRYPTION			false
 
 
@@ -294,6 +298,7 @@ bool BinObject::IsConnected(void) const
 		++attrIter;
 	}
 	// Never found a connected pointer = not connected
+	ASSERT(false); // Do we actually want to support deferred deletion???
 	return false;
 }
 
@@ -383,6 +388,9 @@ uint32_t BinObject::Write(std::vector<char> &buffer) const
 {
 	// Is this object deleted (via implicit deferred deletion - i.e. no connected forward pointers)
 	if ( !this->IsConnected() ) return 0;
+	// Clear and size the buffer
+	buffer.clear();
+	buffer.resize( this->Size() );
 	char* stream = &buffer[0];
 	// Write the metaID
 	MetaID_t metaID;
@@ -425,7 +433,7 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(), _isCompressed(BINFILE_DEFAULTCOMPRESSION),
 	_indexHash(),_cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
-	_isJournaling(true), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
+	_isJournaling(BINFILE_DEFAULTJOURNALING), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
 	_isEncrypted(BINFILE_DEFAULTENCRYPTION), _encryptionKey()
 {
 	ASSERT(filename != "" );
@@ -663,6 +671,32 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	std::vector<char> buffer;
 	buffer.reserve(indexEntry.sizeB);
 	stream.read(&buffer[0], indexEntry.sizeB);
+	// Is there encryption
+	if (this->_isEncrypted)
+	{
+        // Initialize key and iv
+		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
+		// Create the encryptor
+		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+		encryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
+//		AuthenticatedEncryptionFilter filter( encryptor, new StringSink( ciphertext ) );
+//		filter.Put( &buffer[0], buffer.size() );
+//		filter.MessageEnd();
+	}
+	// Is there compression
+	if (this->_isCompressed)
+	{
+		// Create the decompressor and load it up
+		CryptoPP::ZlibDecompressor decompressor;
+		decompressor.Put((const byte*)&buffer[0], indexEntry.sizeB);
+		decompressor.MessageEnd();
+		// Get the decompressed size
+		indexEntry.sizeB = decompressor.MaxRetrievable();
+		// Resize the buffer
+		buffer.resize(indexEntry.sizeB);
+		// Get the data
+		decompressor.Get((byte*)&buffer[0], indexEntry.sizeB);
+	}
 	BinObject* binObject = BinObject::Read(this->_metaProject, buffer, uuid);
 	ASSERT( binObject != NULL );
 	// Make sure there is space in the cache
@@ -677,14 +711,40 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const U
 	ASSERT( stream.is_open() );
 	// Set the location to appropriately (need to write it out)
 	indexEntry.location = IndexLocation::Scratch();
-	// Get the size of the binObject
-	indexEntry.sizeB = indexEntry.object->Size();
 	// Get the position of where the write it going to happen
 	indexEntry.position = (uint64_t)stream.tellp();
 	// Now, write to the end of scratchFile
 	std::vector<char> buffer;
-	buffer.reserve(indexEntry.sizeB);
 	indexEntry.object->Write(buffer);
+	// Get the size of the binObject
+	indexEntry.sizeB = buffer.size();
+	// Is there compression
+	if (this->_isCompressed)
+	{
+		// Create the compressor and load it up
+		CryptoPP::ZlibCompressor compressor;
+		compressor.Put((const byte*)&buffer[0], indexEntry.sizeB);
+		compressor.MessageEnd();
+		// Get the new size
+		indexEntry.sizeB = compressor.MaxRetrievable();
+		// Resize the buffer
+		buffer.resize(indexEntry.sizeB);
+		// Get the data
+		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
+	}
+	// Is there encryption
+	if (this->_isEncrypted)
+	{
+        // Initialize key and iv
+		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
+		// Create the encryptor
+		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+		decryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
+//		AuthenticatedEncryptionFilter filter( encryptor, new StringSink( ciphertext ) );
+//		filter.Put( &buffer[0], buffer.size() );
+//		filter.MessageEnd();
+	}
+	// Write the final data into the stream
 	stream.write(&buffer[0], indexEntry.sizeB);
 }
 
@@ -737,7 +797,27 @@ void BinFile::FlushCache(void)
 
 const Result_t BinFile::PickleTransaction(uint32_t &sizeB) throw()
 {
+	// How big is this transaction (deleted, changed, created)
+	sizeB = 0;
+	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
+	while (deletedIter != this->_deletedObjects.end())
+	{
+		sizeB += deletedIter->second.object->Size();
+		++deletedIter;
+	}
+	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
+	while (changeIter != this->_changedObjects.end())
+	{
+		++changeIter;
+	}
+	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
+	while( createdIter != this->_createdObjects.end() )
+	{
+		sizeB += sizeof(Uuid) + sizeof(MetaID_t);
+		++createdIter;
+	}
 	// Serialize the three transaction lists (created, changed, deleted) to the end of the scratch file
+	
 	// TODO: Serialize the three transaction lists
 	// Is there compression
 	// TODO: Support compression
@@ -954,7 +1034,23 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 	{
 		// Ok, so we are doing something, mark the binFile as dirty
 		this->MarkDirty();
-		// Changed objects - discard pre/post - otherwise we are good
+		// Are we journaling this transaction
+		if (this->_isJournaling)
+		{
+			// Do we need to trim the undo list
+			if (this->_undoList.size() == this->_maxUndoSize) this->_undoList.pop_front();
+			// Clear the redo list
+			this->_redoList.clear();
+			// Pickle the transaction - and write it to the scratch file
+			std::streampos position = this->_scratchFile.tellp();
+			uint32_t sizeB;
+			ASSERT( this->PickleTransaction(sizeB) == S_OK );
+			// Add pickled transaction to undo list
+			JournalEntry entry = { position, sizeB, tag, true };
+			this->_undoList.push_back(entry);
+		}
+
+		// Changed objects - discard pre/post values
 		ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
 		while (changeIter != this->_changedObjects.end())
 		{
@@ -974,28 +1070,12 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			// Move to the next deleted object in the list
 			++deletedIter;
 		}
-
-		// Are we journaling this transaction
-		if (this->_isJournaling)
-		{
-			// Do we need to trim the undo list
-			if (this->_undoList.size() == this->_maxUndoSize) this->_undoList.pop_front();
-			// Clear the redo list
-			this->_redoList.clear();
-			// Pickle the transaction - and write it to the scratch file
-			std::streampos position = this->_scratchFile.tellp();
-			uint32_t sizeB;
-			ASSERT( this->PickleTransaction(sizeB) == S_OK );
-			// Add pickled transaction to undo list
-			JournalEntry entry = { position, sizeB, tag, true };
-			this->_undoList.push_back(entry);
-		}
 		// Clear the transaction lists
 		this->_createdObjects.clear();
 		this->_changedObjects.clear();
 		this->_deletedObjects.clear();
 	}
-	// We are good
+	// We are good - wrap it up
 	this->_openedObject = this->_indexHash.end();
 	this->_inTransaction = false;
 	return S_OK;
