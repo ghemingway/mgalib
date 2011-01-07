@@ -74,7 +74,8 @@ typedef struct AttributeChangeBase
 template <class T>
 struct AttributeChange : public AttributeChangeBase
 {
-	T										value;
+	T										oldValue;
+	T										newValue;
 };
 typedef std::list<AttributeChangeBase*> ChangedObjectsList;
 typedef ChangedObjectsList::iterator ChangedObjectsListIterator;
@@ -83,7 +84,7 @@ typedef struct JournalEntry
 {
 	std::streampos							position;
 	uint32_t								sizeB;
-	Uuid									uuid;
+	Uuid									tag;
 	bool									inScratch;
 };
 typedef std::list<JournalEntry> JournalList;
@@ -136,7 +137,7 @@ private:
 public:
 	~BinObject();
 	// Static methods to read or create an object
-	static BinObject* Read(CoreMetaProject* &metaProject, char* &stream, const Uuid &uuid);
+	static BinObject* Read(CoreMetaProject* &metaProject, const std::vector<char> &buffer, const Uuid &uuid);
 	static BinObject* Create(CoreMetaObject *metaObject, const Uuid &uuid);
 
 	inline const Uuid GetUuid(void) const							{ return this->_uuid; }
@@ -144,9 +145,9 @@ public:
 	inline CoreMetaObject* GetMetaObject(void) const				{ return this->_metaObject; }
 	inline const bool IsDirty(void) const							{ return this->_isDirty; }
 	inline void MarkDirty(void)										{ this->_isDirty = true; }
-	uint32_t Size(void) const;
-	uint32_t Write(char* &stream) const;
-	BinAttribute* GetAttribute(const AttrID_t &attrID);
+	uint32_t Size(void) const;										//!<
+	uint32_t Write(std::vector<char> &buffer) const;				//!<
+	BinAttribute* GetAttribute(const AttrID_t &attrID);				//!<
 };
 
 
@@ -157,14 +158,13 @@ class BinFile :
 	public ICoreStorage
 {
 private:
-	// Base State Variables
+	// Base State & Option Variables
 	std::string							_filename;					//!< Primary file name (opened as read-only)
 	Uuid								_metaProjectUuid;			//!< MetaProject Uuid
 	Uuid								_rootUuid;					//!< Uuid of the root object for the graph
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
 	bool								_isCompressed;				//!<
-	bool								_isEncrypted;				//!<
 	// Index and Cache Queue Variables
 	IndexHash							_indexHash;					//!< Hash of objects residing in memory cache
 	std::list<Uuid>						_cacheQueue;				//!< Most-recently-used queue of memory cache
@@ -172,14 +172,17 @@ private:
 	// Cursor Variable
 	IndexHashIterator					_openedObject;				//!< Iterator to currently opened object
 	// Transaction Variables
-	std::list<Uuid>						_createdObjects;			//!< List of all objects created in current transaction
+	std::list<std::pair<Uuid,MetaID_t> >_createdObjects;			//!< List of all objects created in current transaction
 	ChangedObjectsList					_changedObjects;			//!< List of all object changes from current transaction
-	std::list<std::pair<Uuid,IndexEntry> >	_deletedObjects;		//!< List of all objects deleted in current transaction
+	std::list<std::pair<Uuid,IndexEntry> >_deletedObjects;			//!< List of all objects deleted in current transaction
 	// Undo/Redo Variables
 	bool								_isJournaling;				//!<
-	uint32_t							_maxUndo;					//!<
+	uint32_t							_maxUndoSize;				//!<
 	JournalList							_undoList;					//!<
 	JournalList							_redoList;					//!<
+	// Encryption Variables
+	bool								_isEncrypted;				//!<
+	Uuid								_encryptionKey;				//!<
 
 private:
 	BinFile();														//!< Deny access to default constructor
@@ -196,30 +199,33 @@ private:
 	const Result_t ReadIndex(std::fstream &stream, const uint32_t &objCount);		//!< Read an index from an MGA file
 	const Result_t WriteIndex(std::fstream &stream, const uint32_t &objCount) const;//!< Write an index into an MGA file
 	IndexHashIterator FetchObject(const Uuid &uuid);								//!< Bring an object into the cache
-	void CacheObjectFromFile(std::fstream &stream, IndexHashIterator &iter);		//!< Move object from file to cache
+	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);//!< Move object from file to cache
+	void ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);	//!< Move object to scratch file
 	void CheckCacheSize(void);														//!< Make sure the cache is not getting too big
 	void FlushCache(void);															//!< Clear the cache of all objects (no writing to any file)
+	const Result_t PickleTransaction(uint32_t &sizeB) throw();						//!<
+	const Result_t UnpickleTransaction(const JournalEntry &entry) throw();			//!<
 
 public:
 	virtual ~BinFile();
-	const Result_t MaxMemoryFootprint(const uint64_t &size) throw();//!< Set the maximum amount of memory the cache can use
+	const Result_t MaxMemoryFootprint(const uint64_t &size) throw();				//!< Set the maximum amount of memory the cache can use
 
 	// ------- ICoreStorage Interface
 
-	virtual const Result_t MetaObject(CoreMetaObject* &coreMetaObject) const throw();		//!< Get metaObject of open object
-	virtual const Result_t MetaID(MetaID_t &metaID) const throw();							//!< Get metaID of open object
+	virtual const Result_t MetaObject(CoreMetaObject* &coreMetaObject) const throw();	//!< Get metaObject of open object
+	virtual const Result_t MetaID(MetaID_t &metaID) const throw();						//!< Get metaID of open object
 
-	virtual const Result_t ObjectVector(std::vector<Uuid> &objectVector) const throw();		//!< Get a vector of all objects
-	virtual const Result_t RootUuid(Uuid &uuid) const throw();								//!< Get the root Uuid of the project
-	virtual const Result_t Save(const std::string &filename, const bool &v3=true) throw();	//!< Save the project to filename (overwrites if same as _filename)
-	virtual const Result_t BeginTransaction(void) throw();									//!< Begin a transaction (no nesting allowed)
-	virtual const Result_t CommitTransaction(const Uuid tag=Uuid::Null()) throw();			//!< Commit a transaction (with optional transaction tag)
-	virtual const Result_t AbortTransaction(void) throw();									//!< Abort a transaction and rollback all changes
+	virtual const Result_t ObjectVector(std::vector<Uuid> &objectVector) const throw();	//!< Get a vector of all objects
+	virtual inline const Result_t RootUuid(Uuid &uuid) const throw()					{ uuid = this->_rootUuid; return S_OK; }
+	virtual const Result_t Save(const std::string &filename) throw();					//!< Save the project to filename (overwrites if same as _filename)
+	virtual const Result_t BeginTransaction(void) throw();								//!< Begin a transaction (no nesting allowed)
+	virtual const Result_t CommitTransaction(const Uuid tag=Uuid::Null()) throw();		//!< Commit a transaction (with optional transaction tag)
+	virtual const Result_t AbortTransaction(void) throw();								//!< Abort a transaction and rollback all changes
 
-	virtual const Result_t OpenObject(const Uuid &uuid) throw();							//!< Open an object
-	virtual const Result_t CloseObject(void) throw();										//!< Close an object
-	virtual const Result_t CreateObject(const MetaID_t &metaID, Uuid &newUuid) throw();		//!< Create a new object via metaObject
-	virtual const Result_t DeleteObject(void) throw();										//!< Delete currently opened object
+	virtual const Result_t OpenObject(const Uuid &uuid) throw();						//!< Open an object
+	virtual const Result_t CloseObject(void) throw();									//!< Close an object
+	virtual const Result_t CreateObject(const MetaID_t &metaID, Uuid &newUuid) throw();	//!< Create a new object via metaObject
+	virtual const Result_t DeleteObject(void) throw();									//!< Delete currently opened object
 
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw();			//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, double &value) throw();			//!<
@@ -241,105 +247,6 @@ public:
 									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw();
 	virtual const Result_t BeginJournal(void) throw();										//!<
 	virtual const Result_t EndJournal(void) throw();										//!<
-};
-
-
-// --------------------------- BinAttributeBase --------------------------- //
-
-
-template<class T>
-class BinAttributeBase : public BinAttribute
-{
-protected:
-	T						_value;
-	BinAttributeBase<T>();
-public:
-	BinAttributeBase<T>(BinObject* parent, const AttrID_t &attrID, const T &value) : ::BinAttribute(parent, attrID), _value(value) { }
-	inline virtual const Result_t Set(const T &value)	{ this->_parent->MarkDirty(); this->_value = value; return S_OK; }
-	inline virtual T Get(void) const					{ return this->_value; }
-};
-
-
-// --------------------------- BinAttribute::ValueType::Long() --------------------------- //
-
-
-
-class BinAttributeLong : public BinAttributeBase<int32_t> {
-public:
-	BinAttributeLong(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<int32_t>(parent, attrID, 0) { }
-	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Long(); }
-	virtual inline uint32_t Size(void) const			{ return sizeof(int32_t); }
-	virtual void StreamRead(char* &stream);
-	virtual void StreamWrite(char* &stream) const;
-};
-
-
-// --------------------------- BinAttribute::ValueType::Real() --------------------------- //
-
-
-class BinAttributeReal : public BinAttributeBase<double> {
-public:
-	BinAttributeReal(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<double>(parent, attrID, 0.0) { }
-	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Real(); }
-	virtual inline uint32_t Size(void) const			{ return sizeof(double); }
-	virtual void StreamRead(char* &stream);
-	virtual void StreamWrite(char* &stream) const;
-};
-
-
-// --------------------------- BinAttribute::ValueType::String() --------------------------- //
-
-
-class BinAttributeString : public BinAttributeBase<std::string> {
-public:
-	BinAttributeString(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::string>(parent, attrID, "") { }
-	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::String(); }
-	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size()); }
-	virtual const Result_t Set(const std::string &value);
-	virtual void StreamRead(char* &stream);
-	virtual void StreamWrite(char* &stream) const;
-};
-
-
-// --------------------------- BinAttribute::ValueType::LongPointer() --------------------------- //
-
-
-class BinAttributeLongPointer : public BinAttributeBase<Uuid> {
-public:
-	BinAttributeLongPointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
-	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::LongPointer(); }
-	virtual inline uint32_t Size(void) const			{ return sizeof(Uuid); }
-	virtual void StreamRead(char* &stream);
-	virtual void StreamWrite(char* &stream) const;
-};
-
-
-// --------------------------- BinAttribute::ValueType::Collection() --------------------------- //
-
-
-class BinAttributeCollection : public BinAttributeBase<std::list<Uuid> > {
-public:
-	BinAttributeCollection(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::list<Uuid> >(parent, attrID, std::list<Uuid>()) { }
-	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Collection(); }
-	inline void Add(const Uuid &value)					{ this->_parent->MarkDirty(); this->_value.push_back(value); }
-	inline void Remove(const Uuid &value)				{ this->_parent->MarkDirty(); this->_value.remove(value); }
-	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size() * sizeof(Uuid)); }
-	virtual void StreamRead(char* &stream);
-	virtual void StreamWrite(char* &stream) const;
-};
-
-
-// --------------------------- BinAttribute::ValueType::Pointer() --------------------------- //
-
-
-class BinAttributePointer : public BinAttributeBase<Uuid> {
-public:
-	BinAttributePointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
-	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Pointer(); }
-	inline const bool IsConnected(void) const			{ return (this->_value != Uuid::Null()); }
-	virtual inline uint32_t Size(void) const			{ return sizeof(Uuid); }
-	virtual void StreamRead(char* &stream);
-	virtual void StreamWrite(char* &stream) const;
 };
 
 
