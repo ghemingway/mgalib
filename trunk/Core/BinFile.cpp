@@ -7,39 +7,33 @@
 
 /*** Internally Defined Constants ***/
 #define BINFILE_DEFAULTCACHESIZE			10000000
-#define BINFILE_DEFAULTMAXUNDO
+#define BINFILE_DEFAULTMAXUNDO				10000000
+#define BINFILE_DEFAULTCOMPRESSION			true
+#define BINFILE_DEFAULTENCRYPTION			false
 
 
 // --------------------------- IOStream Access  --------------------------- //
 
 
-// IFStream Reads
-inline static void _Read(char* &stream, int16_t &value)			{ memcpy(&value, stream, sizeof(int16_t)); stream += sizeof(int16_t); }
-inline static void _Read(char* &stream, uint32_t &value)		{ memcpy(&value, stream, sizeof(uint32_t)); stream += sizeof(uint32_t); }
-inline static void _Read(char* &stream, int32_t &value)			{ memcpy(&value, stream, sizeof(int32_t)); stream += sizeof(int32_t); }
-inline static void _Read(char* &stream, double &value)			{ memcpy(&value, stream, sizeof(double)); stream += sizeof(double); }
-inline static void _Read(char* &stream, ValueType &valueType)	{ valueType = ValueType::Read(stream); }
-inline static void _Read(char* &stream, std::streampos &pos)	{ uint64_t value; memcpy(&value, stream, sizeof(uint64_t));  pos = (std::streampos)value; stream += sizeof(uint64_t); }
-inline static void _Read(char* &stream, Uuid &value)			{ memcpy(&value, stream, sizeof(Uuid));  stream += sizeof(Uuid); }
-
-inline static void _Read(char* &stream, std::string &str)
+// IFStream Reads and Writes
+template <class T> void _Read(char* &stream, T &value)						{ memcpy(&value, stream, sizeof(T)); stream += sizeof(T); }
+template <> void _Read<ValueType>(char* &stream, ValueType &valueType)		{ valueType = ValueType::Read(stream); }
+template <> void _Read<std::streampos>(char* &stream, std::streampos &pos)	{ uint64_t value; memcpy(&value, stream, sizeof(uint64_t));  pos = (std::streampos)value; stream += sizeof(uint64_t); }
+template <> void _Read<std::string>(char* &stream, std::string &str)
 {
 	// Read the length of the string
 	uint32_t len;
 	_Read(stream, len);
-	ASSERT( len >= 0 );
 	// Create the string
 	str.resize(len);
 	memcpy(&str[0], stream, len);
 	stream += len;
 }
-
-inline static void _Read(char* &stream, std::list<Uuid> &collection)
+template <> void _Read<std::list<Uuid> >(char* &stream, std::list<Uuid> &collection)
 {
 	// Read the number of Uuids in the list
 	uint32_t len;
 	_Read(stream, len);
-	ASSERT( len >= 0 );
 	// Read data into the list
 	Uuid uuid;
 	for (uint32_t i=0; i<len; ++i)
@@ -50,29 +44,22 @@ inline static void _Read(char* &stream, std::list<Uuid> &collection)
 	}
 }
 
-// OFStream Writes
-inline static void _Write(char* &stream, const int16_t &value)		{ memcpy(stream, &value, sizeof(int16_t)); stream += sizeof(int16_t); }
-inline static void _Write(char* &stream, const uint32_t &value)		{ memcpy(stream, &value, sizeof(uint32_t)); stream += sizeof(uint32_t); }
-inline static void _Write(char* &stream, const int32_t &value)		{ memcpy(stream, &value, sizeof(int32_t)); stream += sizeof(int32_t); }
-inline static void _Write(char* &stream, const double &value)		{ memcpy(stream, &value, sizeof(double)); stream += sizeof(double); }
-inline static void _Write(char* &stream, const ValueType &valueType){ valueType.Write(stream); }
-inline static void _Write(char* &stream, const std::streampos &pos)	{ uint64_t value = (uint64_t)pos; memcpy(stream, &value, sizeof(uint64_t)); stream += sizeof(uint64_t); }
-inline static void _Write(char* &stream, const Uuid &value)			{ memcpy(stream, &value, sizeof(Uuid)); stream += sizeof(Uuid); }
-
-inline static void _Write(char* &stream, const std::string &str) {
+template <class T> void _Write(char* &stream, const T &value)					{ memcpy(stream, &value, sizeof(T)); stream += sizeof(T); }
+template <> void _Write<ValueType>(char* &stream, const ValueType &valueType)	{ valueType.Write(stream); }
+template <> void _Write<std::streampos>(char* &stream, const std::streampos &pos){ uint64_t value = (uint64_t)pos; memcpy(stream, &value, sizeof(uint64_t)); stream += sizeof(uint64_t); }
+template <> void _Write<std::string>(char* &stream, const std::string &str)
+{
 	// Write the length of the string
 	uint32_t len = str.length();
-	ASSERT( len >= 0 );
 	_Write(stream, len);
 	// Write the actual string
 	memcpy(stream, &str[0], len);
 	stream += len;
 }
-
-inline static void _Write(char* &stream, const std::list<Uuid> &collection) {
+template <> inline void _Write<std::list<Uuid> >(char* &stream, const std::list<Uuid> &collection)
+{
 	// Write the length of the list
 	uint32_t len = collection.size();
-	ASSERT( len >= 0 );
 	_Write(stream, len);
 	// Write the actual list
 	std::list<Uuid>::const_iterator collectionIter = collection.begin();
@@ -83,6 +70,114 @@ inline static void _Write(char* &stream, const std::list<Uuid> &collection) {
 		++collectionIter;
 	}
 }
+
+
+// --------------------------- BinAttributeBase --------------------------- //
+
+
+template<class T>
+class BinAttributeBase : public BinAttribute
+{
+protected:
+	T						_value;
+	BinAttributeBase<T>();
+public:
+	BinAttributeBase<T>(BinObject* parent, const AttrID_t &attrID, const T &value) : ::BinAttribute(parent, attrID), _value(value) { }
+	inline virtual const Result_t Set(const T &value)	{ this->_parent->MarkDirty(); this->_value = value; return S_OK; }
+	inline virtual T Get(void) const					{ return this->_value; }
+	inline virtual uint32_t Size(void) const			{ return sizeof(T); }
+	inline virtual void StreamRead(char* &stream)		{ _Read(stream, this->_value); }
+	inline virtual void StreamWrite(char* &stream) const{ _Write(stream, this->_attrID); _Write(stream, this->_value); }
+};
+
+
+// --------------------------- BinAttribute::ValueType::Long() --------------------------- //
+
+
+
+class BinAttributeLong : public BinAttributeBase<int32_t> {
+public:
+	BinAttributeLong(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<int32_t>(parent, attrID, 0) { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Long(); }
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Long()); BinAttributeBase<int32_t>::StreamWrite(stream); }
+};
+
+
+// --------------------------- BinAttribute::ValueType::Real() --------------------------- //
+
+
+class BinAttributeReal : public BinAttributeBase<double> {
+public:
+	BinAttributeReal(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<double>(parent, attrID, 0.0) { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Real(); }
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Real()); BinAttributeBase<double>::StreamWrite(stream); }
+};
+
+
+// --------------------------- BinAttribute::ValueType::String() --------------------------- //
+
+
+class BinAttributeString : public BinAttributeBase<std::string> {
+public:
+	BinAttributeString(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::string>(parent, attrID, "") { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::String(); }
+	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size()); }
+	virtual inline const Result_t Set(const std::string &value)
+	{
+		std::string localValue = value;
+		// Make sure this is a valid UTF-8 encoding
+		std::string::iterator endIter = utf8::find_invalid(localValue.begin(), localValue.end());
+		if (endIter != localValue.end())
+		{
+			std::cout << "Invalid UTF-8 encoding detected!\n";
+			std::cout << "This part is fine: " << std::string(localValue.begin(), endIter) << "\n";
+			return E_BADUTF8STRING;
+		}
+		
+		// Get the line length (at least for the valid part)
+		this->_value = value;
+		this->_parent->MarkDirty();
+		return S_OK;
+	}
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::String()); BinAttributeBase<std::string>::StreamWrite(stream); }
+};
+
+
+// --------------------------- BinAttribute::ValueType::LongPointer() --------------------------- //
+
+
+class BinAttributeLongPointer : public BinAttributeBase<Uuid> {
+public:
+	BinAttributeLongPointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::LongPointer(); }
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::LongPointer()); BinAttributeBase<Uuid>::StreamWrite(stream); }
+};
+
+
+// --------------------------- BinAttribute::ValueType::Collection() --------------------------- //
+
+
+class BinAttributeCollection : public BinAttributeBase<std::list<Uuid> > {
+public:
+	BinAttributeCollection(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::list<Uuid> >(parent, attrID, std::list<Uuid>()) { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Collection(); }
+	inline void Add(const Uuid &value)					{ this->_parent->MarkDirty(); this->_value.push_back(value); }
+	inline void Remove(const Uuid &value)				{ this->_parent->MarkDirty(); this->_value.remove(value); }
+	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size() * sizeof(Uuid)); }
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Collection()); BinAttributeBase<std::list<Uuid> >::StreamWrite(stream); }
+};
+
+
+// --------------------------- BinAttribute::ValueType::Pointer() --------------------------- //
+
+
+class BinAttributePointer : public BinAttributeBase<Uuid> {
+public:
+	BinAttributePointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Pointer(); }
+	inline const bool IsConnected(void) const			{ return (this->_value != Uuid::Null()); }
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Pointer()); BinAttributeBase<Uuid>::StreamWrite(stream); }
+};
 
 
 // --------------------------- BinAttr ---------------------------
@@ -148,99 +243,6 @@ BinAttribute* BinAttribute::Create(BinObject *parent, const ValueType &valueType
 	ASSERT( binAttribute != NULL );	
 	// Return the new attribute
 	return binAttribute;
-}
-
-
-// BinAttribute Read/Write Methods (need access to _Write and _Read functions)
-inline void BinAttributeLong::StreamRead(char* &stream)
-{
-	_Read(stream, this->_value);
-}
-
-inline void BinAttributeLong::StreamWrite(char* &stream) const
-{
-	_Write(stream, ValueType::Long());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
-}
-
-inline void BinAttributeReal::StreamRead(char* &stream)
-{
-	_Read(stream, this->_value);
-}
-
-inline void BinAttributeReal::StreamWrite(char* &stream) const
-{
-	_Write(stream, ValueType::Real());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
-}
-
-inline void BinAttributeString::StreamRead(char* &stream)
-{
-	_Read(stream, this->_value);
-}
-
-inline void BinAttributeString::StreamWrite(char* &stream) const
-{
-	_Write(stream, ValueType::String());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
-}
-
-
-inline const Result_t BinAttributeString::Set(const std::string &value)
-{
-	std::string localValue = value;
-	// Make sure this is a valid UTF-8 encoding
-	std::string::iterator endIter = utf8::find_invalid(localValue.begin(), localValue.end());
-	if (endIter != localValue.end())
-	{
-		std::cout << "Invalid UTF-8 encoding detected!\n";
-		std::cout << "This part is fine: " << std::string(localValue.begin(), endIter) << "\n";
-		return E_BADUTF8STRING;
-	}
-	
-	// Get the line length (at least for the valid part)
-	this->_value = value;
-	this->_parent->MarkDirty();
-	return S_OK;
-}
-
-inline void BinAttributeLongPointer::StreamRead(char* &stream)
-{
-	_Read(stream, this->_value);
-}
-
-inline void BinAttributeLongPointer::StreamWrite(char* &stream) const
-{
-	_Write(stream, ValueType::LongPointer());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
-}
-
-inline void BinAttributeCollection::StreamRead(char* &stream)
-{
-	_Read(stream, this->_value);
-}
-
-inline void BinAttributeCollection::StreamWrite(char* &stream) const
-{
-	_Write(stream, ValueType::Collection());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
-}
-
-void BinAttributePointer::StreamRead(char* &stream)
-{
-	_Read(stream, this->_value);
-}
-
-void BinAttributePointer::StreamWrite(char* &stream) const
-{
-	_Write(stream, ValueType::Pointer());
-	_Write(stream, this->_attrID);
-	_Write(stream, this->_value);
 }
 
 
@@ -313,9 +315,9 @@ BinObject::~BinObject()
 }
 
 
-BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &stream, const Uuid &uuid)
+BinObject* BinObject::Read(CoreMetaProject* &metaProject, const std::vector<char> &buffer, const Uuid &uuid)
 {
-	ASSERT( stream != NULL );
+	char* stream = (char*)&buffer[0];
 	// First, read in the metaID
 	MetaID_t metaID;
 	_Read(stream, metaID);
@@ -377,12 +379,11 @@ uint32_t BinObject::Size(void) const
 }
 
 
-uint32_t BinObject::Write(char* &stream) const
+uint32_t BinObject::Write(std::vector<char> &buffer) const
 {
-	ASSERT( stream != NULL );
 	// Is this object deleted (via implicit deferred deletion - i.e. no connected forward pointers)
 	if ( !this->IsConnected() ) return 0;
-	char* streamMark = stream;
+	char* stream = &buffer[0];
 	// Write the metaID
 	MetaID_t metaID;
 	ASSERT( this->_metaObject->GetMetaID(metaID) == S_OK );
@@ -398,10 +399,8 @@ uint32_t BinObject::Write(char* &stream) const
 	}
 	// Write the closing ValueType::None() to signal end of object
 	_Write(stream, ValueType::None());
-	uint32_t writeSize = (uint32_t)(stream - streamMark);
-	uint32_t sizeSize = this->Size();
-	ASSERT( writeSize == sizeSize );
-//	std::cout << "Write Object (" << pos << " @ " << stream.tellp() << ")-(" << this->_idPair.metaID << ", " << this->_idPair.objID << ").\n";
+	uint32_t writeSize = (uint32_t)(stream - &buffer[0]);
+	ASSERT( writeSize == this->Size() );
 	return writeSize;
 }
 
@@ -423,10 +422,11 @@ BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
-	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(),
+	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(), _isCompressed(BINFILE_DEFAULTCOMPRESSION),
 	_indexHash(),_cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
-	_isJournaling(true), _maxUndo(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList()
+	_isJournaling(true), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
+	_isEncrypted(BINFILE_DEFAULTENCRYPTION), _encryptionKey()
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
@@ -438,6 +438,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_META_NOTOPEN;
+	// Make sure filename is valid UTF-8
+	// TODO: UTF-8 validation
 	// Create a BinFile object with the given name and metaProject
 	BinFile *binFile = new BinFile(filename, coreMetaProject);
 	ASSERT( binFile != NULL );
@@ -482,6 +484,8 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_INVALID_USAGE;
+	// Make sure filename is valid UTF-8
+	// TODO: UTF-8 validation
 	// Clean up the filename a bit (handle ~ and such)
 	std::string tmpName, directory;
 	_SplitPath(filename, directory, tmpName);
@@ -491,19 +495,17 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	ASSERT( binFile != NULL );
 	// Open the metaProject and get the Uuid
 	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
-
-	// Load the project
+	// Load the project (check for errors)
 	Result_t result = binFile->Load();
 	if (result != S_OK)
 	{
 		// Failure to open file properly
 		delete binFile;
-		storage = NULL;
-		return result;
+		binFile = NULL;
 	}
 	// Return the new BinFile
 	storage = binFile;
-	return S_OK;
+	return result;
 }
 
 
@@ -515,7 +517,6 @@ const Result_t BinFile::Load(void)
 	// Make sure the cache and indexHash are clear
 	this->FlushCache();
 	this->_indexHash.clear();
-
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
 	this->_inputFile.open(this->_filename.c_str(), std::ios::in | std::ios::binary);
 	if( this->_inputFile.fail() || !this->_inputFile.is_open() ) return E_FILEOPEN;
@@ -621,12 +622,11 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const uint32_t &objCoun
 }
 
 
-IndexHashIterator BinFile::FetchObject(const Uuid &uuid) {
-//	std::cout << "Fetching (" << uuid << ").\n";
+IndexHashIterator BinFile::FetchObject(const Uuid &uuid)
+{
 	// Is the object in index
 	IndexHashIterator indexIter = this->_indexHash.find(uuid);
-	if (indexIter == this->_indexHash.end()) return indexIter;
-
+	ASSERT( indexIter != this->_indexHash.end() );
 	//Is the object in the cache
 	if (indexIter->second.location == IndexLocation::Cache())
 	{
@@ -634,21 +634,18 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid) {
 		this->_cacheQueue.remove(uuid);
 		// Move the object to the top of the cacheQueue
 		this->_cacheQueue.push_front(uuid);
-//		std::cout << "Found Object (" << indexIter->first << ") in cache.\n";
 	}
 	// Next, try the inputFile
 	else if (indexIter->second.location == IndexLocation::Input())
 	{
 		// Move the object from the scratch file to the cache
-		this->CacheObjectFromFile(this->_inputFile, indexIter);
-//		std::cout << "Found Object (" << indexIter->first << ") in file.\n";
+		this->ObjectFromFile(this->_inputFile, indexIter->second, indexIter->first);
 	}
-	// Lastly, is the object in the scratch file
-	else // if (indexIter->second.location == IndexLocation::Scratch())
+	// Object must be in the scratch file
+	else
 	{
 		// Move the object from the scratch file to the cache
-		this->CacheObjectFromFile(this->_scratchFile, indexIter);
-//		std::cout << "Found Object (" << indexIter->first << ") in scratch.\n";
+		this->ObjectFromFile(this->_scratchFile, indexIter->second, indexIter->first);
 		// Since the scratchFile is only for dirty objects, must mark object as dirty
 		indexIter->second.object->MarkDirty();
 	}
@@ -657,22 +654,38 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid) {
 }
 
 
-void BinFile::CacheObjectFromFile(std::fstream &stream, IndexHashIterator &hashIter)
+void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid)
 {
 	ASSERT( stream.is_open() );
 	// Move the read pointer to the appropraite place
-	stream.seekg(hashIter->second.position);
+	stream.seekg(indexEntry.position);
 	// Try to read the object
 	std::vector<char> buffer;
-	buffer.reserve(hashIter->second.sizeB);
-	char *bufferPointer = &buffer[0];
-	stream.read(bufferPointer, hashIter->second.sizeB);
-	BinObject* binObject = BinObject::Read(this->_metaProject, bufferPointer, hashIter->first);
+	buffer.reserve(indexEntry.sizeB);
+	stream.read(&buffer[0], indexEntry.sizeB);
+	BinObject* binObject = BinObject::Read(this->_metaProject, buffer, uuid);
 	ASSERT( binObject != NULL );
 	// Make sure there is space in the cache
 	this->CheckCacheSize();
 	// Move the object to the cache and to the front of the cacheQueue
-	this->_cacheQueue.push_front(hashIter->first);
+	this->_cacheQueue.push_front(uuid);
+}
+
+
+void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid)
+{
+	ASSERT( stream.is_open() );
+	// Set the location to appropriately (need to write it out)
+	indexEntry.location = IndexLocation::Scratch();
+	// Get the size of the binObject
+	indexEntry.sizeB = indexEntry.object->Size();
+	// Get the position of where the write it going to happen
+	indexEntry.position = (uint64_t)stream.tellp();
+	// Now, write to the end of scratchFile
+	std::vector<char> buffer;
+	buffer.reserve(indexEntry.sizeB);
+	indexEntry.object->Write(buffer);
+	stream.write(&buffer[0], indexEntry.sizeB);
 }
 
 
@@ -692,22 +705,9 @@ void BinFile::CheckCacheSize(void)
 			// Place the object back into _inputFile (no need to write anything)
 			hashIter->second.location = IndexLocation::Input();
 		}
-		// If the object is dirty, see where the end of scratchFile is
-		else
-		{
-			// Set the location to _scratchFile (need to write it out)
-			hashIter->second.location = IndexLocation::Scratch();
-			// Get the size of the binObject
-			hashIter->second.sizeB = hashIter->second.object->Size();
-			// Get the position of where the write it going to happen
-			hashIter->second.position = (uint64_t)this->_scratchFile.tellp();
-			// Now, write to the end of scratchFile
-			std::vector<char> buffer;
-			buffer.reserve(hashIter->second.sizeB);
-			char *bufferPointer = &buffer[0];
-			hashIter->second.object->Write(bufferPointer);
-			this->_scratchFile.write(bufferPointer, hashIter->second.sizeB);
-		}
+		// If the object is dirty, write it to the scratch file
+		else this->ObjectToFile(this->_scratchFile, hashIter->second, hashIter->first);
+
 		// Delete the object now (not needed any longer)
 		ASSERT( hashIter->second.object != NULL );
 		delete hashIter->second.object;		
@@ -735,6 +735,35 @@ void BinFile::FlushCache(void)
 }
 
 
+const Result_t BinFile::PickleTransaction(uint32_t &sizeB) throw()
+{
+	// Serialize the three transaction lists (created, changed, deleted) to the end of the scratch file
+	// TODO: Serialize the three transaction lists
+	// Is there compression
+	// TODO: Support compression
+	// Is there encryption
+	// TODO: Support encryption
+	// Return the size of the resulting pickle
+	sizeB = 0;
+	// All is good
+	return S_OK;
+}
+
+
+const Result_t BinFile::UnpickleTransaction(const JournalEntry &entry) throw()
+{
+	// Is the entry in the scratch file or input file
+	// TODO: Locate entry
+	// Is there encryption
+	// TODO: Support encryption
+	// Is there compression
+	// TODO: Support compression
+	// Deserialize the three transaction lists (created, changed, deleted) to memory
+	// TODO: Deserialize the journal entry
+	return S_OK;
+}
+
+
 // --------------------------- Public BinFile Methods ---------------------------
 
 
@@ -745,7 +774,9 @@ BinFile::~BinFile()
 	// Clean up any open files
 	if( this->_inputFile.is_open() )
 		this->_inputFile.close();
-	if( this->_scratchFile.is_open() ) {
+	if( this->_scratchFile.is_open() )
+	{
+		// First, close the scratch file
 		this->_scratchFile.close();
 		// Delete the scratch file
 		std::string scratchFilename = "~" + this->_filename;
@@ -803,8 +834,9 @@ const Result_t BinFile::MetaID(MetaID_t &metaID) const throw()
 
 const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const throw()
 {
-	// Clear the incoming vector
+	// Clear the incoming vector and size it
 	objectVector.clear();
+	objectVector.reserve(this->_indexHash.size());
 	// Load it with the indexHash
 	IndexHash::const_iterator indexIter = this->_indexHash.begin();
 	while(indexIter != this->_indexHash.end())
@@ -817,15 +849,7 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 }
 
 
-const Result_t BinFile::RootUuid(Uuid &uuid) const throw()
-{
-	// Simply copy the root Uuid through
-	uuid = this->_rootUuid;
-	return S_OK;
-}
-
-
-const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw()
+const Result_t BinFile::Save(const std::string &filename) throw()
 {
 	// Make sure we have a valid project file open
 	ASSERT( this->_metaProject != NULL );
@@ -869,16 +893,8 @@ const Result_t BinFile::Save(const std::string &filename, const bool &v3) throw(
 		ASSERT( hashIter->second.object != NULL );
 		// Fetch the object into memory
 		this->FetchObject(hashIter->first);
-		// Get the current outputFile position and object size (needed for correct index)
-		hashIter->second.position = outputFile.tellp();
-		hashIter->second.sizeB = hashIter->second.object->Size();
-		// Size the buffer and set the bufferPointer
-		buffer.reserve(hashIter->second.sizeB);
-		bufferPointer = &buffer[0];
-		// Write the object to the buffer
-		hashIter->second.object->Write(bufferPointer);
-		// Write the buffer to the stream
-		outputFile.write(&buffer[0], hashIter->second.sizeB);
+		// Write the object out
+		this->ObjectToFile(outputFile, hashIter->second, hashIter->first);
 		// Move on to the next item in the hash
 		++hashIter;
 	}
@@ -938,9 +954,6 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 	{
 		// Ok, so we are doing something, mark the binFile as dirty
 		this->MarkDirty();
-		// Created objects - nothing to be done here
-		this->_createdObjects.clear();
-
 		// Changed objects - discard pre/post - otherwise we are good
 		ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
 		while (changeIter != this->_changedObjects.end())
@@ -950,8 +963,6 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			delete *changeIter;
 			++changeIter;
 		}
-		this->_changedObjects.clear();
-
 		// Must actually delete all objects in deletedObjects list
 		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 		while ( deletedIter != this->_deletedObjects.end() )
@@ -963,6 +974,25 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			// Move to the next deleted object in the list
 			++deletedIter;
 		}
+
+		// Are we journaling this transaction
+		if (this->_isJournaling)
+		{
+			// Do we need to trim the undo list
+			if (this->_undoList.size() == this->_maxUndoSize) this->_undoList.pop_front();
+			// Clear the redo list
+			this->_redoList.clear();
+			// Pickle the transaction - and write it to the scratch file
+			std::streampos position = this->_scratchFile.tellp();
+			uint32_t sizeB;
+			ASSERT( this->PickleTransaction(sizeB) == S_OK );
+			// Add pickled transaction to undo list
+			JournalEntry entry = { position, sizeB, tag, true };
+			this->_undoList.push_back(entry);
+		}
+		// Clear the transaction lists
+		this->_createdObjects.clear();
+		this->_changedObjects.clear();
 		this->_deletedObjects.clear();
 	}
 	// We are good
@@ -1012,7 +1042,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)*changeIter;
 				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->value);
+				attribute->Set(changeRecord->oldValue);
 			}
 			// Is the changed attribute a REAL
 			else if (binAttribute->GetValueType() == ValueType::Real()) {
@@ -1020,7 +1050,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange<double>* changeRecord = (AttributeChange<double>*)*changeIter;
 				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->value);
+				attribute->Set(changeRecord->oldValue);
 			}
 			// Is the changed attribute a STRING
 			else if (binAttribute->GetValueType() == ValueType::String()) {
@@ -1028,7 +1058,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)*changeIter;
 				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->value);
+				attribute->Set(changeRecord->oldValue);
 			}
 			// Is the changed attribute a LONGPOINTER
 			else if (binAttribute->GetValueType() == ValueType::LongPointer()) {
@@ -1036,7 +1066,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
 				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->value);
+				attribute->Set(changeRecord->oldValue);
 			}
 			// Is the changed attribute a COLLECTION
 			else if (binAttribute->GetValueType() == ValueType::Collection()) {
@@ -1044,7 +1074,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange< std::list<Uuid> >* changeRecord = (AttributeChange< std::list<Uuid> >*)*changeIter;
 				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->value);
+				attribute->Set(changeRecord->oldValue);
 			}
 			// Is the changed attribute a POINTER
 			else if (binAttribute->GetValueType() == ValueType::Pointer()) {
@@ -1052,7 +1082,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
 				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->value);
+				attribute->Set(changeRecord->oldValue);
 			}
 			// Finally, delete the AttributeChange
 			delete *changeIter;
@@ -1062,11 +1092,11 @@ const Result_t BinFile::AbortTransaction(void) throw()
 		this->_changedObjects.clear();
 		
 		// Delete all Created objects
-		std::list<Uuid>::iterator createdIter = this->_createdObjects.begin();
+		std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 		while( createdIter != this->_createdObjects.end() )
 		{
 			// Fetch the created object
-			IndexHashIterator indexIter = this->FetchObject(*createdIter);
+			IndexHashIterator indexIter = this->FetchObject(createdIter->first);
 			ASSERT( indexIter != this->_indexHash.end() );
 			// Delete the object itself
 			BinObject* binObject = indexIter->second.object;
@@ -1074,7 +1104,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			delete binObject;
 			// Remove object info from cacheHash and cacheQueue
 			this->_indexHash.erase(indexIter);
-			this->_cacheQueue.remove(*createdIter);
+			this->_cacheQueue.remove(createdIter->first);
 			// Move on to the next created object
 			++createdIter;
 		}
@@ -1122,15 +1152,16 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	BinObject* binObject = BinObject::Create(metaObject, uuid);
 	ASSERT( binObject != NULL );
 
-	// Put the object into the index and queue
+	// Put the object into the index and queue (first make sure there is space)
+	this->CheckCacheSize();
 	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, 0 };
 	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
 	this->_cacheQueue.push_front(uuid);
 	// Put the object into the createdObjects list
-	this->_createdObjects.push_front(uuid);
+	this->_createdObjects.push_front(std::make_pair(uuid, metaID));
 	this->_openedObject = insertReturn.first;
-	// Set the new UUID
+	// Return the new UUID
 	newUuid = uuid;
 	return S_OK;
 }
@@ -1270,7 +1301,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t 
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->value = attribute->Get();
+	changeRecord->oldValue = attribute->Get();
+	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
 	// Update the attribute value
@@ -1294,7 +1326,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->value = attribute->Get();
+	changeRecord->oldValue = attribute->Get();
+	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
 	// Update the attribute value
@@ -1318,7 +1351,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->value = attribute->Get();
+	changeRecord->oldValue = attribute->Get();
+	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
 	// Update the attribute value
@@ -1354,7 +1388,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 		ASSERT( changeRecord != NULL );
 		changeRecord->uuid = this->_openedObject->first;
 		changeRecord->attrID = attrID;
-		changeRecord->value = attribute->Get();
+		changeRecord->oldValue = attribute->Get();
+		changeRecord->newValue = value;
 		// Add the change record into the changedObjects list
 		this->_changedObjects.push_back(changeRecord);
 		// Update the attribute value
@@ -1381,13 +1416,14 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 		ASSERT( changeRecord != NULL );
 		changeRecord->uuid = this->_openedObject->first;
 		changeRecord->attrID = attrID;
-		changeRecord->value = attribute->Get();
+		changeRecord->oldValue = attribute->Get();
+		changeRecord->newValue = value;
 		// Add the change record into the changedObjects list
 		this->_changedObjects.push_back(changeRecord);
 		// Update the current pointed-to object's backpointer collection (if idPair is valid)
-		if (changeRecord->value != Uuid::Null())
+		if (changeRecord->oldValue != Uuid::Null())
 		{
-			BinObject *binObject = this->FetchObject(changeRecord->value)->second.object;
+			BinObject *binObject = this->FetchObject(changeRecord->oldValue)->second.object;
 			ASSERT( binObject != NULL );
 			BinAttributeCollection *collection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
 			ASSERT( collection != NULL );	//	<-- Means pointed-to-object doesn't have backpointer collection for this type of pointer
@@ -1405,13 +1441,111 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 
 const Result_t BinFile::Undo(Uuid &tag) throw()
 {
-	ASSERT(false);
+	// Must not be in a transaction
+	if( this->_inTransaction ) return E_TRANSACTION;
+	ASSERT( this->_createdObjects.empty() );
+	ASSERT( this->_changedObjects.empty() );
+	ASSERT( this->_deletedObjects.empty() );
+	if( this->_undoList.empty() ) return S_OK;
+	// Unpickle journaled transaction
+	JournalEntry entry = this->_undoList.back();
+	ASSERT( this->UnpickleTransaction(entry) == S_OK );
+
+	// Ok, so we are doing something, mark the binFile as dirty
+	this->MarkDirty();
+	// Must restore all objects in deletedObjects list
+	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
+	while ( deletedIter != this->_deletedObjects.end() )
+	{
+		// Restore the object itself
+		// TODO: Restore the object itself
+		// Move to the next deleted object in the list
+		++deletedIter;
+	}
+	// Must unchange all changed attributes
+	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
+	while (changeIter != this->_changedObjects.end())
+	{
+		// Revert the attribute value change
+		// TODO: Revert the attribute value change
+		// Move on to the next change
+		++changeIter;
+	}
+	// Delete the created objects
+	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
+	while (createdIter != this->_createdObjects.end())
+	{
+		// Delete the object
+		// TODO: Delete the object
+		// Move on to the next created object
+		++createdIter;
+	}
+	// Clear the transaction lists
+	this->_createdObjects.clear();
+	this->_changedObjects.clear();
+	this->_deletedObjects.clear();
+	
+	// Move journal entry to redo list
+	this->_redoList.push_back(entry);
+	this->_undoList.pop_back();
+	// Return a tag (if any)
+	tag = entry.tag;
 	return S_OK;
 }
 
+
 const Result_t BinFile::Redo(Uuid &tag) throw()
 {
-	ASSERT(false);
+	// Must not be in a transaction
+	if( this->_inTransaction ) return E_TRANSACTION;
+	ASSERT( this->_createdObjects.empty() );
+	ASSERT( this->_changedObjects.empty() );
+	ASSERT( this->_deletedObjects.empty() );
+	// Make sure there is something to redo
+	if( this->_redoList.empty() ) return E_INVALID_USAGE;
+	// Unpickle the journal entry
+	JournalEntry entry = this->_redoList.back();
+	ASSERT( this->UnpickleTransaction(entry) == S_OK );
+
+	// Ok, so we are doing something, mark the binFile as dirty
+	this->MarkDirty();
+	// Create the created objects
+	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
+	while (createdIter != this->_createdObjects.end())
+	{
+		// Create the object
+		// TODO: Create the object
+		// Move on to the next created object
+		++createdIter;
+	}
+	// Changed objects
+	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
+	while (changeIter != this->_changedObjects.end())
+	{
+		// Make the attribute value change
+		// TODO: Make the attribute value change
+		// Move on to the next change
+		++changeIter;
+	}
+	// Must delete all objects in deletedObjects list
+	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
+	while ( deletedIter != this->_deletedObjects.end() )
+	{
+		// Delete the object itself
+		// TODO: Delete the object itself
+		// Move to the next deleted object in the list
+		++deletedIter;
+	}
+	// Clear the transaction lists
+	this->_createdObjects.clear();
+	this->_changedObjects.clear();
+	this->_deletedObjects.clear();
+
+	// Move entry to undoList from redoList
+	this->_undoList.push_back(entry);
+	this->_redoList.pop_back();
+	// Return a tag (if any)
+	tag = entry.tag;
 	return S_OK;
 }
 
