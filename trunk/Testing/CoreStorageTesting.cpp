@@ -5,6 +5,8 @@
 // Initialize the static members outside of the class
 CoreProject* ICoreStorageTest::coreProject = NULL;
 ICoreStorage* ICoreStorageTest::storage = NULL;
+Uuid ICoreStorageTest::atomUuid = Uuid::Null();
+Uuid ICoreStorageTest::attributeUuid = Uuid::Null();
 //CoreMetaProject* ICoreStorageParamTest::metaProject = NULL;
 //CoreProject* ICoreStorageParamTest::coreProject = NULL;
 //ICoreStorage* ICoreStorageParamTest::storage = NULL;
@@ -65,466 +67,622 @@ TEST(StaticICoreStorageTest,RegisterStorageFactory)
 }
 
 
-TEST(StaticICoreStorageTest,Create)
-{
-//	Result_t result = Create(const std::string &tag, const std::string &filename,
-//							 CoreMetaProject* metaProject, ICoreStorage* &storage);
-
-	// TODO: Create with simple filename (no directory path)
-
-	// TODO: Create with full path (directory + filename)
-}
-
-
 TEST(StaticICoreStorageTest,Open)
 {
 //	Result_t result = Open(const std::string &tag, const std::string &filename,
 //						   CoreMetaProject* metaProject, ICoreStorage* &storage);
 
 	// TODO: Open with simple filename (no directory path)
-	
+
 	// TODO: Open with full path (directory + filename)
-	
 }
 
 
 // --------------------------- ICoreStorage Standard --------------------------- //
 
-/*
-TEST_F(ICoreStorageTest,OpenObject)
-{
-	Uuid uuid = Uuid::Null();
-	// OpenObject outside of transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->OpenObject(uuid), E_TRANSACTION);
-
-	// OpenObject with transaction but with Uuid == NULL (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(uuid), E_INVALID_USAGE);
-
-	// OpenObject with transaction but with invalid Uuid (Expect E_NOTFOUND)
-	uuid = Uuid("{12345678-1234-1234-1234-123412341234}");
-	EXPECT_EQ( storage->OpenObject(uuid), E_NOTFOUND);
-
-	// OpenObject with transaction and valid uuid (Expect S_OK)
-	uuid = Uuid("{9D3F9884-FE60-409C-8FC1-45789193989B}");
-	EXPECT_EQ( storage->OpenObject(uuid), S_OK);
-	EXPECT_EQ( storage->CommitTransaction(), S_OK);
-}
-
-/*
-TEST_F(ICoreStorageTest,CloseObject)
-{
-	MetaObjIDPair idPair(METAID_NONE, OBJID_NONE);
-	// CloseObject outside of transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->CloseObject(), E_TRANSACTION );
-	
-	// CloseObject with transaction but no opened object (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->CloseObject(), S_OK );
-
-	// CloseObject with transaction and correctly opened object (Expect S_OK)
-	idPair.metaID = 102;
-	idPair.objID = 27;
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->CloseObject(), S_OK);
-	EXPECT_EQ( storage->CommitTransaction(), S_OK);
-}
-
 
 TEST_F(ICoreStorageTest,CreateObject)
 {
-	MetaObjIDPair idPair(DTID_ATOM, OBJID_NONE);
+	Result_t result;
+	Uuid newUuid(Uuid::Null());
 	// CreateObject with METAID_NONE (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->CreateObject(METAID_NONE, idPair.objID), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->CreateObject(METAID_NONE, newUuid), E_INVALID_USAGE ) << GetErrorInfo(result);
+	EXPECT_EQ( newUuid, Uuid::Null() );
 
 	// CreateObject outside of transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->CreateObject(DTID_ATOM, idPair.objID), E_TRANSACTION );
+	EXPECT_EQ( result = storage->CreateObject(DTID_ATOM, newUuid), E_TRANSACTION ) << GetErrorInfo(result);
+	EXPECT_EQ( newUuid, Uuid::Null() );
 
 	EXPECT_EQ( storage->BeginTransaction(), S_OK );
 	// CreateObject inside transaction with invalid MetaID (Expect E_METAID)
-	EXPECT_EQ( storage->CreateObject(123456, idPair.objID), E_METAID );
+	EXPECT_EQ( result = storage->CreateObject(123456, newUuid), E_METAID ) << GetErrorInfo(result);
+	EXPECT_EQ( newUuid, Uuid::Null() );
 
 	// CreateObject inside transaction with valid MetaID (Expect S_OK)
-	EXPECT_EQ( storage->CreateObject(DTID_ATOM, idPair.objID), S_OK );
+	EXPECT_EQ( result = storage->CreateObject(DTID_ATOM, newUuid), S_OK ) << GetErrorInfo(result);
 	// Make sure objID is not OBJID_NONE
-	EXPECT_NE( idPair.objID, OBJID_NONE );
+	EXPECT_NE( newUuid, Uuid::Null() );
 	// Close the object
-	EXPECT_EQ( storage->CloseObject(), S_OK );
+	EXPECT_EQ( result = storage->CloseObject(), S_OK ) << GetErrorInfo(result);
 	// Try opening the object again
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK );
+	EXPECT_EQ( result = storage->OpenObject(newUuid), S_OK ) << GetErrorInfo(result);
 	// Clean up and exit
-	EXPECT_EQ( storage->CloseObject(), S_OK );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK );
+	EXPECT_EQ( result = storage->CloseObject(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK ) << GetErrorInfo(result);
 
 	// Start another transaction and see if we can open the object (Expect E_NOTFOUND)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->OpenObject(idPair), E_NOTFOUND );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK );
+	EXPECT_EQ( result = storage->OpenObject(newUuid), E_NOTFOUND );
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK );
 
 	// Start another transaction and see if creation persists across commit transaction (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->CreateObject(DTID_ATOM, idPair.objID), S_OK );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CreateObject(DTID_ATOM, newUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(newUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK ) << GetErrorInfo(result);
+
+	// Set up the test Uuid for future tests
+	ICoreStorageTest::atomUuid = newUuid;
+}
+
+
+TEST_F(ICoreStorageTest,OpenObject)
+{
+	Result_t result;
+	Uuid uuid = Uuid::Null();
+	// OpenObject outside of transaction (Expect E_TRANSACTION)
+	EXPECT_EQ( result = storage->OpenObject(uuid), E_TRANSACTION) << GetErrorInfo(result);
+
+	// OpenObject with transaction but with Uuid == NULL (Expect E_INVALID_USAGE)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), E_INVALID_USAGE) << GetErrorInfo(result);
+
+	// OpenObject with transaction but with invalid Uuid (Expect E_NOTFOUND)
+	uuid = Uuid("{12345678-1234-1234-1234-123412341234}");
+	EXPECT_EQ( result = storage->OpenObject(uuid), E_NOTFOUND) << GetErrorInfo(result);
+
+	// OpenObject with transaction and valid uuid (Expect S_OK)
+	uuid = ICoreStorageTest::atomUuid;
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+}
+
+
+TEST_F(ICoreStorageTest,CloseObject)
+{
+	Result_t result;
+	Uuid uuid = Uuid::Null();
+	// CloseObject outside of transaction (Expect E_TRANSACTION)
+	EXPECT_EQ( result = storage->CloseObject(), E_TRANSACTION ) << GetErrorInfo(result);
+	
+	// CloseObject with transaction but no opened object (Expect S_OK)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CloseObject(), S_OK ) << GetErrorInfo(result);
+
+	// CloseObject with transaction and correctly opened object (Expect S_OK)
+	uuid = ICoreStorageTest::atomUuid;
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CloseObject(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,DeleteObject)
 {
+	Result_t result;
+	Uuid uuid = Uuid::Null();
 	// DeleteObject outside of transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->DeleteObject(), E_TRANSACTION );
+	EXPECT_EQ( result = storage->DeleteObject(), E_TRANSACTION ) << GetErrorInfo(result);
 
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK );
 	// DeleteObject without valid open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->DeleteObject(), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->DeleteObject(), E_INVALID_USAGE ) << GetErrorInfo(result);
 
-	MetaObjIDPair idPair(102,28);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK );
+	uuid = ICoreStorageTest::atomUuid;
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK ) << GetErrorInfo(result);
 	// DeleteObject with transaction and valid open object (Expect S_OK)
-	EXPECT_EQ( storage->DeleteObject(), S_OK );
+	EXPECT_EQ( result = storage->DeleteObject(), S_OK );
 	// Make sure there is no open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->DeleteObject(), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->DeleteObject(), E_INVALID_USAGE ) << GetErrorInfo(result);
 	// Make sure we can not open the deleted object
-	EXPECT_EQ( storage->OpenObject(idPair), E_NOTFOUND );
+	EXPECT_EQ( result = storage->OpenObject(uuid), E_NOTFOUND ) << GetErrorInfo(result);
+/*
 	// Make sure objects that were being pointed to no longer have backpointers
 	MetaObjIDPair bpPair(101,2);
-	EXPECT_EQ( storage->OpenObject(bpPair), S_OK );
+	EXPECT_EQ( result = storage->OpenObject(bpPair), S_OK ) << GetErrorInfo(result);
 	std::list<MetaObjIDPair> bpList;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_PARENT + ATTRID_COLLECTION, bpList), S_OK );
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PARENT + ATTRID_COLLECTION, bpList), S_OK ) << GetErrorInfo(result);
 	std::list<MetaObjIDPair>::iterator bpListIter = bpList.begin();
 	while (bpListIter != bpList.end()) {
 		// Make sure this pair does not refer to the idPair
 		EXPECT_NE( *bpListIter, idPair );
 		++bpListIter;
 	}
+*/
 	// Abort the transaction to restore the deleted object
-	EXPECT_EQ( storage->AbortTransaction(), S_OK );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK ) << GetErrorInfo(result);
 	// Make sure we can open the object
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK ) << GetErrorInfo(result);
 	// Make sure objects that are being pointed to now have backpointers
 	// ...
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK ) << GetErrorInfo(result);
 
 	// Delete the object through commit and test for it being gone
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK );
-	EXPECT_EQ( storage->DeleteObject(), S_OK );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->OpenObject(idPair), E_NOTFOUND );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->DeleteObject(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), E_NOTFOUND ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK ) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,BeginTransaction)
 {
+	Result_t result;
 	// BeginTransaction with no existing transaction (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
 
 	// BeginTransaction with an outstanding transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->BeginTransaction(), E_TRANSACTION );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), E_TRANSACTION ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK ) << GetErrorInfo(result);
 
 	// BeginTransaction after a commit transaction (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK ) << GetErrorInfo(result);
 
 	// BeginTransaction after an abort transaction (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK ) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,CommitTransaction)
 {
+	Result_t result;
 	// CommitTransaction with no existing transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->CommitTransaction(), E_TRANSACTION );
+	EXPECT_EQ( result = storage->CommitTransaction(), E_TRANSACTION ) << GetErrorInfo(result);
 
-	// TODO: Event (Create, Alter, Delete) ordering permutations
+	// TODO: Event (Create, Change, Delete) ordering permutations
 	//...
 }
 
 
 TEST_F(ICoreStorageTest,AbortTransaction)
 {
+	Result_t result;
 	// AbortTransaction with no existing transaction (Expect E_TRANSACTION)
-	EXPECT_EQ( storage->AbortTransaction(), E_TRANSACTION );
+	EXPECT_EQ( result = storage->AbortTransaction(), E_TRANSACTION ) << GetErrorInfo(result);
 
-	// TODO: Event (Create, Alter, Delete) ordering permutations
+	// TODO: Event (Create, Change, Delete) ordering permutations
 	//...
 }
 
 
 TEST_F(ICoreStorageTest,LongAttribute)
 {
+	Uuid uuid(Uuid::Null());
+	Result_t result;
 	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
 	int32_t value;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, value), E_TRANSACTION );
-	
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FCOPARENT, value), E_TRANSACTION ) << GetErrorInfo(result);
+
 	// GetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, value), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FCOPARENT, value), E_INVALID_USAGE ) << GetErrorInfo(result);
 
 	// GetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	MetaObjIDPair idPair(102,30);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(12345, value), E_ATTRID );
+	EXPECT_EQ( result = storage->CreateObject(DTID_ATOM, uuid), S_OK ) << GetErrorInfo(result);
+	ASSERT_NE( uuid, Uuid::Null() );
+	ICoreStorageTest::atomUuid = uuid;
+	EXPECT_EQ( result = storage->GetAttributeValue(12345, value), E_ATTRID ) << GetErrorInfo(result);
 
-	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match Long (Expect E_ATTVALTYPE)
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, value), E_ATTVALTYPE );
+	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, value), E_ATTVALTYPE ) << GetErrorInfo(result);
 
 	// GetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_ROLEMETA, value), S_OK );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PERMISSIONS, value), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
 	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
 	int32_t newValue = 34879;
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_TRANSACTION );
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_TRANSACTION ) << GetErrorInfo(result);
 
 	// SetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_INVALID_USAGE ) << GetErrorInfo(result);
 
 	// SetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->SetAttributeValue(12345, newValue), E_ATTRID );
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(12345, newValue), E_ATTRID ) << GetErrorInfo(result);
 
-	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match Long (Expect E_ATTVALTYPE)
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_NAME, newValue), E_ATTVALTYPE );
+	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, newValue), E_ATTVALTYPE ) << GetErrorInfo(result);
 
 	// SetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_ROLEMETA, newValue), S_OK );
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_PERMISSIONS, newValue), S_OK ) << GetErrorInfo(result);
 	// Test to make sure value was accepted
 	int32_t tmpValue;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_ROLEMETA, tmpValue), S_OK );
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PERMISSIONS, tmpValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( newValue, tmpValue );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 	// Test to make sure old value was restored
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_ROLEMETA, tmpValue), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PERMISSIONS, tmpValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( value, tmpValue );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 
 	// SetAttributeValue within a commit transaction (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_ROLEMETA, newValue), S_OK );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK);
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_ROLEMETA, tmpValue), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_PERMISSIONS, newValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PERMISSIONS, tmpValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( newValue, tmpValue );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,RealAttribute)
 {
-	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
 	double value;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_TRANSACTION );
+	Result_t result;
+	Uuid uuid(Uuid::Null());
+	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_TRANSACTION ) << GetErrorInfo(result);
 
 	// GetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_INVALID_USAGE ) << GetErrorInfo(result);
 
-	// TODO: GetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-//	MetaObjIDPair idPair(113,1);
-//	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-//	EXPECT_EQ( storage->GetAttributeValue(12345, value), E_ATTRID );
+	// GetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
+	EXPECT_EQ( result = storage->CreateObject(DTID_FLOATATTR, uuid), S_OK ) << GetErrorInfo(result);
+	ASSERT_NE( uuid, Uuid::Null() );
+	ICoreStorageTest::attributeUuid = uuid;
+	EXPECT_EQ( result = storage->GetAttributeValue(12345, value), E_ATTRID ) << GetErrorInfo(result);
 
-	// TODO: GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match Long (Expect E_ATTVALTYPE)
-//	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, value), E_ATTVALTYPE );
+	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, value), E_ATTVALTYPE ) << GetErrorInfo(result);
 
-	// TODO: GetAttributeValue with everything corret (Expect S_OK)
-//	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FLOATATTR, value), S_OK );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	// GetAttributeValue with everything corret (Expect S_OK)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, value), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+
+	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
+	double newValue = 34879.12341;
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_TRANSACTION ) << GetErrorInfo(result);
+
+	// SetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_INVALID_USAGE ) << GetErrorInfo(result);
+
+	// SetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(12345, newValue), E_ATTRID ) << GetErrorInfo(result);
+
+	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_ATTRPARENT, newValue), E_ATTVALTYPE ) << GetErrorInfo(result);
+
+	// SetAttributeValue with everything corret (Expect S_OK)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, newValue), S_OK ) << GetErrorInfo(result);
+	// Test to make sure value was accepted
+	double tmpValue;
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( newValue, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+	// Test to make sure old value was restored
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( value, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+
+	// SetAttributeValue within a commit transaction (Expect S_OK)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, newValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( newValue, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,StringAttribute)
 {
+	Result_t result;
+	Uuid uuid(Uuid::Null());
 	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
 	std::string value;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, value), E_TRANSACTION );
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, value), E_TRANSACTION ) << GetErrorInfo(result);
 	
 	// GetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, value), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, value), E_INVALID_USAGE ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	MetaObjIDPair idPair(102,31);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(12345, value), E_ATTRID );
+	EXPECT_EQ( result = storage->RootUuid(uuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(12345, value), E_ATTRID ) << GetErrorInfo(result);
 	
-	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match Long (Expect E_ATTVALTYPE)
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_META, value), E_ATTVALTYPE );
+	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PARGUID, value), E_ATTVALTYPE ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, value), S_OK );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, value), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 
 	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
-	std::string newValue = "Foo man choo";
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_NAME, newValue), E_TRANSACTION );
+	std::string newValue = "A quick brown fox jumps over the lazy dog.";
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, newValue), E_TRANSACTION ) << GetErrorInfo(result);
 
 	// SetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_NAME, newValue), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, newValue), E_INVALID_USAGE ) << GetErrorInfo(result);
 
 	// SetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->SetAttributeValue(12345, newValue), E_ATTRID );
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(12345, newValue), E_ATTRID ) << GetErrorInfo(result);
 
-	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match Long (Expect E_ATTVALTYPE)
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, newValue), E_ATTVALTYPE );
+	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_PARGUID, newValue), E_ATTVALTYPE ) << GetErrorInfo(result);
 
 	// SetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_NAME, newValue), S_OK );
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, newValue), S_OK ) << GetErrorInfo(result);
 	// Test to make sure value was accepted
 	std::string tmpValue;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, tmpValue), S_OK );
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, tmpValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( newValue, tmpValue );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 	// Test to make sure old value was restored
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, tmpValue), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, tmpValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( value, tmpValue );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 
 	// SetAttributeValue within a commit transaction (Expect S_OK)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_NAME, newValue), S_OK );
-	EXPECT_EQ( storage->CommitTransaction(), S_OK);
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, tmpValue), S_OK );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, newValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, tmpValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( newValue, tmpValue );
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
-TEST_F(ICoreStorageTest,BinaryAttribute)
+TEST_F(ICoreStorageTest,LongPointerAttribute)
 {
+	Result_t result;
+	Uuid uuid(Uuid::Null());
 	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
-	std::vector<unsigned char> value;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_TRANSACTION );
+	Uuid value;
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_TRANSACTION ) << GetErrorInfo(result);
 	
 	// GetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_INVALID_USAGE ) << GetErrorInfo(result);
 
 	// GetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	MetaObjIDPair idPair(METAID_ROOT,OBJID_ROOT);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(12345, value), E_ATTRID );
+	EXPECT_EQ( result = storage->RootUuid(uuid), S_OK ) << GetErrorInfo(result) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(12345, value), E_ATTRID ) << GetErrorInfo(result);
 
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, value), E_ATTVALTYPE ) << GetErrorInfo(result);
+	
+	// GetAttributeValue with everything corret (Expect S_OK)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PARGUID, value), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+	
+	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
+	Uuid newValue;
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, newValue), E_TRANSACTION ) << GetErrorInfo(result);
+	
+	// SetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, newValue), E_INVALID_USAGE ) << GetErrorInfo(result);
+	
+	// SetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(12345, newValue), E_ATTRID ) << GetErrorInfo(result);
+	
+	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, newValue), E_ATTVALTYPE ) << GetErrorInfo(result);
+	
+	// SetAttributeValue with everything corret (Expect S_OK)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_PARGUID, newValue), S_OK ) << GetErrorInfo(result);
+	// Test to make sure value was accepted
+	Uuid tmpValue;
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PARGUID, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( newValue, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+	// Test to make sure old value was restored
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PARGUID, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( value, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+	
+	// SetAttributeValue within a commit transaction (Expect S_OK)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_PARGUID, newValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(uuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_PARGUID, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( newValue, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,PointerAttribute)
 {
+	Result_t result;
+	Uuid attributeUuid = ICoreStorageTest::attributeUuid;
 	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
-	MetaObjIDPair pointerPair;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, pointerPair), E_TRANSACTION );
+	Uuid value(Uuid::Null());
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, value), E_TRANSACTION ) << GetErrorInfo(result);
 
 	// GetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
-	EXPECT_EQ( storage->BeginTransaction(), S_OK);
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, pointerPair), E_INVALID_USAGE );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, value), E_INVALID_USAGE ) << GetErrorInfo(result);
 	
-	// Open an object (an Atom) we know has a pointer attribute
-	MetaObjIDPair idPair(102,27);
-	EXPECT_EQ( storage->OpenObject(idPair), S_OK);
+	// Open an object (a FloatAttribute) we know has a pointer attribute
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
 	// Get a non-existant pointer attribute value (Foo attribute) (Expect E_ATTRID)
-	EXPECT_EQ( storage->GetAttributeValue(123, pointerPair), E_ATTRID);
+	EXPECT_EQ( result = storage->GetAttributeValue(123, value), E_ATTRID) << GetErrorInfo(result);
 
-	// Get an attribute that isn't a pointer (ATTRID_NAME) (Expect E_ATTVALTYPE)
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_NAME, pointerPair), E_ATTVALTYPE);
+	// Get an attribute that isn't a pointer (ATTRID_FLOATATTR) (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FLOATATTR, value), E_ATTVALTYPE) << GetErrorInfo(result);
 
-	// Get the pointer attribute value (ATTRID_FCOPARENT) (Expect S_OK)
-	MetaObjIDPair goodPair;
-	EXPECT_EQ( storage->GetAttributeValue(ATTRID_FCOPARENT, goodPair), S_OK);
+	// Get the pointer attribute value (ATTRID_ATTRPARENT) (Expect S_OK)
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, value), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( value, Uuid::Null() );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
 
-	// Set a non-existant pointer attribute value (Foo attribute) (Expect E_ATTRID)
-	EXPECT_EQ( storage->SetAttributeValue(123, pointerPair), E_ATTRID);
-
-	// Set an attribute that isn't a pointer (ATTRID_NAME) (Expect E_ATTVALTYPE)
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_NAME, pointerPair), E_ATTVALTYPE);
-
-	// Set a pointer attribute to point at an invalid object (7,1) (Expect E_NOTFOUND)
-	pointerPair.metaID = 7;
-	pointerPair.objID = 1;
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, pointerPair), E_NOTFOUND);
-
-	// Set a pointer attribute to point at an object that doesn't have a valid backpointer collection (Expect E_VALTYPE)
-	pointerPair.metaID = DTID_STRATTR;
-	pointerPair.objID = 17;
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, pointerPair), E_VALTYPE);
-
-	// Set pointer attribute correctly (Expect S_OK)
-	pointerPair.metaID = DTID_MODEL;
-	pointerPair.objID = 13;
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, pointerPair), S_OK);
-	// Make sure object that was being pointed to no longer has backpointer
-	//...
-	// Make sure object now being pointed to has backpointer
-	//...
-
-	// Set pointer attribute to NONE (Expect S_OK)
-	pointerPair.metaID = METAID_NONE;
-	pointerPair.objID = OBJID_NONE;
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, pointerPair), S_OK);
-
-	// Set pointer attribute from NONE back to original good idPair (Expect S_OK)
-	EXPECT_EQ( storage->SetAttributeValue(ATTRID_FCOPARENT, goodPair), S_OK);
+	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
+	Uuid atomUuid = ICoreStorageTest::atomUuid;
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_ATTRPARENT, atomUuid), E_TRANSACTION ) << GetErrorInfo(result);
 	
-	// Cleanup and be done
-	EXPECT_EQ( storage->CloseObject(), S_OK);
-	EXPECT_EQ( storage->AbortTransaction(), S_OK);
+	// SetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_ATTRPARENT, atomUuid), E_INVALID_USAGE ) << GetErrorInfo(result);
+
+	// SetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(12345, atomUuid), E_ATTRID ) << GetErrorInfo(result);
+	
+	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, atomUuid), E_ATTVALTYPE ) << GetErrorInfo(result);
+
+	// SetAttributeValue with everything corret (Float attribute now points to atom as parent) (Expect S_OK)
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_ATTRPARENT, atomUuid), S_OK ) << GetErrorInfo(result);
+	// Test to make sure value was accepted
+	Uuid tmpValue;
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( atomUuid, tmpValue );
+	// Make sure object now being pointed to has backpointer
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	// Get backpointer list (ATTRID_ATTRPARENT) and make sure it has uuid in it
+	std::list<Uuid> backpointers;
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT+ATTRID_COLLECTION, backpointers), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( backpointers.size(), 1 );
+	EXPECT_EQ( backpointers.front(), attributeUuid );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+
+	// Test to make sure old values (both forward and backpointer) were restored
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( value, tmpValue );
+	// Make sure object that was being pointed to no longer has backpointer
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	// Get backpointer list (ATTRID_ATTRPARENT) and make sure it is empty
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT+ATTRID_COLLECTION, backpointers), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( backpointers.size(), 0 );
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+	
+	// SetAttributeValue within a commit transaction (Expect S_OK)
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_ATTRPARENT, atomUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, tmpValue), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( atomUuid, tmpValue );
+	EXPECT_EQ( result = storage->AbortTransaction(), S_OK) << GetErrorInfo(result);
+
+	// Clean up the atom's connection to the root object
+	Uuid rootUuid;
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->RootUuid(rootUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FCOPARENT, rootUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,Save)
 {
-	// TODO: Save with "" as filename
+	Result_t result;
+	// Save with "" (existing filename) as filename
+	EXPECT_EQ( result = storage->Save(""), S_OK ) << GetErrorInfo(result);
+	// Make sure the three objects are there and correct
+	Uuid rootUuid(Uuid::Null());
+	EXPECT_EQ( result = storage->RootUuid(rootUuid), S_OK ) << GetErrorInfo(result);
+	std::vector<Uuid> objectVector;
+	EXPECT_EQ( result = storage->ObjectVector(objectVector), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( objectVector.size(), 3 );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 	
-	// TODO: Save with filename as existing file
-	
-	// TODO: Save with simple filename (no directory path)
-	
-	// TODO: Save with full path (directory + filename)
-	
-	// TODO: Save with objects in cache and scratch file and changes
-	
+	//Save with simple filename (no directory path)
+	EXPECT_EQ( result = storage->Save("testOrama.mga"), S_OK ) << GetErrorInfo(result);
+	// Make sure the objects are there and correct
+	EXPECT_EQ( result = storage->ObjectVector(objectVector), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( objectVector.size(), 3 );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+
+	// Save with full path (directory + filename) from simple path
+//	EXPECT_EQ( result = storage->Save("../testOrama.mga"), S_OK ) << GetErrorInfo(result);
+
+	// TODO: Save from full path (directory + filename) to simple path
+
+	// Clean up all of the saves
+	EXPECT_EQ( result = storage->Save("tmpfile.mga"), S_OK ) << GetErrorInfo(result);
+	remove("testOrama.mga");
+	// Make sure the objects are there and correct
+	EXPECT_EQ( result = storage->ObjectVector(objectVector), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( objectVector.size(), 3 );
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 }
 
 
 TEST_F(ICoreStorageTest,CacheSize)
 {
 	// TODO: Perform with cacheSize == 1
-	
+
 	// TODO: Perform with cacheSize == 2
-	
+
 	// TODO: Perform with cacheSize == 8
-	
+
 	// TODO: Perform with cacheSize == 64
-	
+
 	// TODO: Perform with cacheSize == 256
-	
-	// TODO: Perform with cacheSize == unlimited	
+
+	// TODO: Perform with cacheSize == unlimited
+
+	// TODO: Save with objects in cache and scratch file and changes
 }
 
 
 // --------------------------- ICoreStorage Parameterized --------------------------- //
 
-
+/*
 TEST_P(ICoreStorageParamTest,MetaObject)
 {
 	CoreMetaObject* coreMetaObject = NULL;

@@ -114,18 +114,6 @@ struct Uuid_HashFunc
 	}
 };
 
-/*
-struct Uuid_EqualKey
-{
-	bool operator()(const Uuid &a, const Uuid &b) const { return a == b; }
-};
-
-
-struct Uuid_Less
-{
-	bool operator()(const Uuid &a, const Uuid &b) const { return a < b; }
-};
-*/
 
 /******************************************/
 

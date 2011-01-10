@@ -140,11 +140,10 @@ const Result_t CoreProject::Create(const std::string &connection, CoreMetaProjec
 		Result_t retVal = ICoreStorage::Create(con, cleanFileName, coreMetaProject, coreStorage);
 		if ( retVal != S_OK ) return retVal;
 	}
-	else ASSERT( false );	
 	if( coreStorage == NULL )
 	{
 		// Do something to signal a failure to create CoreStorage
-		return E_EXCEPTION;
+		return E_UNKNOWN_STORAGE;
 	}
 	// Create the new CoreProject
 	project = new CoreProject(coreMetaProject, coreStorage);

@@ -105,7 +105,7 @@ protected:
 public:
 	virtual ~BinAttribute()							{ }				//!< Default destructor
 	// Static methods to read an attribute in from disk or create a blank new one
-	static BinAttribute* Read(BinObject *parent, char* stream);
+	static BinAttribute* Read(BinObject *parent, char* &stream);	//!< Read an attribute in from buffer
 	static BinAttribute* Create(BinObject *parent, const ValueType &valueType, const AttrID_t &attrID);
 
 	inline const AttrID_t GetAttributeID(void) const				{ return this->_attrID; }
@@ -194,18 +194,19 @@ private:
 	static const Result_t Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage);
 
 	// Private Methods
-	const Result_t Load(void);														//!< Load an MGA in from file (really just gets index ready)
+	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
 	const Result_t ReadIndex(std::fstream &stream, const uint64_t &objCount);		//!< Read an index from an MGA file
 	const Result_t WriteIndex(std::fstream &stream, const uint64_t &objCount) const;//!< Write an index into an MGA file
 	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &objCount);	//!< Read the options
 	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &objCount) const;		//!< Write the options
-	IndexHashIterator FetchObject(const Uuid &uuid);								//!< Bring an object into the cache
+	IndexHashIterator FetchObject(const Uuid &uuid);				//!< Bring an object into the cache
 	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);//!< Move object from file to cache
 	void ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);	//!< Move object to scratch file
-	void CheckCacheSize(void);														//!< Make sure the cache is not getting too big
-	void FlushCache(void);															//!< Clear the cache of all objects (no writing to any file)
-	const Result_t PickleTransaction(uint32_t &sizeB) throw();						//!<
-	const Result_t UnpickleTransaction(const JournalEntry &entry) throw();			//!<
+	void CheckCacheSize(void);										//!< Make sure the cache is not getting too big
+	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
+	const Result_t PickleTransaction(uint32_t &sizeB);				//!<
+	const Result_t UnpickleTransaction(const JournalEntry &entry);	//!<
+	const Result_t PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, const Uuid &oldVal, const Uuid &newVal);	//!< Update a pointer & backpointers
 
 public:
 	virtual ~BinFile();

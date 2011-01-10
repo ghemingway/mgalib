@@ -11,35 +11,41 @@
 #include <gtest/gtest.h>
 
 
-
 /*** Externally Defined Functions & Variables ***/
 extern std::string testFileName;
-
 
 
 class ICoreStorageTest : public ::testing::Test {
 protected:
 	// Static class values
-	static CoreProject			*coreProject;
 	static ICoreStorage			*storage;
+	static CoreProject			*coreProject;
+	static Uuid					atomUuid, attributeUuid;
 public:
 	static void SetUpTestCase()
 	{
+		Result_t result;
 		// Get everything up to storage ready
-//		CoreMetaProject	*coreMetaProject = NULL;
-//		Result_t result = CreateMGACoreMetaProject(coreMetaProject);
-//		ASSERT_EQ( result, S_OK );
-//		ASSERT_TRUE( coreMetaProject != NULL );
-//		result = CoreProject::OpenProject("MGA=ESMoLv3.mga", coreMetaProject, ICoreStorageTest::coreProject);
-//		ASSERT_EQ( result, S_OK );
-//		// Get the ICoreStorage pointer
-//		ICoreStorageTest::coreProject->Storage(ICoreStorageTest::storage);
+		CoreMetaProject	*coreMetaProject = NULL;
+		EXPECT_EQ( result = CreateMGACoreMetaProject(coreMetaProject), S_OK ) << GetErrorInfo(result);
+		ASSERT_TRUE( coreMetaProject != NULL );
+		
+		// Create a new test coreProject
+		EXPECT_EQ( result = CoreProject::Create("MGA=tmpfile.mga", coreMetaProject, ICoreStorageTest::coreProject), S_OK ) << GetErrorInfo(result);
+		ASSERT_TRUE( ICoreStorageTest::coreProject != NULL );
+		// Get the ICoreStorage pointer
+		ICoreStorageTest::coreProject->Storage(ICoreStorageTest::storage);
 	}
 	
 	static void TearDownTestCase()
 	{
 		// Close the projects and delete the objects
-		if (ICoreStorageTest::coreProject != NULL) delete ICoreStorageTest::coreProject;
+		if (ICoreStorageTest::coreProject != NULL)
+		{
+			delete ICoreStorageTest::coreProject;
+		}
+		ICoreStorageTest::atomUuid = Uuid::Null();
+		ICoreStorageTest::attributeUuid = Uuid::Null();
 		ICoreStorageTest::storage = NULL;
 		ICoreStorageTest::coreProject = NULL;
 	}
