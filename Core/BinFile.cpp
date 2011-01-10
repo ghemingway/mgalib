@@ -198,7 +198,7 @@ public:
 // --------------------------- BinAttr ---------------------------
 
 
-BinAttribute *BinAttribute::Read(BinObject *parent, char *stream)
+BinAttribute *BinAttribute::Read(BinObject *parent, char* &stream)
 {
 	ASSERT( parent != NULL );
 	ASSERT( stream != NULL );
@@ -700,7 +700,8 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid)
 {
 	// Is the object in index
 	IndexHashIterator indexIter = this->_indexHash.find(uuid);
-	ASSERT( indexIter != this->_indexHash.end() );
+	// Did we not find it in the index?
+	if( indexIter == this->_indexHash.end() ) return indexIter;
 	//Is the object in the cache
 	if (indexIter->second.location == IndexLocation::Cache())
 	{
@@ -765,6 +766,9 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	}
 	BinObject* binObject = BinObject::Read(this->_metaProject, buffer, uuid);
 	ASSERT( binObject != NULL );
+	// Set the object and mark it as in cache
+	indexEntry.object = binObject;
+	indexEntry.location = IndexLocation::Cache();
 	// Make sure there is space in the cache
 	this->CheckCacheSize();
 	// Move the object to the cache and to the front of the cacheQueue
@@ -861,7 +865,7 @@ void BinFile::FlushCache(void)
 }
 
 
-const Result_t BinFile::PickleTransaction(uint32_t &sizeB) throw()
+const Result_t BinFile::PickleTransaction(uint32_t &sizeB)
 {
 	// How big is this transaction (deleted, changed, created)
 	sizeB = 0;
@@ -896,7 +900,7 @@ const Result_t BinFile::PickleTransaction(uint32_t &sizeB) throw()
 }
 
 
-const Result_t BinFile::UnpickleTransaction(const JournalEntry &entry) throw()
+const Result_t BinFile::UnpickleTransaction(const JournalEntry &entry)
 {
 	// Is the entry in the scratch file or input file
 	// TODO: Locate entry
@@ -906,6 +910,37 @@ const Result_t BinFile::UnpickleTransaction(const JournalEntry &entry) throw()
 	// TODO: Support compression
 	// Deserialize the three transaction lists (created, changed, deleted) to memory
 	// TODO: Deserialize the journal entry
+	return S_OK;
+}
+
+
+const Result_t BinFile::PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, const Uuid &oldValue, const Uuid &newValue)
+{
+	// Make sure value is valid (either points to a valid object or NULL - and any backpointer is valid)
+	BinAttributeCollection *newCollection = NULL;
+	if (newValue != Uuid::Null())
+	{
+		// Can we fetch this object - if not it is an error
+		IndexHashIterator newObjecterIterator = this->FetchObject(newValue);
+		if (newObjecterIterator == this->_indexHash.end()) return E_NOTFOUND;
+		// Does the object have a correct backpointer collection
+		BinObject* binObject = newObjecterIterator->second.object;
+		ASSERT( binObject != NULL );
+		newCollection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
+		// Make sure the backpointer collection exists
+		if (newCollection == NULL) return E_VALTYPE;
+	}
+	// Update the current pointed-to object's backpointer collection (if idPair is valid)
+	if (oldValue != Uuid::Null())
+	{
+		BinObject *binObject = this->FetchObject(oldValue)->second.object;
+		ASSERT( binObject != NULL );
+		BinAttributeCollection *collection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
+		ASSERT( collection != NULL );	//	<-- Means pointed-to-object doesn't have backpointer collection for this type of pointer
+		collection->Remove(uuid);
+	}
+	// Update the pointed-to object's backpointer collection (if it points to something valid)
+	if (newCollection != NULL) newCollection->Add(uuid);
 	return S_OK;
 }
 
@@ -1025,7 +1060,6 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	IndexHashIterator hashIter = this->_indexHash.begin();
 	while (hashIter != this->_indexHash.end())
 	{
-		ASSERT( hashIter->second.object != NULL );
 		// Fetch the object into memory
 		this->FetchObject(hashIter->first);
 		// Write the object out
@@ -1216,11 +1250,8 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			}
 			// Is the changed attribute a COLLECTION
 			else if (binAttribute->GetValueType() == ValueType::Collection()) {
-				BinAttributeCollection *attribute = (BinAttributeCollection*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange< std::list<Uuid> >* changeRecord = (AttributeChange< std::list<Uuid> >*)*changeIter;
-				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->oldValue);
+				// Never should be here!
+				ASSERT(false);
 			}
 			// Is the changed attribute a POINTER
 			else if (binAttribute->GetValueType() == ValueType::Pointer()) {
@@ -1228,6 +1259,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( attribute != NULL );
 				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
 				ASSERT( changeRecord != NULL );
+				this->PointerUpdate(binAttribute->GetAttributeID(), changeRecord->uuid, changeRecord->newValue, changeRecord->oldValue);
 				attribute->Set(changeRecord->oldValue);
 			}
 			// Finally, delete the AttributeChange
@@ -1526,60 +1558,29 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 	// Quick check to see if there is a no-change requested
 	if (attribute->Get() == value) return S_OK;
-	// Is this a LongPointer
-	if (binAttribute->GetValueType() == ValueType::LongPointer())
+	// Must save old value
+	AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
+	ASSERT( changeRecord != NULL );
+	changeRecord->uuid = this->_openedObject->first;
+	changeRecord->attrID = attrID;
+	changeRecord->oldValue = attribute->Get();
+	changeRecord->newValue = value;
+	// Is this a pointer or longPointer
+	if ( binAttribute->GetValueType() == ValueType::Pointer() )
 	{
-		// Must save old value
-		AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
-		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-		changeRecord->oldValue = attribute->Get();
-		changeRecord->newValue = value;
-		// Add the change record into the changedObjects list
-		this->_changedObjects.push_back(changeRecord);
-		// Update the attribute value
-		attribute->Set(value);
-	}
-	else if (binAttribute->GetValueType() == ValueType::Pointer())
-	{
-		// Make sure value is valid (either a valid object or NULL - and pointed to has good backpointer collection)
-		BinAttributeCollection *newCollection = NULL;
-		if (value != Uuid::Null())
+		// Try to update the attribute value for a pointer type
+		Result_t result = this->PointerUpdate(binAttribute->GetAttributeID(), changeRecord->uuid,changeRecord->oldValue, changeRecord->newValue);
+		if (result != S_OK)
 		{
-			// Can we fetch this object - if not it is an error
-			IndexHashIterator newObjecterIterator = this->FetchObject(value);
-			if (newObjecterIterator == this->_indexHash.end()) return E_NOTFOUND;
-			// Does the object have a correct backpointer collection
-			BinObject* binObject = newObjecterIterator->second.object;
-			ASSERT( binObject != NULL );
-			newCollection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
-			// Make sure the backpointer collection exists
-			if (newCollection == NULL) return E_VALTYPE;
-		}
-		// Must save old value
-		AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
-		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-		changeRecord->oldValue = attribute->Get();
-		changeRecord->newValue = value;
-		// Add the change record into the changedObjects list
-		this->_changedObjects.push_back(changeRecord);
-		// Update the current pointed-to object's backpointer collection (if idPair is valid)
-		if (changeRecord->oldValue != Uuid::Null())
-		{
-			BinObject *binObject = this->FetchObject(changeRecord->oldValue)->second.object;
-			ASSERT( binObject != NULL );
-			BinAttributeCollection *collection = (BinAttributeCollection*)binObject->GetAttribute(attrID + ATTRID_COLLECTION);
-			ASSERT( collection != NULL );	//	<-- Means pointed-to-object doesn't have backpointer collection for this type of pointer
-			collection->Remove(this->_openedObject->first);
-		}
-		// Update the actual pointer value
-		attribute->Set(value);
-		// Update the pointed-to object's backpointer collection (if it points to something valid)
-		if (newCollection != NULL) newCollection->Add(this->_openedObject->first);
+			// Delete the change record and return the error code
+			delete changeRecord;
+			return result;
+		}		
 	}
+	// Now set the value
+	attribute->Set(value);
+	// Add the change record into the changedObjects list
+	this->_changedObjects.push_back(changeRecord);
 	// All is good...
 	return S_OK;
 }
