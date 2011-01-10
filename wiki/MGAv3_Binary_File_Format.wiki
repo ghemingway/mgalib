@@ -11,6 +11,12 @@ Bytes (all ordered little endian):
 
 0-15: Uuid (16 bytes) - The Uuid of the corresponding !MetaProject.
 
+16-23: Location of Options (8 bytes as uint64_t)
+
+24-27: Size of Options (4 bytes as uint32_t)
+
+== Options ==
+
 16-19: Size of Index (4 bytes as uint32_t)
 
 20-35: Uuid(16 bytes) - The Uuid of the root object for this project.
