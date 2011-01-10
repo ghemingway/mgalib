@@ -16,6 +16,7 @@
 #include <memory>
 #else
 #include <ext/hash_map>
+#include <tr1/unordered_map>
 #include <tr1/memory>
 #include <memory>
 #endif
@@ -61,18 +62,13 @@ extern void _SplitPath(const std::string &path, std::string &directory, std::str
 namespace MGA {
 
 
-//typedef long guid_t;
 typedef int16_t MetaID_t;
-//typedef uint32_t ObjID_t;
 typedef int16_t AttrID_t;
 
 
 const MetaID_t METAID_NONE = 0;
 const MetaID_t METAID_ROOT = 1;
-//const ObjID_t OBJID_NONE = 0;
-//const ObjID_t OBJID_ROOT = 1;
 const AttrID_t ATTRID_NONE = 0;
-//const AttrID_t ATTRID_LOCK = 1;
 const AttrID_t ATTRID_NAME = 2;
 const AttrID_t ATTRID_FATHER = 3;
 const AttrID_t ATTRID_COLLECTION = 10000;
@@ -83,7 +79,6 @@ private:
 	uint8_t		_data[16];								//!< Just 16 bytes of data - that is all
 public:
 	Uuid();												//!< Default constructor creates new unique Uuid
-//	Uuid(const GUID_t &guid);							//!< To be removed
 	Uuid(const std::vector<unsigned char> &vector);		//!< Binary vector constructor
 	Uuid(const char* string);							//!< Char string constructor
 	Uuid(const std::string &string);					//!< Std::string constructor
@@ -114,32 +109,12 @@ struct Uuid_HashFunc
 	size_t operator()(const Uuid &uuid) const
 	{
 		size_t returnValue;
-		if (sizeof(size_t) == 4)
-		{
-			// Copy over bytes 0, 4, 8, & 12
-			memcpy(&returnValue, &uuid, 1);
-			memcpy(&returnValue+1, &uuid+4, 1);
-			memcpy(&returnValue+2, &uuid+8, 1);
-			memcpy(&returnValue+3, &uuid+12, 1);
-		}
-		else if (sizeof(size_t) == 8)
-		{
-			// Copy over bytes 0, 2, 4, 6, 8, 10, 12, 14
-			memcpy(&returnValue, &uuid, sizeof(size_t));
-//			memcpy(&returnValue, &uuid, 1);
-//			memcpy(&returnValue+1, &uuid+2, 1);
-//			memcpy(&returnValue+2, &uuid+4, 1);
-//			memcpy(&returnValue+3, &uuid+6, 1);
-//			memcpy(&returnValue+4, &uuid+8, 1);
-//			memcpy(&returnValue+5, &uuid+10, 1);
-//			memcpy(&returnValue+6, &uuid+12, 1);
-//			memcpy(&returnValue+7, &uuid+14, 1);
-		}
+		memcpy(&returnValue, &uuid, sizeof(size_t));
 		return returnValue;
 	}
 };
 
-
+/*
 struct Uuid_EqualKey
 {
 	bool operator()(const Uuid &a, const Uuid &b) const { return a == b; }
@@ -150,7 +125,7 @@ struct Uuid_Less
 {
 	bool operator()(const Uuid &a, const Uuid &b) const { return a < b; }
 };
-
+*/
 
 /******************************************/
 
