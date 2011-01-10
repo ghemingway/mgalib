@@ -76,6 +76,25 @@ template <> inline void _Write<std::list<Uuid> >(char* &stream, const std::list<
 }
 
 
+// --------------------------- UTF-8 Encoding Check --------------------------- //
+
+
+static inline const Result_t _CheckUTF8(const std::string &value)
+{
+	std::string localValue = value;
+	Result_t result = S_OK;
+	// Make sure this is a valid UTF-8 encoding
+	std::string::iterator endIter = utf8::find_invalid(localValue.begin(), localValue.end());
+	if (endIter != localValue.end())
+	{
+		std::cout << "Invalid UTF-8 encoding detected!\n";
+		std::cout << "This part is fine: " << std::string(localValue.begin(), endIter) << "\n";
+		result = E_BADUTF8STRING;
+	}
+	return result;
+}	
+
+
 // --------------------------- BinAttributeBase --------------------------- //
 
 
@@ -128,16 +147,8 @@ public:
 	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size()); }
 	virtual inline const Result_t Set(const std::string &value)
 	{
-		std::string localValue = value;
-		// Make sure this is a valid UTF-8 encoding
-		std::string::iterator endIter = utf8::find_invalid(localValue.begin(), localValue.end());
-		if (endIter != localValue.end())
-		{
-			std::cout << "Invalid UTF-8 encoding detected!\n";
-			std::cout << "This part is fine: " << std::string(localValue.begin(), endIter) << "\n";
-			return E_BADUTF8STRING;
-		}
-		
+		// Make sure string is valid UTF-8
+		if (_CheckUTF8(value) != S_OK) return E_BADUTF8STRING;
 		// Get the line length (at least for the valid part)
 		this->_value = value;
 		this->_parent->MarkDirty();
@@ -447,7 +458,7 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_META_NOTOPEN;
 	// Make sure filename is valid UTF-8
-	// TODO: UTF-8 validation
+	if (_CheckUTF8(filename) != S_OK) return E_BADUTF8STRING;
 	// Create a BinFile object with the given name and metaProject
 	BinFile *binFile = new BinFile(filename, coreMetaProject);
 	ASSERT( binFile != NULL );
@@ -493,7 +504,7 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_INVALID_USAGE;
 	// Make sure filename is valid UTF-8
-	// TODO: UTF-8 validation
+	if (_CheckUTF8(filename) != S_OK) return E_BADUTF8STRING;
 	// Clean up the filename a bit (handle ~ and such)
 	std::string tmpName, directory;
 	_SplitPath(filename, directory, tmpName);
@@ -541,13 +552,15 @@ const Result_t BinFile::Load(void)
 		return E_FILEOPEN;
 	}
 
-	// Read the project Uuid and index object count from the file
+	// Read the preamble (metaProject Uuid, options position and options size)
 	Uuid uuid;
-	uint32_t objCount;
-	char buffer[sizeof(Uuid) + sizeof(uint32_t) + sizeof(Uuid)], *stream = buffer;
-	this->_inputFile.read(buffer, sizeof(Uuid) + sizeof(uint32_t));
-	_Read(stream, uuid);
-	// Make sure the Uuid matches 
+	uint32_t preambleSizeB = sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t);
+	std::vector<char> buffer;
+	buffer.reserve(preambleSizeB);
+	char* bufferPointer = &buffer[0];
+	this->_inputFile.read(&buffer[0], preambleSizeB);
+	_Read(bufferPointer, uuid);
+	// Make sure the Uuid matches that of the metaProject
 	if( !(uuid == this->_metaProjectUuid) )
 	{
 		// Close the files
@@ -555,9 +568,23 @@ const Result_t BinFile::Load(void)
 		this->_scratchFile.close();
 		return E_PROJECT_MISMATCH;
 	}
+
+	// Read the options information
+	std::streampos startOfOptions, startOfIndex;
+	uint64_t objectCount;
+	uint32_t optionsSizeB;
+	_Read(bufferPointer, startOfOptions);
+	_Read(bufferPointer, optionsSizeB);
+	this->_inputFile.seekg(startOfOptions);
+	if ( this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, objectCount) != S_OK )
+	{
+		// Error in reading options
+		ASSERT(false);
+	}
+
 	// Read the object index
-	_Read(stream, objCount);
-	Result_t result = this->ReadIndex(this->_inputFile, objCount);
+	this->_inputFile.seekg(startOfIndex);
+	Result_t result = this->ReadIndex(this->_inputFile, objectCount);
 	// Do we have a good index
 	if (result != S_OK)
 	{
@@ -566,15 +593,13 @@ const Result_t BinFile::Load(void)
 		this->_scratchFile.close();
 		return result;
 	}
-	// Finally, read the root object Uuid
-	_Read(stream, this->_rootUuid);
 	// Open went well (make sure to clear the openedObject)
 	this->_openedObject = this->_indexHash.end();
 	return S_OK;
 }
 
 
-const Result_t BinFile::ReadIndex(std::fstream &stream, const uint32_t &objCount)
+const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &objCount)
 {
 	ASSERT( stream.is_open() );
 	// Therefore, the index is how large (Uuid, Position, Size)
@@ -603,7 +628,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint32_t &objCount
 }
 
 
-const Result_t BinFile::WriteIndex(std::fstream &stream, const uint32_t &objCount) const
+const Result_t BinFile::WriteIndex(std::fstream &stream, const uint64_t &objCount) const
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
@@ -627,6 +652,47 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const uint32_t &objCoun
 	// Now write out the data to the file
 	stream.write(&indexBuffer[0], indexSizeB);
 	return S_OK;
+}
+
+
+const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &objCount)
+{
+	ASSERT( stream.is_open() );
+	// Create a correctly sized input buffer
+	std::vector<char> buffer;
+	buffer.reserve(sizeB);
+	char* bufferPointer = &buffer[0];
+	// Read data from the stream
+	stream.read(&buffer[0], sizeB);
+	// Parse the options
+	uint8_t tmpVal;
+	_Read<uint8_t>(bufferPointer, tmpVal);
+	this->_isEncrypted = tmpVal;
+	_Read<uint8_t>(bufferPointer, tmpVal);
+	this->_isCompressed = tmpVal;
+	_Read(bufferPointer, this->_rootUuid);
+	_Read(bufferPointer, startOfIndex);
+	_Read(bufferPointer, objCount);
+	return S_OK;
+}
+
+
+const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &objCount) const
+{
+	ASSERT( stream.is_open() );
+	// Create a correctly sized output buffer
+	uint32_t sizeB = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint64_t);
+	std::vector<char> buffer;
+	buffer.reserve(sizeB);
+	char* bufferPointer = &buffer[0];
+	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
+	_Write<uint8_t>(bufferPointer, this->_isCompressed);
+	_Write(bufferPointer, this->_rootUuid);
+	_Write(bufferPointer, startOfIndex);
+	_Write(bufferPointer, objCount);
+	// Write it out to the stream
+	stream.write(&buffer[0], sizeB);
+	return sizeB;
 }
 
 
@@ -935,6 +1001,8 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	ASSERT( this->_metaProject != NULL );
 	ASSERT( this->_inputFile.is_open() );
 	ASSERT( this->_scratchFile.is_open() );
+	// Make sure filename is valid UTF-8
+	if (_CheckUTF8(filename) != S_OK) return E_BADUTF8STRING;
 	// Passing an empty filename implies saving the file with the current filename
 	std::string saveAs, directory;
 	if (filename == "") saveAs = this->_filename;
@@ -946,26 +1014,13 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	std::string tmpFilename = directory + "~_" + saveAs;
 	std::fstream outputFile;
 	outputFile.open(tmpFilename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-	ASSERT( !outputFile.fail() );
-	ASSERT( outputFile.is_open() );
+	if( outputFile.fail() || !outputFile.is_open() ) return E_FILEOPEN;
 	// Save implies commiting any open transaction
 	if (this->_inTransaction) this->CommitTransaction();
 
-	// Write out the metaProjectID + number of objects in the index
-	std::vector<char> buffer;
-	buffer.reserve(sizeof(Uuid) + sizeof(uint32_t) + sizeof(Uuid));
-	char *bufferPointer = &buffer[0];
-	uint32_t objectCount = this->_indexHash.size();
-	_Write(bufferPointer, this->_metaProjectUuid);
-	_Write(bufferPointer, objectCount);
-	_Write(bufferPointer, this->_rootUuid);
-	outputFile.write(&buffer[0], sizeof(Uuid) + sizeof(uint32_t) + sizeof(Uuid));
-	// Move streampos to end of what will be the index
-	int indexSizeB = objectCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
-	std::streampos startOfIndex = outputFile.tellp();
-	// Move the write pointer to the end of the index
-	outputFile.seekp(startOfIndex + (std::streampos)indexSizeB);
-
+	// Move the write pointer to just after the preamble
+	size_t preambleSize = sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t);
+	outputFile.seekp(preambleSize);
 	// Write out all of the objects
 	IndexHashIterator hashIter = this->_indexHash.begin();
 	while (hashIter != this->_indexHash.end())
@@ -979,27 +1034,38 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 		++hashIter;
 	}
 
-	// Now that we know where everything will be, write out the index
-	outputFile.seekp(startOfIndex);
+	// Write out the object index
+	std::streampos startOfIndex = outputFile.tellp();
+	uint64_t objectCount = this->_indexHash.size();
 	this->WriteIndex(outputFile, objectCount);
+
+	// Write out the options
+	std::streampos startOfOptions = outputFile.tellp();
+	uint32_t optionsSize = this->WriteOptions(outputFile, startOfIndex, objectCount);
+
+	// Write out the preamble (metaProject Uuid + options location and options size)
+	std::vector<char> buffer;
+	buffer.reserve(preambleSize);
+	char* bufferPointer = &buffer[0];
+	_Write(bufferPointer, this->_metaProjectUuid);
+	_Write(bufferPointer, startOfOptions);
+	_Write(bufferPointer, optionsSize);
+	outputFile.seekp(0);
+	outputFile.write(&buffer[0], preambleSize);
+
 	// Close the file and we are done with it
 	outputFile.close();
 	ASSERT( !outputFile.fail() );	//E_FILEOPEN;
-
 	// Close and delete scratch file
 	this->_scratchFile.close();
 	ASSERT( !this->_scratchFile.fail() );	//E_FILEOPEN
+	// TODO: Take possible directory name into account
 	std::string scratchFileName = "~" + this->_filename;
 	remove(scratchFileName.c_str());
-
-	// Are we overwriting the original inputfile
 	this->_inputFile.close();
+	// Are we overwriting the original inputfile, then delete it
 	ASSERT( !this->_inputFile.fail() );		//E_FILEOPEN
-	if (overwrite) {
-		// Delete the original input file
-		remove(this->_filename.c_str());
-	}
-
+	if (overwrite) remove(this->_filename.c_str());
 	// Rename tmp file to desired name
 	rename(tmpFilename.c_str(), saveAs.c_str());
 	// Set the new filename and load (what was outputFile)
@@ -1633,7 +1699,10 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 const Result_t BinFile::JournalInfo(const uint32_t &undoSize, const uint32_t redoSize,
 									std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()
 {
+	// Nothing to do if not journaling
+	if (!this->_isJournaling) return S_OK;
 	ASSERT(false);
+	// TODO: Get journal info
 	return S_OK;
 }
 
@@ -1643,6 +1712,7 @@ const Result_t BinFile::BeginJournal(void) throw()
 	// Nothing to be done if we already are journaling
 	if (this->_isJournaling) return S_OK;
 	ASSERT(false);
+	// TODO: Start journaling
 	return S_OK;
 }
 
@@ -1652,6 +1722,48 @@ const Result_t BinFile::EndJournal(void) throw()
 	// Nothing to be done if we already are not journaling
 	if (!this->_isJournaling) return S_OK;
 	ASSERT(false);
+	// TODO: Stop journaling
 	return S_OK;
 }
+
+
+const Result_t BinFile::BeginCompression(void) throw()
+{
+	// Nothing to be done if we already are compressing
+	if (this->_isCompressed) return S_OK;
+	ASSERT(false);
+	// TODO: Start compression
+	return S_OK;
+}
+
+
+const Result_t BinFile::EndCompression(void) throw()
+{
+	// Nothing to be done if we already are not compressing
+	if (!this->_isCompressed) return S_OK;
+	ASSERT(false);
+	// TODO: Stop compression
+	return S_OK;
+}
+
+
+const Result_t BinFile::BeginEncryption(const std::vector<char> &key) throw()
+{
+	// Nothing to be done if we already are encrypting
+	if (this->_isEncrypted) return S_OK;
+	ASSERT(false);
+	// TODO: Start encryption
+	return S_OK;
+}
+
+
+const Result_t BinFile::EndEncryption(void) throw()
+{
+	// Nothing to be done if we already are not encryption
+	if (!this->_isEncrypted) return S_OK;
+	ASSERT(false);
+	// TODO: Stop encryption
+	return S_OK;
+}
+
 

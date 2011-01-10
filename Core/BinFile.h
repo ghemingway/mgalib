@@ -21,8 +21,7 @@ class BinFileFactory;
 
 
 /*** Locally Defined Values ***/
-#define DTID_INDEX							10
-
+// None
 
 
 // --------------------------- IndexLocation Class  --------------------------- //
@@ -62,7 +61,7 @@ typedef struct IndexEntry
 	std::streampos							position;
 	uint32_t								sizeB;
 } IndexEntry;
-typedef STDEXT::hash_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
+	typedef std::tr1::unordered_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
 
 typedef struct AttributeChangeBase
@@ -127,8 +126,8 @@ private:
 	CoreMetaObject						*_metaObject;				//!< MetaObject for this object
 	std::list<BinAttribute*>			_attributes;				//!< List of attributes
 	bool								_isDirty;					//!< Flag for if object attributes have been changed
-	std::map<std::string,std::string>	_dictionary;				//!< String::String dictionary
-private:
+	std::tr1::unordered_map<std::string,std::string>	_dictionary;//!< String::String dictionary
+
 	BinObject();													//!< Deny access to default constructor
 	BinObject(CoreMetaObject* &metaObject, const Uuid &uuid) :
 		_uuid(uuid), _metaObject(metaObject), _attributes(), _isDirty(false), _dictionary() { }
@@ -146,9 +145,9 @@ public:
 	inline CoreMetaObject* GetMetaObject(void) const				{ return this->_metaObject; }
 	inline const bool IsDirty(void) const							{ return this->_isDirty; }
 	inline void MarkDirty(void)										{ this->_isDirty = true; }
-	uint32_t Size(void) const;										//!<
-	uint32_t Write(std::vector<char> &buffer) const;				//!<
-	BinAttribute* GetAttribute(const AttrID_t &attrID);				//!<
+	uint32_t Size(void) const;										//!< Size of this object
+	uint32_t Write(std::vector<char> &buffer) const;				//!< Write the object to the vector
+	BinAttribute* GetAttribute(const AttrID_t &attrID);				//!< Get a particular attribute
 };
 
 
@@ -165,7 +164,7 @@ private:
 	Uuid								_rootUuid;					//!< Uuid of the root object for the graph
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
-	bool								_isCompressed;				//!<
+	bool								_isCompressed;				//!< Is compression turned on
 	// Index and Cache Queue Variables
 	IndexHash							_indexHash;					//!< Hash of objects residing in memory cache
 	std::list<Uuid>						_cacheQueue;				//!< Most-recently-used queue of memory cache
@@ -177,15 +176,14 @@ private:
 	ChangedObjectsList					_changedObjects;			//!< List of all object changes from current transaction
 	std::list<std::pair<Uuid,IndexEntry> >_deletedObjects;			//!< List of all objects deleted in current transaction
 	// Undo/Redo Variables
-	bool								_isJournaling;				//!<
-	uint32_t							_maxUndoSize;				//!<
-	JournalList							_undoList;					//!<
-	JournalList							_redoList;					//!<
+	bool								_isJournaling;				//!< Is journaling turned on
+	uint32_t							_maxUndoSize;				//!< Maximum number of journal entries
+	JournalList							_undoList;					//!< List of undo journal entries
+	JournalList							_redoList;					//!< List of redo journal entries
 	// Encryption Variables
-	bool								_isEncrypted;				//!<
-	Uuid								_encryptionKey;				//!<
+	bool								_isEncrypted;				//!< Is encryption turned on
+	Uuid								_encryptionKey;				//!< What is the encryption key
 
-private:
 	BinFile();														//!< Deny access to default constructor
 	BinFile(const BinFile &);										//!< Deny access to copy constructor
 	BinFile& operator=(const BinFile &);							//!< Deny access to equals operator
@@ -197,8 +195,10 @@ private:
 
 	// Private Methods
 	const Result_t Load(void);														//!< Load an MGA in from file (really just gets index ready)
-	const Result_t ReadIndex(std::fstream &stream, const uint32_t &objCount);		//!< Read an index from an MGA file
-	const Result_t WriteIndex(std::fstream &stream, const uint32_t &objCount) const;//!< Write an index into an MGA file
+	const Result_t ReadIndex(std::fstream &stream, const uint64_t &objCount);		//!< Read an index from an MGA file
+	const Result_t WriteIndex(std::fstream &stream, const uint64_t &objCount) const;//!< Write an index into an MGA file
+	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &objCount);	//!< Read the options
+	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &objCount) const;		//!< Write the options
 	IndexHashIterator FetchObject(const Uuid &uuid);								//!< Bring an object into the cache
 	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);//!< Move object from file to cache
 	void ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);	//!< Move object to scratch file
@@ -244,10 +244,19 @@ public:
 	virtual const Result_t Redo(Uuid &tag) throw();											//!<
 	virtual inline const Result_t UndoCount(uint32_t &count) const throw()					{ count = this->_undoList.size(); return S_OK; }
 	virtual inline const Result_t RedoCount(uint32_t &count) const throw()					{ count = this->_redoList.size(); return S_OK; }
+	virtual inline const Result_t IsJournaled(bool &flag) const throw()						{ flag = this->_isJournaling; return S_OK; }
 	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
 									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw();
 	virtual const Result_t BeginJournal(void) throw();										//!<
 	virtual const Result_t EndJournal(void) throw();										//!<
+
+	virtual const Result_t IsCompressed(bool &flag) const throw()							{ flag = this->_isCompressed; return S_OK; }
+	virtual const Result_t BeginCompression(void) throw();									//!<
+	virtual const Result_t EndCompression(void) throw();									//!<
+
+	virtual const Result_t IsEncrypted(bool &flag) const throw()							{ flag = this->_isEncrypted; return S_OK; }
+	virtual const Result_t BeginEncryption(const std::vector<char> &key) throw();			//!<
+	virtual const Result_t EndEncryption(void) throw();										//!<	
 };
 
 
