@@ -644,13 +644,14 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
 	// Save with full path (directory + filename) from simple path
-//	EXPECT_EQ( result = storage->Save("../testOrama.mga"), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->Save("Subfolder/testOrama2.mga"), S_OK ) << GetErrorInfo(result);
 
 	// TODO: Save from full path (directory + filename) to simple path
 
 	// Clean up all of the saves
 	EXPECT_EQ( result = storage->Save("tmpfile.mga"), S_OK ) << GetErrorInfo(result);
 	remove("testOrama.mga");
+	remove("Subfolder/testOrama2.mga");
 	// Make sure the objects are there and correct
 	EXPECT_EQ( result = storage->ObjectVector(objectVector), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( objectVector.size(), 3 );
@@ -664,19 +665,46 @@ TEST_F(ICoreStorageTest,Save)
 
 TEST_F(ICoreStorageTest,CacheSize)
 {
-	// TODO: Perform with cacheSize == 1
+	Result_t result;
+	// Set cacheSize == 1
+	EXPECT_EQ( result = storage->SetCacheSize(1), S_OK ) << GetErrorInfo(result);
+	uint64_t cacheSize;
+	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 0 );
+	// Perform simple lookups to try putting more objects into the cache than 1
+	Uuid rootUuid(Uuid::Null());
+	EXPECT_EQ( result = storage->RootUuid(rootUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 1 );
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 1 );
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 1 );
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
-	// TODO: Perform with cacheSize == 2
+	// Perform simple lookups with cacheSize == 2
+	EXPECT_EQ( result = storage->SetCacheSize(2), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 1 );
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 2 );
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
-	// TODO: Perform with cacheSize == 8
+	// Make changes to two of the three objects with cache size = 1
+	EXPECT_EQ( result = storage->SetCacheSize(2), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	// TODO: Makeing changes
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
-	// TODO: Perform with cacheSize == 64
-
-	// TODO: Perform with cacheSize == 256
-
-	// TODO: Perform with cacheSize == unlimited
-
-	// TODO: Save with objects in cache and scratch file and changes
+	// Save with objects in cache and scratch file (from being pushed out of queue) and changes
+	// TODO: Save with objects in input, cache, and scratch
 }
 
 

@@ -968,13 +968,11 @@ BinFile::~BinFile()
 }
 
 
-const Result_t BinFile::MaxMemoryFootprint(const uint64_t &size) throw()
+const Result_t BinFile::SetCacheSize(const uint64_t &size) throw()
 {
-	// Set the max cache size (in number of objects in cache)
+	// Set the size and make any needed adjustments to the actual cache (may push some objs to file)
 	this->_maxCacheSize = size;
-	// See if we need to reduce the number of objects in the cache
 	this->CheckCacheSize();
-	// We are done now
 	return S_OK;
 }
 
@@ -1084,29 +1082,32 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	_Write(bufferPointer, this->_metaProjectUuid);
 	_Write(bufferPointer, startOfOptions);
 	_Write(bufferPointer, optionsSize);
+	// Make sure to start writing at the beginning of the file d'uh
 	outputFile.seekp(0);
 	outputFile.write(&buffer[0], preambleSize);
 
-	// Close the file and we are done with it
-	outputFile.close();
-	ASSERT( !outputFile.fail() );	//E_FILEOPEN;
-	// Close and delete scratch file
-	this->_scratchFile.close();
-	ASSERT( !this->_scratchFile.fail() );	//E_FILEOPEN
-	// TODO: Take possible directory name into account
-	std::string scratchFileName = "~" + this->_filename;
-	remove(scratchFileName.c_str());
+	// Clean up the original input file
 	this->_inputFile.close();
 	// Are we overwriting the original inputfile, then delete it
-	ASSERT( !this->_inputFile.fail() );		//E_FILEOPEN
+	ASSERT( !this->_inputFile.fail() );
 	if (overwrite) remove(this->_filename.c_str());
-	// Rename tmp file to desired name
-	rename(tmpFilename.c_str(), saveAs.c_str());
-	// Set the new filename and load (what was outputFile)
+
+	// Close the file and we are done with it
+	outputFile.close();
+	ASSERT( !outputFile.fail() );
+	// Rename tmp file to desired name (make sure to grab the filename before it is changed)
+	std::string scratchFileName = this->_filename;
 	this->_filename = directory + saveAs;
+	rename(tmpFilename.c_str(), this->_filename.c_str());
+	
+	// Close and delete scratch file
+	this->_scratchFile.close();
+	ASSERT( !this->_scratchFile.fail() );
+	_SplitPath(scratchFileName, directory, scratchFileName);
+	scratchFileName = directory + std::string("~") + scratchFileName;
+	remove(scratchFileName.c_str());
 	// Now load the newly saved file and keep on truckin'
-	this->Load();
-	return S_OK;
+	return this->Load();
 }
 
 
@@ -1248,11 +1249,6 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
 			}
-			// Is the changed attribute a COLLECTION
-			else if (binAttribute->GetValueType() == ValueType::Collection()) {
-				// Never should be here!
-				ASSERT(false);
-			}
 			// Is the changed attribute a POINTER
 			else if (binAttribute->GetValueType() == ValueType::Pointer()) {
 				BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
@@ -1262,7 +1258,9 @@ const Result_t BinFile::AbortTransaction(void) throw()
 				this->PointerUpdate(binAttribute->GetAttributeID(), changeRecord->uuid, changeRecord->newValue, changeRecord->oldValue);
 				attribute->Set(changeRecord->oldValue);
 			}
-			// Finally, delete the AttributeChange
+			// Never should be here!
+			else ASSERT(false);
+			// Finally, delete the AttributeChange and move on to the next
 			delete *changeIter;
 			++changeIter;
 		}
@@ -1325,7 +1323,7 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	CoreMetaObject* metaObject = NULL;
 	Result_t result = this->_metaProject->GetObject(metaID, metaObject);
 	if ( result != S_OK || metaObject == NULL ) return E_METAID;
-	// Make sure to use a new Uuid to make sure it is unique
+	// Use a new Uuid to make sure it is unique
 	Uuid uuid;
 	BinObject* binObject = BinObject::Create(metaObject, uuid);
 	ASSERT( binObject != NULL );
