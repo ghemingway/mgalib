@@ -51,8 +51,10 @@ protected:
 
 public:
 	virtual ~ICoreStorage()									{ }								//!< Default destructor
-
-// --------------------------- Public Interface Methods --------------------------- //
+	virtual const Result_t GetCacheSize(uint64_t &size) const throw()=0;
+	virtual const Result_t SetCacheSize(const uint64_t &size) throw()=0;	
+	
+	// --------------------------- Public Interface Methods --------------------------- //
 
 	// --- Static Methods
 	

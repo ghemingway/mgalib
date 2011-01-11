@@ -210,7 +210,8 @@ private:
 
 public:
 	virtual ~BinFile();
-	const Result_t MaxMemoryFootprint(const uint64_t &size) throw();				//!< Set the maximum amount of memory the cache can use
+	virtual inline const Result_t GetCacheSize(uint64_t &size) const throw()			{ size = this->_cacheQueue.size(); return S_OK; }
+	virtual const Result_t SetCacheSize(const uint64_t &size) throw();					//!< Set limit for number of obj in the cache
 
 	// ------- ICoreStorage Interface
 
