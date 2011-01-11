@@ -2,6 +2,11 @@
 #include "MetaProjectTesting.h"
 #include "../Meta/MetaFolder.h"
 #include "../Meta/MetaConstraint.h"
+#include "../Meta/MetaAttribute.h"
+#include "../Meta/MetaFCO.h"
+
+
+// --------------------------- MetaGMEv3 Built Programatically --------------------------- //
 
 
 TEST(MetaProjectTest,CreateMetaGMEv3)
@@ -27,24 +32,40 @@ TEST(MetaProjectTest,CreateMetaGMEv3)
 
 	MetaConstraint *objectInRootFolder;
 	EXPECT_EQ( rootFolder->CreateConstraint(objectInRootFolder), S_OK );
-	EXPECT_EQ( objectInRootFolder->SetName("ObjectInRootFolder"), S_OK );
-	EXPECT_EQ( objectInRootFolder->SetName("RootFolder has to contain at least either a Model or a Folder."), S_OK );
-	EXPECT_EQ( objectInRootFolder->SetEventMask(0x0), S_OK );
-	EXPECT_EQ( objectInRootFolder->SetDepth(CONSTRAINT_DEPTH_ZERO), S_OK );
-	EXPECT_EQ( objectInRootFolder->SetPriority(2), S_OK );
-	EXPECT_EQ( objectInRootFolder->SetExpression("let mFlags = project.allInstancesOf( Model ) -> exists( m : Model | m.InRootFolder ) in let fFlags = project.allInstancesOf( Folder ) -> exists( f : Folder | f.InRootFolder ) in mFlags or fFlags"), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetName("ObjectInRootFolder"), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetDisplayedName("RootFolder has to contain at least either a Model or a Folder."), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetEventMask(0x0), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetDepth(CONSTRAINT_DEPTH_ZERO), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetPriority(2), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetExpression("let mFlags = project.allInstancesOf( Model ) -> exists( m : Model | m.InRootFolder ) in let fFlags = project.allInstancesOf( Folder ) -> exists( f : Folder | f.InRootFolder ) in mFlags or fFlags"), S_OK );
 	delete objectInRootFolder;
-/*	
+
 	MetaConstraint *allAscendants;
 	EXPECT_EQ( rootFolder->CreateConstraint(allAscendants), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetName("allAscendants"), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetExpression("let kinds = Set{ \"Model\", \"Atom\", \"Set\", \"Reference\", \"Connection\",\"FCO\" } in \nif ( kinds.includes( self.kindName )) then \nself.ascendantEndsRecursive( Set{}, inhType ) \nelse \nSet{ } \nendif"), S_OK );
 	delete allAscendants;
 
 	MetaConstraint *allAspects;
 	EXPECT_EQ( rootFolder->CreateConstraint(allAspects), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetName("allAspects"), S_OK );
+//	EXPECT_EQ( objectInRootFolder->SetExpression("method;gme::FCO;;ocl::Set; \nself.allAscendants( 1 ) -> iterate( fco : gme::FCO ; accu = Set{} | accu + fco.memberOfSets() )"), S_OK );
 	delete allAspects;
-*/
+
+	MetaAttribute *AddSetEvent;
+	EXPECT_EQ( rootFolder->CreateAttribute(AddSetEvent), S_OK );
+	EXPECT_EQ( AddSetEvent->SetName("AddSetEvent"), S_OK );
+	EXPECT_EQ( AddSetEvent->SetDisplayedName("On include in set"), S_OK );
+//	EXPECT_EQ( AddSetEvent->SetValueType(ATTVAL_BOOLEAN), S_OK );
+//	EXPECT_EQ( AddSetEvent->SetDefaultValue(false), S_OK );
+	delete AddSetEvent;
+
+	MetaAtom *Atom;
+	EXPECT_EQ( rootFolder->CreateAtom(Atom), S_OK );
+	delete Atom;
+
 	// Save the built up MetaGMEv3 file -- we can use it later
-	metaProject->Save("MetaGMEv3.mta");
+	metaProject->Save();
 	delete rootFolder;
 	delete metaProject;
 }

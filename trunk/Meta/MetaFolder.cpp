@@ -2,36 +2,24 @@
 #include "MetaFolder.h"
 #include "MetaProject.h"
 #include "MetaGeneric.h"
+#include "MetaFCO.h"
+#include "MetaAttribute.h"
 #include "../Core/CoreObject.h"
 
 
 // --------------------------- MetaFolder --------------------------- //
 
-/*
-void MetaFolder::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base object
-	MetaBase::Traverse(metaProject, coreObject);
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_DEFFOLDER_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_DEFFCO_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_DEFATTR_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_FOLDERLINK_CHILD_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ROOTOBJLINK_FOLDER_PTR);
-}
-*/
 
 const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
 {
-//	return ComGetPointerValue(GetUnknown(), ATTRID_DEFFOLDER_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get a Folder from this pointer attribute
+	return this->ObjectFromAttribute(ATTRID_DEFFOLDER_PTR, folder);
 }
 
 
 const Result_t MetaFolder::GetDefinedFolders(std::list<MetaFolder*> &folderList) const throw()
 {
+	ASSERT(false);
 //	return ComGetCollectionValue<IMgaMetaFolder>(GetUnknown(), ATTRID_DEFFOLDER_PTR, p);
 	return S_OK;
 }
@@ -39,6 +27,7 @@ const Result_t MetaFolder::GetDefinedFolders(std::list<MetaFolder*> &folderList)
 
 const Result_t MetaFolder::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {
+	ASSERT(false);
 //	return ComGetSortedCollValue<IMgaMetaFCO>(GetUnknown(), ATTRID_DEFFCO_PTR, p);
 	return S_OK;
 }
@@ -46,6 +35,7 @@ const Result_t MetaFolder::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const th
 
 const Result_t MetaFolder::GetDefinedAttributes(std::list<MetaAttribute*> &attribList) const throw()
 {
+	ASSERT(false);
 //	return ComGetSortedCollValue<IMgaMetaAttribute>(GetUnknown(), ATTRID_DEFATTR_PTR, p);
 	return S_OK;
 }
@@ -53,6 +43,7 @@ const Result_t MetaFolder::GetDefinedAttributes(std::list<MetaAttribute*> &attri
 
 const Result_t MetaFolder::GetLegalChildFolders(std::list<MetaFolder*> &folderList) const throw()
 {
+	ASSERT(false);
 //	return ComGetSortedLinkCollValue<IMgaMetaFolder>(GetUnknown(),ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, p);
 	return S_OK;
 }
@@ -60,6 +51,7 @@ const Result_t MetaFolder::GetLegalChildFolders(std::list<MetaFolder*> &folderLi
 
 const Result_t MetaFolder::GetLegalChildFolderByName(const std::string &name, MetaFolder* &metaFolder) const throw()
 {
+	ASSERT(false);
 //	return ComGetLinkCollValueByName(name, GetUnknown(), ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, p);
 	return S_OK;
 }
@@ -67,6 +59,7 @@ const Result_t MetaFolder::GetLegalChildFolderByName(const std::string &name, Me
 
 const Result_t MetaFolder::GetLegalRootObjects(std::list<MetaFCO*> &fcoList) const throw()
 {
+	ASSERT(false);
 //	return ComGetSortedLinkCollValue<IMgaMetaFCO>(GetUnknown(), ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p);
 	return S_OK;
 }
@@ -74,6 +67,7 @@ const Result_t MetaFolder::GetLegalRootObjects(std::list<MetaFCO*> &fcoList) con
 
 const Result_t MetaFolder::GetLegalRootObjectByName(const std::string &name, MetaFCO* &metaFCO) const throw()
 {
+	ASSERT(false);
 //	return ComGetLinkCollValueByName(name, GetUnknown(), ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p);
 	return S_OK;
 }
@@ -81,6 +75,7 @@ const Result_t MetaFolder::GetLegalRootObjectByName(const std::string &name, Met
 
 const Result_t MetaFolder::GetUsedInFolders(std::list<MetaFolder*> &folderList) const throw()
 {
+	ASSERT(false);
 //	return ComGetLinkCollectionValue<IMgaMetaFolder>(GetUnknown(), ATTRID_FOLDERLINK_CHILD_PTR, ATTRID_FOLDERLINK_PARENT_PTR, p);
 	return S_OK;
 }
@@ -115,6 +110,7 @@ const Result_t MetaFolder::GetDefinedFolderByName(const std::string &name, const
 
 const Result_t MetaFolder::GetDefinedFCOByName(const std::string &name, const bool &inScope, MetaFCO* &metaFCO) const throw()
 {
+	ASSERT(false);
 //	CCoreObjectPtr self(GetUnknown());
 //	CComBstrObj_lightequal equal( GetUnknown());
 //	coreobjects_type coreobjects;
@@ -142,6 +138,7 @@ const Result_t MetaFolder::GetDefinedFCOByName(const std::string &name, const bo
 
 const Result_t MetaFolder::GetDefinedAttributeByName(const std::string &name, const bool &inScope, MetaAttribute* &metaAttribute) const throw()
 {
+	ASSERT(false);
 //	CCoreObjectPtr self(GetUnknown());
 //	coreobjects_type coreobjects;
 //	self.GetCollectionValue(ATTRID_DEFATTR_PTR, coreobjects);
@@ -163,5 +160,53 @@ const Result_t MetaFolder::GetDefinedAttributeByName(const std::string &name, co
 //			COMRETURN( parent->get_DefinedAttributeByName(name, inscope, p) );
 //	}
 	return E_NOTFOUND;
+}
+
+
+const Result_t MetaFolder::CreateAtom(MetaAtom* &metaAtom) throw()
+{
+	// Get the associated coreProject
+	CoreProject* coreProject = NULL;
+	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	ASSERT( coreProject != NULL );
+	// Start a transaction
+	ASSERT( coreProject->BeginTransaction(false) == S_OK );
+	// Create a METAID_METAATOM object
+	CoreObject coreObject;
+	ASSERT( coreProject->CreateObject(METAID_METAATOM, coreObject) == S_OK );
+	// Link the new child to this object as parent
+	Uuid uuid;
+	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
+	ASSERT( coreObject->SetAttributeValue(ATTRID_DEFFCO_PTR, uuid) == S_OK );
+	// Commit transaction at the CoreProject level
+	coreProject->CommitTransaction();
+	// Now use the core object to create a MetaAtom
+	metaAtom = new MetaAtom(coreObject, this->_metaProject);
+	ASSERT( metaAtom != NULL );
+	return S_OK;
+}
+
+
+const Result_t MetaFolder::CreateAttribute(MetaAttribute* &metaAttribute) throw()
+{
+	// Get the associated coreProject
+	CoreProject* coreProject = NULL;
+	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	ASSERT( coreProject != NULL );
+	// Start a transaction
+	ASSERT( coreProject->BeginTransaction(false) == S_OK );
+	// Create a METAID_METAATTRIBUTE object
+	CoreObject coreObject;
+	ASSERT( coreProject->CreateObject(METAID_METAATTRIBUTE, coreObject) == S_OK );
+	// Link the new child to this object as parent
+	Uuid uuid;
+	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
+	ASSERT( coreObject->SetAttributeValue(ATTRID_DEFATTR_PTR, uuid) == S_OK );
+	// Commit transaction at the CoreProject level
+	coreProject->CommitTransaction();
+	// Now use the core object to create a MetaAttribute
+	metaAttribute = new MetaAttribute(coreObject, this->_metaProject);
+	ASSERT( metaAttribute != NULL );
+	return S_OK;
 }
 

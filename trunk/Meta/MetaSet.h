@@ -25,8 +25,11 @@ private:
 	MetaSet(const MetaSet &);								//!< Deny access to copy constructor
 	MetaSet& operator=(const MetaSet &);					//!< Deny access to equals operator
 
+	friend class MetaModel;
+	MetaSet(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
+
 public:
-//	static void Traverse(MetaProject *metaProject, CoreObject* &coreObject);
+	virtual ~MetaSet() { }
 
 	const Result_t GetMemberSpec(MetaPointerSpec* &metaPointerSpec) const throw();
 	const Result_t CheckPath(const std::string &path, bool &valid) const throw();

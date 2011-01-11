@@ -13,6 +13,8 @@ namespace MGA {
 /*** Class Predefinitions ***/
 class MetaModel;
 class MetaFCO;
+class MetaPart;
+class MetaModel;
 
 
 // --------------------------- MetaRole --------------------------- //
@@ -25,10 +27,15 @@ private:
 	MetaRole(const MetaRole &);								//!< Deny access to copy constructor
 	MetaRole& operator=(const MetaRole &);					//!< Deny access to equals operator
 
+	friend class MetaModel;
+	MetaRole(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
+
 public:
-	const Result_t GetParentModel(MetaModel* &metaModel) throw();		//{ return ComGetPointerValue(GetUnknown(), ATTRID_ROLES_COLL, metaModel); }
-	const Result_t GetParts(std::list<MetaPart*> &partList) throw();	//{ return ComGetCollectionValue<IMgaMetaPart>(GetUnknown(), ATTRID_PARTROLE_PTR, partList); }
-	const Result_t GetKind(MetaFCO* &metaFCO) throw();					//{ return ComGetPointerValue(GetUnknown(), ATTRID_KIND_PTR, metaFCO); }
+	virtual ~MetaRole() { }
+
+	const Result_t GetParentModel(MetaModel* &metaModel) throw();		//!<
+	const Result_t GetParts(std::list<MetaPart*> &partList) throw();	//!<
+	const Result_t GetKind(MetaFCO* &metaFCO) throw();					//!<
 };
 
 

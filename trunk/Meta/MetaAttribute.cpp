@@ -6,18 +6,6 @@
 
 // --------------------------- Public MetaAttribute Methods --------------------------- //
 
-/*
-void MetaAttribute::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base class
-	MetaBase::Traverse(metaProject, coreObject);
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ATTRLINK_ATTR_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ENUMITEMS_COLL);
-}
-*/
 
 const Result_t MetaAttribute::GetDefinedIn(MetaFCO* &fco) const throw()
 {
@@ -29,8 +17,7 @@ const Result_t MetaAttribute::GetDefinedIn(MetaFCO* &fco) const throw()
 const Result_t MetaAttribute::GetEnumItems(std::list<MetaEnumItem*> &enumList) const throw()
 {
 	// Use the MetaBase helper function to get collection of MetaEnumItems
-//	return this->CollectionFromAttribute(ATTRID_ENUMITEMS_COLL, enumList);
-	return S_OK;
+	return this->CollectionFromAttribute(ATTRID_ENUMITEMS_COLL, enumList);
 }
 
 
@@ -38,6 +25,7 @@ const Result_t MetaAttribute::GetUsedIn(std::list<MetaFCO*> &fcoList) const thro
 {
 	std::list<Uuid> attrList;
 	this->_coreObject->GetAttributeValue(ATTRID_ATTRLINK_ATTR_PTR, attrList);
+	ASSERT(false);
 //	typedef CCoreCollection<MetaFCOs, std::vector<IMgaMetaFCO*>, IMgaMetaFCO, IMgaMetaFCO> COMTYPE;
 //	CComObjPtr<COMTYPE> coll;
 //	CreateComObject(coll);
@@ -59,19 +47,6 @@ const Result_t MetaAttribute::GetUsedIn(std::list<MetaFCO*> &fcoList) const thro
 }
 
 
-const Result_t MetaAttribute::GetDefaultValue(bool &value) const throw() 
-{
-	std::string strValue;
-	// Get the attribute value
-	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VALUE, strValue);
-	if (result != S_OK ) return result;
-	int32_t valueType;
-	result = this->_coreObject->GetAttributeValue(ATTRID_ATTVALTYPE, valueType);
-//	ChangeAttrValueType(v, attval);
-	return S_OK;
-}
-
-
 const Result_t MetaAttribute::GetValueType(AttVal_t &valueType) const throw() 
 {
 	int32_t value;
@@ -83,6 +58,42 @@ const Result_t MetaAttribute::GetValueType(AttVal_t &valueType) const throw()
 }
 
 
+const Result_t MetaAttribute::SetValueType(const AttVal_t &type) throw()
+{
+	ASSERT(false);
+	//	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	//	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_ATTVALTYPE, type);
+	//	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	//	return result;
+	return S_OK;
+}
+
+
+const Result_t MetaAttribute::GetDefaultValue(bool &value) const throw() 
+{
+	ASSERT(false);
+	std::string strValue;
+	// Get the attribute value
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VALUE, strValue);
+	if (result != S_OK ) return result;
+	// Get the value type
+	int32_t valueType;
+	result = this->_coreObject->GetAttributeValue(ATTRID_ATTVALTYPE, valueType);
+	// Change the value into the correct value type
+//	ChangeAttrValueType(v, attval);
+	return S_OK;
+}
+
+
+const Result_t MetaAttribute::SetDefaultValue(const std::string &name) throw()
+{
+	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
+	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	return result;
+}
+
+
 const Result_t MetaAttribute::GetViewable(bool &flag) const throw()
 {
 	int32_t longValue;
@@ -90,5 +101,21 @@ const Result_t MetaAttribute::GetViewable(bool &flag) const throw()
 	// A bit of silly conversion magic
 	if (result == S_OK) flag = (bool)longValue;
 	return result;
+}
+
+
+const Result_t MetaAttribute::SetViewable(const bool &flag) throw()
+{
+	ASSERT(false);
+//	return ComPutAttrValue(GetUnknown(), ATTRID_VIEWABLE, (p == VARIANT_FALSE)?0L:1L);
+	return S_OK;
+}
+
+
+const Result_t MetaAttribute::CreateEnumItem(std::list<int> &list) throw()
+{
+	ASSERT(false);
+//	return ComCreateMetaObj(GetUnknown(), METAID_METAENUMITEM, ATTRID_ENUMITEMS_COLL, p);
+	return S_OK;
 }
 

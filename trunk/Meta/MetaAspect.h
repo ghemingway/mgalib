@@ -14,6 +14,7 @@ namespace MGA {
 class MetaModel;
 class MetaPart;
 class MetaAttribute;
+class MetaRole;
 
 
 // --------------------------- MetaAspect --------------------------- //
@@ -26,15 +27,16 @@ private:
 	MetaAspect(const MetaAspect &);							//!< Deny access to copy constructor
 	MetaAspect& operator=(const MetaAspect &);				//!< Deny access to equals operator
 
-public:
-//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
+	friend class MetaModel;
+	MetaAspect(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
-	const Result_t GetParentModel(MetaModel* &metaModel) const throw();
-	const Result_t GetParts(std::list<MetaPart*> &partList)	const throw();
-	const Result_t GetAttributes(std::list<MetaAttribute*> &attribList) const throw();	//{ return ComGetSortedLinkCollValue<IMgaMetaAttribute>(GetUnknown(), ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p); }
-//	const Result_t AddAttribute(MetaAttribute* &attrib) throw();			//{ return ComAddLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR,	ATTRID_ATTRLINK_ATTR_PTR, p); }
-//	const Result_t RemoveAttribute(MetaAttribute* &attrib) throw();			//{ return ComRemoveLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p); }
-//	const Result_t CreatePart(MetaRole* &role, MetaPart* &part) throw();
+public:
+	const Result_t GetParentModel(MetaModel* &metaModel) const throw();					//!< Get the parent metaModel
+	const Result_t GetParts(std::list<MetaPart*> &partList)	const throw();				//!< Get all child parts
+	const Result_t GetAttributes(std::list<MetaAttribute*> &attribList) const throw();	//!< Get all child attributes
+	const Result_t AddAttribute(MetaAttribute* &attrib) throw();						//!< Add a child attribute
+	const Result_t RemoveAttribute(MetaAttribute* &attrib) throw();						//!< Remove a child attribute
+	const Result_t CreatePart(MetaRole* &role, MetaPart* &part) throw();				//!< Create a child part
 };
 
 

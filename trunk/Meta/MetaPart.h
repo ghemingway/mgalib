@@ -25,8 +25,11 @@ private:
 	MetaPart(const MetaPart &);							//!< Deny access to copy constructor
 	MetaPart& operator=(const MetaPart &);				//!< Deny access to equals operator
 
+	friend class MetaAspect;
+	MetaPart(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
+
 public:
-//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
+	virtual ~MetaPart() { }
 
 	inline const Result_t GetDisplayedName(std::string &name) const throw()						{ return E_INVALID_USAGE; }
 	inline const Result_t GetConstraints(std::list<MetaConstraint*> *constraintList) throw()	{ return E_INVALID_USAGE; }
