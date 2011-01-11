@@ -31,37 +31,29 @@ protected:
 	CoreObject					_coreObject;					//!< Pointer to wrapped core object
 	MetaProject					*_metaProject;					//!< Pointer to parent project
 
-//	static void TraverseObject(MetaProject* &metaProject, CoreObject* &coreObject);
-
 	template <class T>
-	const Result_t ObjectFromAttribute(const AttrID_t &attrID, T &obj) const throw()
+	const Result_t ObjectFromAttribute(const AttrID_t &attrID, T* &obj) const throw()
 	{
-/*		MetaObjIDPair idPair;
-		Result_t result = this->_coreObject->GetAttributeValue(attrID, idPair);
+		Uuid uuid;
+		Result_t result = this->_coreObject->GetAttributeValue(attrID, uuid);
 		if ( result != S_OK ) return result;
-		// Get a coreObject for the idPair
+		// Get a coreObject for the uuid
 		CoreProject* coreProject;
 		ASSERT( this->_coreObject->Project(coreProject) == S_OK );
 		ASSERT( coreProject != NULL );
-		CoreObject* coreObject;
-		ASSERT( coreProject->Object(idPair, coreObject) == S_OK );
+		CoreObject coreObject;
+		ASSERT( coreProject->Object(uuid, coreObject) == S_OK );
 		ASSERT( coreObject != NULL );
-		int32_t value;
-		// What metaRef does this object have (210 == ATTRID_METAREF - just dont want to include MetaGeneric.h)
-		ASSERT( coreObject->GetAttributeValue(210, value) == S_OK );
-		MetaRef_t metaRef = (MetaRef_t)value;
-		delete coreObject;
-		// Get the MetaBase from the MetaProject metaObjHash
-		MetaBase* metaBase;
-		result = this->_metaProject->FindObject(metaRef, metaBase);
-		if (result != S_OK) return result;
-		obj = (T)metaBase; */
+		// Create a new MetaBase object and cast to the correct type
+		obj = (T*)new MetaBase(coreObject, this->_metaProject);
+		ASSERT(obj != NULL);
 		return S_OK;
 	}
 
 	template <class T>
 	const Result_t CollectionFromAttribute(const AttrID_t &attrID, std::list<T> &objList) const throw()
 	{
+		ASSERT(false);
 /*		objList.clear();
 		std::list<MetaObjIDPair> pairList;
 		Result_t result = this->_coreObject->GetAttributeValue(attrID, pairList);
@@ -95,7 +87,7 @@ protected:
 	}
 
 public:
-	MetaBase(CoreObject &coreObject, MetaProject* &metaProject);
+	MetaBase(CoreObject &coreObject, MetaProject* const &metaProject);
 	virtual ~MetaBase();
 
 	virtual const Result_t GetUuid(Uuid &uuid) const throw();

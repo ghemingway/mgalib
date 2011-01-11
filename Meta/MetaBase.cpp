@@ -114,7 +114,7 @@ void MetaBase::TraverseCollection(MetaProject* &metaProject, CoreObject* &coreOb
 // --------------------------- Public MetaBase Methods --------------------------- //
 
 
-MetaBase::MetaBase(CoreObject &coreObject, MetaProject* &metaProject) :
+MetaBase::MetaBase(CoreObject &coreObject, MetaProject* const &metaProject) :
 _coreObject(coreObject), _metaProject(metaProject)
 {
 	ASSERT(coreObject != NULL);
@@ -226,7 +226,7 @@ const Result_t MetaBase::CreateConstraint(MetaConstraint* &constraint) throw()
 	ASSERT( coreProject != NULL );
 	// Start a transaction
 	ASSERT( coreProject->BeginTransaction(false) == S_OK );
-	// Create a METAID_METACONSTRAINT object
+	// Create a METAID_METACONSTRAINT core object
 	CoreObject coreObject;
 	ASSERT( coreProject->CreateObject(METAID_METACONSTRAINT, coreObject) == S_OK );
 	// Link the new child to this object as parent

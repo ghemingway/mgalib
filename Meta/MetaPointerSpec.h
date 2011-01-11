@@ -25,7 +25,6 @@ private:
 	MetaPointerSpec& operator=(const MetaPointerSpec &);		//!< Deny access to equals operator
 
 public:
-//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
 //	static bool CheckPath(CoreObject* &coreObject, pathitems_type &pathitems, bool &global);
 	
 //	const Result_t GetParent(IDispatch **p);

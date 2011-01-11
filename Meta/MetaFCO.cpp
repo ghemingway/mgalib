@@ -3,43 +3,38 @@
 #include "MetaGeneric.h"
 
 
-// --------------------------- MetaFCO --------------------------- //
+// --------------------------- Static MetaFCO Methods --------------------------- //
 
 
-const Result_t MetaFCO::GetAttributeByName(MetaFCO* &metaFCO, const std::string &name, MetaAttribute* &attrib)
+const Result_t MetaFCO::GetAttributeByName(MetaFCO* &metaFCO, const std::string &name, MetaAttribute* &attrib) throw()
 {
-/*
-	ASSERT( me != NULL );
-		CCoreObjectPtr self(me);
-
-		coreobjects_type coreobjects;
-		self.GetCollectionValue(ATTRID_ATTRLINK_USEDIN_PTR, coreobjects);
-
-		coreobjects_iterator i = coreobjects.begin();
-		coreobjects_iterator e = coreobjects.end();
-		while( i != e )
-		{
-			CCoreObjectPtr obj;
-			(*i).GetPointerValue(ATTRID_ATTRLINK_ATTR_PTR, obj);
-
-			CComBstrObj n;
-			obj.GetStringValue(ATTRID_NAME, PutOut(n));
-
-			if( n == name )
-				COMRETURN( ::QueryInterface(obj, p) );
-
-			++i;
-		}
-
-		HR_THROW(E_NOTFOUND);
-*/
+	ASSERT(false);
+/*	ASSERT( me != NULL );
+	CCoreObjectPtr self(me);
+	coreobjects_type coreobjects;
+	self.GetCollectionValue(ATTRID_ATTRLINK_USEDIN_PTR, coreobjects);
+	coreobjects_iterator i = coreobjects.begin();
+	coreobjects_iterator e = coreobjects.end();
+	while( i != e )
+	{
+		CCoreObjectPtr obj;
+		(*i).GetPointerValue(ATTRID_ATTRLINK_ATTR_PTR, obj);
+		CComBstrObj n;
+		obj.GetStringValue(ATTRID_NAME, PutOut(n));
+		if( n == name )
+			COMRETURN( ::QueryInterface(obj, p) );
+		++i;
+	}
+	HR_THROW(E_NOTFOUND);
+ */
 	return S_OK;
  }
 
-/*
-HRESULT CMgaMetaFCO::get_AttributeByRef(IMgaMetaFCO *me, metaref_type mref, IMgaMetaAttribute **p)
+
+const Result_t MetaFCO::GetAttributeByRef(MetaFCO *metaFCO, const Uuid &uuid, MetaAttribute* &metaAttribute) throw()
 {
-	ASSERT( me != NULL );
+	ASSERT(false);
+/*	ASSERT( me != NULL );
 	CHECK_OUT(p);
 
 	COMTRY 
@@ -68,12 +63,15 @@ HRESULT CMgaMetaFCO::get_AttributeByRef(IMgaMetaFCO *me, metaref_type mref, IMga
 		HR_THROW(E_NOTFOUND);
 	}
 	COMCATCH(;)
+*/
+	return S_OK;
 }
 
-HRESULT CMgaMetaFCO::get_DefinedAttributeByName(IMgaMetaFCO *me, BSTR name,
-	VARIANT_BOOL inscope, IMgaMetaAttribute **p)
+
+const Result_t MetaFCO::GetDefinedAttributeByName(MetaFCO *metaFCO, const std::string &name, const bool &inscope, MetaAttribute* &metaAttribute) throw()
 {
-	ASSERT( me != NULL );
+	ASSERT(false);
+/*	ASSERT( me != NULL );
 	CHECK_OUT(p);
 
 	COMTRY
@@ -115,24 +113,15 @@ HRESULT CMgaMetaFCO::get_DefinedAttributeByName(IMgaMetaFCO *me, BSTR name,
 		COMRETURN( fco->get_DefinedAttributeByName(name, inscope, p) );
 	}
 	COMCATCH(;)
-}
 */
-/*
-void MetaFCO::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base class
-	MetaBase::Traverse(metaProject, coreObject);
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_DEFATTR_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ATTRLINK_USEDIN_PTR);
+	return S_OK;
 }
-*/
-/*
-HRESULT CMgaMetaFCO::get_AliasingEnabled(IMgaMetaFCO *me, VARIANT_BOOL *p)
+
+
+const Result_t MetaFCO::GetAliasingEnabled(MetaFCO *metaFCO, bool &value) throw()
 {
-	ASSERT( me != NULL );
+	ASSERT(false);
+/*	ASSERT( me != NULL );
 	if( p == NULL ) COMRETURN(E_POINTER);
 	COMTRY
 	{
@@ -141,11 +130,15 @@ HRESULT CMgaMetaFCO::get_AliasingEnabled(IMgaMetaFCO *me, VARIANT_BOOL *p)
 
 	}
 	COMCATCH(;)
+*/
+	return S_OK;
 }
 
-HRESULT CMgaMetaFCO::put_AliasingEnabled(IMgaMetaFCO *me, VARIANT_BOOL p)
+
+const Result_t MetaFCO::SetAliasingEnabled(MetaFCO *metaFCO, const bool &value) throw()
 {
-	ASSERT( me != NULL );
+	ASSERT(false);
+/*	ASSERT( me != NULL );
 	COMTRY
 	{
 		CCoreObjectPtr self(me);
@@ -153,5 +146,106 @@ HRESULT CMgaMetaFCO::put_AliasingEnabled(IMgaMetaFCO *me, VARIANT_BOOL p)
 
 	}
 	COMCATCH(;)
-}
 */
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetDefinedIn(MetaBase* &metaBase) const throw()
+{
+	ASSERT(false);
+//	return ComGetPointerValue(GetUnknown(), ATTRID_DEFFCO_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetDefinedAttributes(std::list<MetaAttribute*> &attribList) const throw()
+{
+	ASSERT(false);
+//	return ComGetSortedCollValue<IMgaMetaAttribute>(GetUnknown(), ATTRID_DEFATTR_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetDefinedAttributeByName(const std::string &name, const bool &inScope, MetaAttribute* &attrib) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetUsedInRoles(std::list<MetaRole*> &rolesList) const throw()
+{
+	ASSERT(false);
+//	return ComGetCollectionValue<IMgaMetaRole>(GetUnknown(), ATTRID_KIND_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetUsedInFolders(std::list<MetaFolder*> &folderList) const throw()
+{
+	ASSERT(false);
+//	return ComGetLinkCollectionValue<IMgaMetaFolder>(GetUnknown(), ATTRID_ROOTOBJLINK_OBJECT_PTR, ATTRID_ROOTOBJLINK_FOLDER_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetAttributes(std::list<MetaAttribute*> &attribList) const throw()
+{
+	ASSERT(false);
+//	return ComGetSortedLinkCollValue<IMgaMetaAttribute>(GetUnknown(),	ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetAttributeByName(const std::string &name, MetaAttribute* &attrib) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetAttributeByRef(const Uuid &uuid, MetaAttribute* &attrib) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::CreateAttribute(MetaAttribute* &metaAttribute) throw()
+{
+	ASSERT(false);
+//	return ComDefineBase(this, METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::AddAttribute(MetaAttribute* &attrib) throw()
+{
+	ASSERT(false);
+//	return ComAddLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::RemoveAttribute(MetaAttribute* &attrib) throw()
+{
+	ASSERT(false);
+//	return ComRemoveLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::GetAliasingEnabled(bool &value) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t MetaFCO::SetAliasingEnabled(const bool &value) throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+

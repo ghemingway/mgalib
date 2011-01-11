@@ -24,15 +24,16 @@ private:
 	MetaConnection(const MetaConnection &);						//!< Deny access to copy constructor
 	MetaConnection& operator=(const MetaConnection &);			//!< Deny access to equals operator
 
+	friend class MetaModel;
+	MetaConnection(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
+
 public:
 	virtual ~MetaConnection() { }
-
-//	static void Traverse(MetaProject* &metaProject, CoreObject* &coreObject);
 //	static bool CheckPaths(CoreObject &coreObject, jointpaths_type jointPaths);
+	inline const Result_t IsSimple(bool &value)	const throw()	{ value = true; return S_OK; }
 
 	const Result_t GetJoints(std::list<MetaConnJoint*> &jointList) const throw();
 	const Result_t CheckPaths(const std::string &paths, bool &valid) const throw();
-	inline const Result_t IsSimple(bool &value)	const throw()			{ value = true; return S_OK; }
 //	const Result_t CreateJoint(MetaConnJoint* &connJoint) throw();
 };
 

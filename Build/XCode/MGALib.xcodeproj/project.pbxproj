@@ -22,6 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		5820C6CD12DCB0FB00D4C50E /* MetaEnumItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */; };
+		5820C6D512DCB25200D4C50E /* MetaRole.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5820C6D412DCB25200D4C50E /* MetaRole.cpp */; };
 		582BD65E12C8F07B00B18A19 /* TestingHarness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F412B970E200F4AB58 /* TestingHarness.cpp */; };
 		582BD66712C8F10600B18A19 /* MgaGeneric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E712B970C900F4AB58 /* MgaGeneric.cpp */; };
 		582BD67C12C8F2C500B18A19 /* MetaGeneric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B712B970A300F4AB58 /* MetaGeneric.cpp */; };
@@ -117,6 +119,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaEnumItem.cpp; path = ../../Meta/MetaEnumItem.cpp; sourceTree = SOURCE_ROOT; };
+		5820C6D412DCB25200D4C50E /* MetaRole.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaRole.cpp; path = ../../Meta/MetaRole.cpp; sourceTree = SOURCE_ROOT; };
 		5843398F125B8AFC00DD904D /* MGALibTestHarness */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MGALibTestHarness; sourceTree = BUILT_PRODUCTS_DIR; };
 		5843905912B96FEB00F4AB58 /* highres_timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = highres_timing.h; path = ../../Arch/highres_timing.h; sourceTree = SOURCE_ROOT; };
 		5843905B12B96FF800F4AB58 /* highres_timing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = highres_timing.cpp; path = ../../Arch/osx/highres_timing.cpp; sourceTree = SOURCE_ROOT; };
@@ -455,6 +459,7 @@
 				584390B212B970A300F4AB58 /* MetaBase.cpp */,
 				584390B312B970A300F4AB58 /* MetaConnection.cpp */,
 				584390B412B970A300F4AB58 /* MetaConstraint.cpp */,
+				5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */,
 				584390B512B970A300F4AB58 /* MetaFCO.cpp */,
 				584390B612B970A300F4AB58 /* MetaFolder.cpp */,
 				584390B712B970A300F4AB58 /* MetaGeneric.cpp */,
@@ -464,6 +469,7 @@
 				584390BB12B970A300F4AB58 /* MetaProject.cpp */,
 				584390BC12B970A300F4AB58 /* MetaReference.cpp */,
 				584390BD12B970A300F4AB58 /* MetaRegNode.cpp */,
+				5820C6D412DCB25200D4C50E /* MetaRole.cpp */,
 				584390BE12B970A300F4AB58 /* MetaSet.cpp */,
 			);
 			name = Source;
@@ -794,6 +800,8 @@
 				582BD6D212C8F7D700B18A19 /* MetaRegNode.cpp in Sources */,
 				582BD6D312C8F7D700B18A19 /* MetaSet.cpp in Sources */,
 				5880222612CA857800935308 /* XmpParser.cpp in Sources */,
+				5820C6CD12DCB0FB00D4C50E /* MetaEnumItem.cpp in Sources */,
+				5820C6D512DCB25200D4C50E /* MetaRole.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
