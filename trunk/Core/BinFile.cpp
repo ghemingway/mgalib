@@ -12,7 +12,7 @@
 #define BINFILE_DEFAULTCACHESIZE			10000000
 #define BINFILE_DEFAULTMAXUNDO				10000000
 #define BINFILE_DEFAULTJOURNALING			false
-#define BINFILE_DEFAULTCOMPRESSION			false
+#define BINFILE_DEFAULTCOMPRESSION			true
 #define BINFILE_DEFAULTENCRYPTION			false
 
 
@@ -441,15 +441,22 @@ BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
-	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(), _isCompressed(BINFILE_DEFAULTCOMPRESSION),
+	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(),
 	_indexHash(),_cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
 	_isJournaling(BINFILE_DEFAULTJOURNALING), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
+	_isCompressed(BINFILE_DEFAULTCOMPRESSION), _compressor(NULL), _decompressor(NULL),
 	_isEncrypted(BINFILE_DEFAULTENCRYPTION), _encryptionKey()
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
 	this->_openedObject = this->_indexHash.end();
+	// Setup compression
+	if (this->_isCompressed)
+	{
+		this->_compressor = new CryptoPP::ZlibCompressor();
+		this->_decompressor = new CryptoPP::ZlibDecompressor();
+	}
 }
 
 
@@ -571,12 +578,12 @@ const Result_t BinFile::Load(void)
 
 	// Read the options information
 	std::streampos startOfOptions, startOfIndex;
-	uint64_t objectCount;
+	uint64_t indexSize;
 	uint32_t optionsSizeB;
 	_Read(bufferPointer, startOfOptions);
 	_Read(bufferPointer, optionsSizeB);
 	this->_inputFile.seekg(startOfOptions);
-	if ( this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, objectCount) != S_OK )
+	if ( this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, indexSize) != S_OK )
 	{
 		// Error in reading options
 		ASSERT(false);
@@ -584,7 +591,7 @@ const Result_t BinFile::Load(void)
 
 	// Read the object index
 	this->_inputFile.seekg(startOfIndex);
-	Result_t result = this->ReadIndex(this->_inputFile, objectCount);
+	Result_t result = this->ReadIndex(this->_inputFile, indexSize);
 	// Do we have a good index
 	if (result != S_OK)
 	{
@@ -599,20 +606,41 @@ const Result_t BinFile::Load(void)
 }
 
 
-const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &objCount)
+const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &originalIndexSizeB)
 {
 	ASSERT( stream.is_open() );
-	// Therefore, the index is how large (Uuid, Position, Size)
-	uint32_t indexSizeB = objCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
-	std::vector<char> indexBuffer;
-	indexBuffer.reserve(indexSizeB);
-	char *bufferPointer = &indexBuffer[0];
+	// Size the buffer
+	uint64_t indexSizeB = originalIndexSizeB;
+	std::vector<char> buffer;
+	buffer.reserve(indexSizeB);
 	// Read the index from the file itself
-	stream.read(bufferPointer, indexSizeB);
+	stream.read(&buffer[0], indexSizeB);
+	// Is there encryption
+	if (this->_isEncrypted)
+	{
+		// TODO: Support decryption of the index
+	}
+	// Is there compression
+	if (this->_isCompressed)
+	{
+		CryptoPP::ZlibDecompressor decompressor;
+		// Flush the decompressor and load it up
+		decompressor.Put((const byte*)&buffer[0], indexSizeB);
+		decompressor.MessageEnd();
+		// Get the decompressed size
+		indexSizeB = decompressor.MaxRetrievable();
+		// Resize the buffer
+		buffer.resize(indexSizeB);
+		// Get the data and clean up
+		decompressor.Get((byte*)&buffer[0], indexSizeB);
+	}
+	// How many objects are there
+	uint64_t objCount = indexSizeB / (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	// Read in each item for the index
+	char *bufferPointer = &buffer[0];
 	Uuid uuid;
 	IndexEntry entry = { NULL, IndexLocation::Input(), 0, 0};
-	for (uint32_t i=0; i < objCount; ++i)
+	for (uint64_t i=0; i < objCount; ++i)
 	{
 		// Copy the Uuid into the variable
 		_Read(bufferPointer, uuid);
@@ -623,20 +651,20 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &objCount
 		// Place these into the indexHash
 		this->_indexHash.insert( std::make_pair(uuid, entry) );
 	}
-//	std::cout << objCount << " objects read into index.\n";
+	// All is good
 	return S_OK;
 }
 
 
-const Result_t BinFile::WriteIndex(std::fstream &stream, const uint64_t &objCount) const
+const Result_t BinFile::WriteIndex(std::fstream &stream, uint64_t &indexSizeB) const
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
-	uint32_t indexSizeB = objCount * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
-	std::vector<char> indexBuffer;
-	indexBuffer.reserve(indexSizeB);
-	char *bufferPointer = &indexBuffer[0];
+	indexSizeB = this->_indexHash.size() * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
+	std::vector<char> buffer;
+	buffer.reserve(indexSizeB);
 	// Write each item from the index into the buffer
+	char *bufferPointer = &buffer[0];
 	IndexHash::const_iterator hashIter = this->_indexHash.begin();
 	while( hashIter != this->_indexHash.end() )
 	{
@@ -649,13 +677,32 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const uint64_t &objCoun
 		// Move on to the next hash element
 		++hashIter;
 	}
+	// Is there compression
+	if (this->_isCompressed)
+	{
+		CryptoPP::ZlibCompressor compressor;
+		// Clear and load up the compressor
+		compressor.Put((const byte*)&buffer[0], indexSizeB);
+		compressor.MessageEnd();
+		// Get the new size
+		indexSizeB = compressor.MaxRetrievable();
+		// Resize the buffer
+		buffer.resize(indexSizeB);
+		// Get the data and clean up
+		compressor.Get((byte*)&buffer[0], indexSizeB);
+	}
+	// Is there encryption
+	if (this->_isEncrypted)
+	{
+		// TODO: Support encryption of the index
+	}
 	// Now write out the data to the file
-	stream.write(&indexBuffer[0], indexSizeB);
+	stream.write(&buffer[0], indexSizeB);
 	return S_OK;
 }
 
 
-const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &objCount)
+const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSizeB)
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized input buffer
@@ -672,12 +719,12 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	this->_isCompressed = tmpVal;
 	_Read(bufferPointer, this->_rootUuid);
 	_Read(bufferPointer, startOfIndex);
-	_Read(bufferPointer, objCount);
+	_Read(bufferPointer, indexSizeB);
 	return S_OK;
 }
 
 
-const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &objCount) const
+const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSizeB) const
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
@@ -687,9 +734,9 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 	char* bufferPointer = &buffer[0];
 	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
 	_Write<uint8_t>(bufferPointer, this->_isCompressed);
-	_Write(bufferPointer, this->_rootUuid);
-	_Write(bufferPointer, startOfIndex);
-	_Write(bufferPointer, objCount);
+	_Write<Uuid>(bufferPointer, this->_rootUuid);
+	_Write<uint64_t>(bufferPointer, startOfIndex);
+	_Write<uint64_t>(bufferPointer, indexSizeB);
 	// Write it out to the stream
 	stream.write(&buffer[0], sizeB);
 	return sizeB;
@@ -741,11 +788,12 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	// Is there encryption
 	if (this->_isEncrypted)
 	{
+		// TODO: Enable encryption for objects coming from file
         // Initialize key and iv
-		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
+//		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
 		// Create the encryptor
-		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
+//		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+//		encryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
 //		AuthenticatedEncryptionFilter filter( encryptor, new StringSink( ciphertext ) );
 //		filter.Put( &buffer[0], buffer.size() );
 //		filter.MessageEnd();
@@ -769,14 +817,14 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	// Set the object and mark it as in cache
 	indexEntry.object = binObject;
 	indexEntry.location = IndexLocation::Cache();
-	// Make sure there is space in the cache
-	this->CheckCacheSize();
 	// Move the object to the cache and to the front of the cacheQueue
 	this->_cacheQueue.push_front(uuid);
+	// Make sure there is space in the cache
+	this->CheckCacheSize();
 }
 
 
-void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid)
+void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid, const bool &compression, const bool &encryption)
 {
 	ASSERT( stream.is_open() );
 	// Set the location to appropriately (need to write it out)
@@ -789,7 +837,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const U
 	// Get the size of the binObject
 	indexEntry.sizeB = buffer.size();
 	// Is there compression
-	if (this->_isCompressed)
+	if (compression)
 	{
 		// Create the compressor and load it up
 		CryptoPP::ZlibCompressor compressor;
@@ -803,13 +851,14 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const U
 		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
 	}
 	// Is there encryption
-	if (this->_isEncrypted)
+	if (encryption)
 	{
+		// TODO: Enable encryption for objects going to file
         // Initialize key and iv
-		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
+//		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
 		// Create the encryptor
-		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
+//		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+//		decryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
 //		AuthenticatedEncryptionFilter filter( encryptor, new StringSink( ciphertext ) );
 //		filter.Put( &buffer[0], buffer.size() );
 //		filter.MessageEnd();
@@ -821,10 +870,10 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const U
 
 void BinFile::CheckCacheSize(void)
 {
-	// If cache size (+1 object) will be too large, get last used object
-	while (this->_cacheQueue.size() >= this->_maxCacheSize)
+	// If cache size is too large...
+	while (this->_cacheQueue.size() > this->_maxCacheSize)
 	{
-		// Get the object info from the cache and index
+		// Get the object info from the back of the cache and index
 		Uuid uuid  = this->_cacheQueue.back();
 		ASSERT( uuid != Uuid::Null() );
 		IndexHashIterator hashIter = this->_indexHash.find(uuid);
@@ -836,7 +885,7 @@ void BinFile::CheckCacheSize(void)
 			hashIter->second.location = IndexLocation::Input();
 		}
 		// If the object is dirty, write it to the scratch file
-		else this->ObjectToFile(this->_scratchFile, hashIter->second, hashIter->first);
+		else this->ObjectToFile(this->_scratchFile, hashIter->second, hashIter->first, this->_isCompressed, this->_isEncrypted);
 
 		// Delete the object now (not needed any longer)
 		ASSERT( hashIter->second.object != NULL );
@@ -963,6 +1012,12 @@ BinFile::~BinFile()
 		std::string scratchFilename = "~" + this->_filename;
 		remove(scratchFilename.c_str());
 	}
+	// Clean up compression
+	if (this->_isCompressed)
+	{
+		delete this->_compressor;
+		delete this->_decompressor;
+	}
 	// Clear the cache (and its objects)
 	this->FlushCache();
 }
@@ -1061,7 +1116,7 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 		// Fetch the object into memory
 		this->FetchObject(hashIter->first);
 		// Write the object out
-		this->ObjectToFile(outputFile, hashIter->second, hashIter->first);
+		this->ObjectToFile(outputFile, hashIter->second, hashIter->first, this->_isCompressed, this->_isEncrypted);
 		// Move on to the next item in the hash
 		++hashIter;
 	}
@@ -1328,12 +1383,13 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	BinObject* binObject = BinObject::Create(metaObject, uuid);
 	ASSERT( binObject != NULL );
 
-	// Put the object into the index and queue (first make sure there is space)
-	this->CheckCacheSize();
+	// Put the object into the index and queue
 	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, 0 };
 	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
 	this->_cacheQueue.push_front(uuid);
+	// Make sure there is space in the queue
+	this->CheckCacheSize();
 	// Put the object into the createdObjects list
 	this->_createdObjects.push_front(std::make_pair(uuid, metaID));
 	this->_openedObject = insertReturn.first;
@@ -1726,27 +1782,59 @@ const Result_t BinFile::EndJournal(void) throw()
 }
 
 
-const Result_t BinFile::BeginCompression(void) throw()
+const Result_t BinFile::EnableCompression(void) throw()
 {
 	// Nothing to be done if we already are compressing
 	if (this->_isCompressed) return S_OK;
-	ASSERT(false);
-	// TODO: Start compression
+	// Go through all objects
+	IndexHashIterator objectIter = this->_indexHash.begin();
+	while (objectIter != this->_indexHash.end())
+	{
+		// If this object is in either input or scratch
+		if (objectIter->second.location == IndexLocation::Input() ||
+			objectIter->second.location == IndexLocation::Scratch())
+		{
+			// Fetch the object to memory
+			this->FetchObject(objectIter->first);
+			// And push the object to the scratch file with compression
+			this->ObjectToFile(this->_scratchFile, objectIter->second, objectIter->first, true, this->_isEncrypted);
+		}
+		// Go to the next object
+		++objectIter;
+	}
+	// Finally, mark compression as on
+	this->_isCompressed = true;
 	return S_OK;
 }
 
 
-const Result_t BinFile::EndCompression(void) throw()
+const Result_t BinFile::DisableCompression(void) throw()
 {
 	// Nothing to be done if we already are not compressing
 	if (!this->_isCompressed) return S_OK;
-	ASSERT(false);
-	// TODO: Stop compression
+	// Go through all objects
+	IndexHashIterator objectIter = this->_indexHash.begin();
+	while (objectIter != this->_indexHash.end())
+	{
+		// If this object is in either input or scratch
+		if (objectIter->second.location == IndexLocation::Input() ||
+			objectIter->second.location == IndexLocation::Scratch())
+		{
+			// Fetch the object to memory
+			this->FetchObject(objectIter->first);
+			// And push the object to the scratch file without compression
+			this->ObjectToFile(this->_scratchFile, objectIter->second, objectIter->first, false, this->_isEncrypted);
+		}
+		// Go to the next object
+		++objectIter;
+	}
+	// Finally, mark compression as off
+	this->_isCompressed = false;
 	return S_OK;
 }
 
 
-const Result_t BinFile::BeginEncryption(const std::vector<char> &key) throw()
+const Result_t BinFile::EnableEncryption(const std::vector<char> &key) throw()
 {
 	// Nothing to be done if we already are encrypting
 	if (this->_isEncrypted) return S_OK;
@@ -1756,7 +1844,7 @@ const Result_t BinFile::BeginEncryption(const std::vector<char> &key) throw()
 }
 
 
-const Result_t BinFile::EndEncryption(void) throw()
+const Result_t BinFile::DisableEncryption(void) throw()
 {
 	// Nothing to be done if we already are not encryption
 	if (!this->_isEncrypted) return S_OK;
