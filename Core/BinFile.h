@@ -9,6 +9,12 @@
 #include "CoreMetaAttribute.h"
 
 
+namespace CryptoPP {
+	class ZlibCompressor;
+	class ZlibDecompressor;
+}
+
+
 /*** Namespace Declaration ***/
 namespace MGA {
 
@@ -18,10 +24,6 @@ class BinFile;
 class BinObject;
 class BinAttribute;
 class BinFileFactory;
-
-
-/*** Locally Defined Values ***/
-// None
 
 
 // --------------------------- IndexLocation Class  --------------------------- //
@@ -164,7 +166,6 @@ private:
 	Uuid								_rootUuid;					//!< Uuid of the root object for the graph
 	std::fstream						_inputFile;					//!< Handle to input file (see _filename)
 	std::fstream						_scratchFile;				//!< Handle to scratch file
-	bool								_isCompressed;				//!< Is compression turned on
 	// Index and Cache Queue Variables
 	IndexHash							_indexHash;					//!< Hash of objects residing in memory cache
 	std::list<Uuid>						_cacheQueue;				//!< Most-recently-used queue of memory cache
@@ -180,7 +181,10 @@ private:
 	uint32_t							_maxUndoSize;				//!< Maximum number of journal entries
 	JournalList							_undoList;					//!< List of undo journal entries
 	JournalList							_redoList;					//!< List of redo journal entries
-	// Encryption Variables
+	// Encryption & Compression Variables
+	bool								_isCompressed;				//!< Is compression turned on
+	CryptoPP::ZlibCompressor			*_compressor;				//!< Compressor
+	CryptoPP::ZlibDecompressor			*_decompressor;				//!< Decompressor
 	bool								_isEncrypted;				//!< Is encryption turned on
 	Uuid								_encryptionKey;				//!< What is the encryption key
 
@@ -195,13 +199,13 @@ private:
 
 	// Private Methods
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
-	const Result_t ReadIndex(std::fstream &stream, const uint64_t &objCount);		//!< Read an index from an MGA file
-	const Result_t WriteIndex(std::fstream &stream, const uint64_t &objCount) const;//!< Write an index into an MGA file
-	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &objCount);	//!< Read the options
-	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &objCount) const;		//!< Write the options
+	const Result_t ReadIndex(std::fstream &stream, const uint64_t &indexSizeB);		//!< Read an index from an MGA file
+	const Result_t WriteIndex(std::fstream &stream, uint64_t &indexSizeB) const;	//!< Write an index into an MGA file
+	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSize);	//!< Read the options
+	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSize) const;		//!< Write the options
 	IndexHashIterator FetchObject(const Uuid &uuid);				//!< Bring an object into the cache
-	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);//!< Move object from file to cache
-	void ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);	//!< Move object to scratch file
+	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);			//!< Move object from file to cache
+	void ObjectToFile(std::fstream &stream, IndexEntry &entry, const Uuid &uuid, const bool &comp, const bool &encryp);	//!< Move object to scratch file
 	void CheckCacheSize(void);										//!< Make sure the cache is not getting too big
 	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
 	const Result_t PickleTransaction(uint32_t &sizeB);				//!<
@@ -253,12 +257,12 @@ public:
 	virtual const Result_t EndJournal(void) throw();										//!<
 
 	virtual const Result_t IsCompressed(bool &flag) const throw()							{ flag = this->_isCompressed; return S_OK; }
-	virtual const Result_t BeginCompression(void) throw();									//!<
-	virtual const Result_t EndCompression(void) throw();									//!<
+	virtual const Result_t EnableCompression(void) throw();									//!<
+	virtual const Result_t DisableCompression(void) throw();								//!<
 
 	virtual const Result_t IsEncrypted(bool &flag) const throw()							{ flag = this->_isEncrypted; return S_OK; }
-	virtual const Result_t BeginEncryption(const std::vector<char> &key) throw();			//!<
-	virtual const Result_t EndEncryption(void) throw();										//!<	
+	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw();			//!<
+	virtual const Result_t DisableEncryption(void) throw();									//!<	
 };
 
 
