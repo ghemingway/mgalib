@@ -540,9 +540,8 @@ const Result_t BinFile::Load(void)
 	ASSERT( !this->_inTransaction );
 	ASSERT( this->_filename != "" );
 	ASSERT( this->_metaProject != NULL );
-	// Make sure the cache and indexHash are clear
-	this->FlushCache();
-	this->_indexHash.clear();
+	ASSERT( this->_indexHash.empty() );
+	ASSERT( this->_cacheQueue.empty() );
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
 	this->_inputFile.open(this->_filename.c_str(), std::ios::in | std::ios::binary);
 	if( this->_inputFile.fail() || !this->_inputFile.is_open() ) return E_FILEOPEN;
@@ -639,7 +638,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Read in each item for the index
 	char *bufferPointer = &buffer[0];
 	Uuid uuid;
-	IndexEntry entry = { NULL, IndexLocation::Input(), 0, 0};
+	IndexEntry entry = { NULL, IndexLocation::Input(), 0, 0, this->_isCompressed, this->_isEncrypted };
 	for (uint64_t i=0; i < objCount; ++i)
 	{
 		// Copy the Uuid into the variable
@@ -656,16 +655,16 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 }
 
 
-const Result_t BinFile::WriteIndex(std::fstream &stream, uint64_t &indexSizeB) const
+const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index, uint64_t &indexSizeB) const
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
-	indexSizeB = this->_indexHash.size() * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
+	indexSizeB = index.size() * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::vector<char> buffer;
 	buffer.reserve(indexSizeB);
 	// Write each item from the index into the buffer
 	char *bufferPointer = &buffer[0];
-	IndexHash::const_iterator hashIter = this->_indexHash.begin();
+	IndexHash::const_iterator hashIter = index.begin();
 	while( hashIter != this->_indexHash.end() )
 	{
 		// Copy in the Uuid
@@ -764,13 +763,14 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid)
 		this->ObjectFromFile(this->_inputFile, indexIter->second, indexIter->first);
 	}
 	// Object must be in the scratch file
-	else
+	else if (indexIter->second.location == IndexLocation::Scratch())
 	{
 		// Move the object from the scratch file to the cache
 		this->ObjectFromFile(this->_scratchFile, indexIter->second, indexIter->first);
 		// Since the scratchFile is only for dirty objects, must mark object as dirty
 		indexIter->second.object->MarkDirty();
 	}
+	else ASSERT(false);
 	// Return the indexIter
 	return indexIter;
 }
@@ -786,7 +786,7 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	buffer.reserve(indexEntry.sizeB);
 	stream.read(&buffer[0], indexEntry.sizeB);
 	// Is there encryption
-	if (this->_isEncrypted)
+	if (indexEntry.isEncrypted)
 	{
 		// TODO: Enable encryption for objects coming from file
         // Initialize key and iv
@@ -799,23 +799,22 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 //		filter.MessageEnd();
 	}
 	// Is there compression
-	if (this->_isCompressed)
+	if (indexEntry.isCompressed)
 	{
 		// Create the decompressor and load it up
 		CryptoPP::ZlibDecompressor decompressor;
 		decompressor.Put((const byte*)&buffer[0], indexEntry.sizeB);
 		decompressor.MessageEnd();
 		// Get the decompressed size
-		indexEntry.sizeB = decompressor.MaxRetrievable();
+		uint64_t sizeB = decompressor.MaxRetrievable();
 		// Resize the buffer
-		buffer.resize(indexEntry.sizeB);
+		buffer.resize(sizeB);
 		// Get the data
-		decompressor.Get((byte*)&buffer[0], indexEntry.sizeB);
+		decompressor.Get((byte*)&buffer[0], sizeB);
 	}
-	BinObject* binObject = BinObject::Read(this->_metaProject, buffer, uuid);
-	ASSERT( binObject != NULL );
+	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid);
+	ASSERT( indexEntry.object != NULL );
 	// Set the object and mark it as in cache
-	indexEntry.object = binObject;
 	indexEntry.location = IndexLocation::Cache();
 	// Move the object to the cache and to the front of the cacheQueue
 	this->_cacheQueue.push_front(uuid);
@@ -824,11 +823,9 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 }
 
 
-void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid, const bool &compression, const bool &encryption)
+void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 {
 	ASSERT( stream.is_open() );
-	// Set the location to appropriately (need to write it out)
-	indexEntry.location = IndexLocation::Scratch();
 	// Get the position of where the write it going to happen
 	indexEntry.position = (uint64_t)stream.tellp();
 	// Now, write to the end of scratchFile
@@ -837,7 +834,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const U
 	// Get the size of the binObject
 	indexEntry.sizeB = buffer.size();
 	// Is there compression
-	if (compression)
+ 	if (indexEntry.isCompressed)
 	{
 		// Create the compressor and load it up
 		CryptoPP::ZlibCompressor compressor;
@@ -851,7 +848,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry, const U
 		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
 	}
 	// Is there encryption
-	if (encryption)
+	if (indexEntry.isEncrypted)
 	{
 		// TODO: Enable encryption for objects going to file
         // Initialize key and iv
@@ -881,15 +878,26 @@ void BinFile::CheckCacheSize(void)
 		// If the object is not dirty
 		if (!hashIter->second.object->IsDirty())
 		{
-			// Place the object back into _inputFile (no need to write anything)
+			// Place the object back into inputFile (no need to write anything)
 			hashIter->second.location = IndexLocation::Input();
+			// TODO: Need to adjust sizeB
 		}
-		// If the object is dirty, write it to the scratch file
-		else this->ObjectToFile(this->_scratchFile, hashIter->second, hashIter->first, this->_isCompressed, this->_isEncrypted);
-
+		// If the object is dirty and is located in the cache, write it to the scratch file
+		else if (hashIter->second.location == IndexLocation::Cache())
+		{
+			// Set the IndexEntry flags correctly
+			hashIter->second.isCompressed = this->_isCompressed;
+			hashIter->second.isEncrypted = this->_isEncrypted;
+			hashIter->second.location = IndexLocation::Scratch();
+			// Write to file
+			this->ObjectToFile(this->_scratchFile, hashIter->second);
+		}
+		// Otherwise, object is already in outputfile, so just pitch it
+		else ASSERT(true);
 		// Delete the object now (not needed any longer)
 		ASSERT( hashIter->second.object != NULL );
-		delete hashIter->second.object;		
+		delete hashIter->second.object;
+		hashIter->second.object = NULL;
 		// Finally, remove that object from the cacheQueue
 		this->_cacheQueue.pop_back();
 	}
@@ -899,18 +907,21 @@ void BinFile::CheckCacheSize(void)
 void BinFile::FlushCache(void)
 {
 	// Loop through each index item
-	IndexHashIterator indexIter = this->_indexHash.begin();
-	while (indexIter != this->_indexHash.end())
+	std::list<Uuid>::iterator cacheIter = this->_cacheQueue.begin();
+	while (cacheIter != this->_cacheQueue.end())
 	{
-		// Delete the object if it is in Cache
-		if (indexIter->second.location == IndexLocation::Cache())
-			delete indexIter->second.object;
-		// Move on to the next indexEntry
-		++indexIter;
+		// Find the index for this object
+		IndexHashIterator indexIter = this->_indexHash.find(*cacheIter);
+		// Delete the object if it exists
+		ASSERT( indexIter->second.location == IndexLocation::Cache() || indexIter->second.location == IndexLocation::Output() );
+		ASSERT( indexIter->second.object != NULL );
+		delete indexIter->second.object;
+		indexIter->second.object = NULL;
+		// Move on to the next cacheEntry
+		++cacheIter;
 	}
 	// Make sure to clear the cache
 	this->_cacheQueue.clear();
-	this->_openedObject = this->_indexHash.end();
 }
 
 
@@ -1025,6 +1036,8 @@ BinFile::~BinFile()
 
 const Result_t BinFile::SetCacheSize(const uint64_t &size) throw()
 {
+	// Can not happen during a transaction (for simplicity)
+	if ( this->_inTransaction ) return E_TRANSACTION;
 	// Set the size and make any needed adjustments to the actual cache (may push some objs to file)
 	this->_maxCacheSize = size;
 	this->CheckCacheSize();
@@ -1115,20 +1128,27 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	{
 		// Fetch the object into memory
 		this->FetchObject(hashIter->first);
-		// Write the object out
-		this->ObjectToFile(outputFile, hashIter->second, hashIter->first, this->_isCompressed, this->_isEncrypted);
+		// Set the indexEntry flags appropriately
+		hashIter->second.isCompressed = this->_isCompressed;
+		hashIter->second.isEncrypted = this->_isEncrypted;
+		hashIter->second.location = IndexLocation::Output();
+		// Write the object out to file
+		this->ObjectToFile(outputFile, hashIter->second);
 		// Move on to the next item in the hash
 		++hashIter;
 	}
 
 	// Write out the object index
 	std::streampos startOfIndex = outputFile.tellp();
-	uint64_t objectCount = this->_indexHash.size();
-	this->WriteIndex(outputFile, objectCount);
+	uint64_t indexSizeB;
+	this->WriteIndex(outputFile, this->_indexHash, indexSizeB);
+	// Make sure the cache and indexHash are clear
+	this->FlushCache();
+	this->_indexHash.clear();	
 
 	// Write out the options
 	std::streampos startOfOptions = outputFile.tellp();
-	uint32_t optionsSize = this->WriteOptions(outputFile, startOfIndex, objectCount);
+	uint32_t optionsSize = this->WriteOptions(outputFile, startOfIndex, indexSizeB);
 
 	// Write out the preamble (metaProject Uuid + options location and options size)
 	std::vector<char> buffer;
@@ -1384,7 +1404,7 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	ASSERT( binObject != NULL );
 
 	// Put the object into the index and queue
-	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, 0 };
+	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
 	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
 	this->_cacheQueue.push_front(uuid);
@@ -1784,25 +1804,9 @@ const Result_t BinFile::EndJournal(void) throw()
 
 const Result_t BinFile::EnableCompression(void) throw()
 {
-	// Nothing to be done if we already are compressing
-	if (this->_isCompressed) return S_OK;
-	// Go through all objects
-	IndexHashIterator objectIter = this->_indexHash.begin();
-	while (objectIter != this->_indexHash.end())
-	{
-		// If this object is in either input or scratch
-		if (objectIter->second.location == IndexLocation::Input() ||
-			objectIter->second.location == IndexLocation::Scratch())
-		{
-			// Fetch the object to memory
-			this->FetchObject(objectIter->first);
-			// And push the object to the scratch file with compression
-			this->ObjectToFile(this->_scratchFile, objectIter->second, objectIter->first, true, this->_isEncrypted);
-		}
-		// Go to the next object
-		++objectIter;
-	}
-	// Finally, mark compression as on
+	// Must not be in a transaction
+	if( this->_inTransaction ) return E_TRANSACTION;
+	// Mark compression as on
 	this->_isCompressed = true;
 	return S_OK;
 }
@@ -1810,25 +1814,9 @@ const Result_t BinFile::EnableCompression(void) throw()
 
 const Result_t BinFile::DisableCompression(void) throw()
 {
-	// Nothing to be done if we already are not compressing
-	if (!this->_isCompressed) return S_OK;
-	// Go through all objects
-	IndexHashIterator objectIter = this->_indexHash.begin();
-	while (objectIter != this->_indexHash.end())
-	{
-		// If this object is in either input or scratch
-		if (objectIter->second.location == IndexLocation::Input() ||
-			objectIter->second.location == IndexLocation::Scratch())
-		{
-			// Fetch the object to memory
-			this->FetchObject(objectIter->first);
-			// And push the object to the scratch file without compression
-			this->ObjectToFile(this->_scratchFile, objectIter->second, objectIter->first, false, this->_isEncrypted);
-		}
-		// Go to the next object
-		++objectIter;
-	}
-	// Finally, mark compression as off
+	// Must not be in a transaction
+	if( this->_inTransaction ) return E_TRANSACTION;
+	// Mark compression as off
 	this->_isCompressed = false;
 	return S_OK;
 }

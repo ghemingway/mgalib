@@ -51,8 +51,14 @@ protected:
 
 public:
 	virtual ~ICoreStorage()									{ }								//!< Default destructor
-	virtual const Result_t GetCacheSize(uint64_t &size) const throw()=0;
-	virtual const Result_t SetCacheSize(const uint64_t &size) throw()=0;	
+	virtual const Result_t GetCacheSize(uint64_t &size) const throw()=0;					//!<
+	virtual const Result_t SetCacheSize(const uint64_t &size) throw()=0;					//!<
+	virtual const Result_t IsCompressed(bool &flag) const throw()=0;						//!<
+	virtual const Result_t EnableCompression(void) throw()=0;								//!<
+	virtual const Result_t DisableCompression(void) throw()=0;								//!<
+	virtual const Result_t IsEncrypted(bool &flag) const throw()=0;							//!<
+	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw()=0;		//!<
+	virtual const Result_t DisableEncryption(void) throw()=0;								//!<
 	
 	// --------------------------- Public Interface Methods --------------------------- //
 
