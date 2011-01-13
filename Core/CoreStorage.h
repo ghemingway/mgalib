@@ -21,8 +21,8 @@ class ICoreStorage;
 
 class CoreStorageFactory {
 public:
-	virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage)=0;
-	virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage)=0;
+	virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage, const bool &encrypted=false)=0;
+	virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage, const std::vector<char> &encryptionKey=std::vector<char>())=0;
 };
 
 
@@ -67,9 +67,9 @@ public:
 	static const Result_t RegisterStorage(const std::string &tag, CoreStorageFactory* factory) throw();	//!< Register a factory
 	static const Result_t ClearStorageRegistry(void) throw();								//!< Clear factory registry
 	static const Result_t Create(const std::string &tag, const std::string &filename,		//!< Create new storage using factory
-								 CoreMetaProject* metaProject, ICoreStorage* &storage) throw();
+								 CoreMetaProject* metaProject, ICoreStorage* &storage, const bool &encrypted=false) throw();
 	static const Result_t Open(const std::string &tag, const std::string &filename,			//!< Open storage from file using factory
-							   CoreMetaProject* metaProject, ICoreStorage* &storage) throw();
+							   CoreMetaProject* metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>()) throw();
 
 	// --- CoreMetaObject
 

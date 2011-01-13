@@ -190,7 +190,7 @@ private:
 	CryptoPP::ZlibCompressor			*_compressor;				//!< Compressor
 	CryptoPP::ZlibDecompressor			*_decompressor;				//!< Decompressor
 	bool								_isEncrypted;				//!< Is encryption turned on
-	Uuid								_encryptionKey;				//!< What is the encryption key
+	char								*_encryptionKey;			//!< What is the encryption key
 
 	BinFile();														//!< Deny access to default constructor
 	BinFile(const BinFile &);										//!< Deny access to copy constructor
@@ -198,8 +198,10 @@ private:
 	BinFile(const std::string &filename, CoreMetaProject *coreMetaProject);	//!< Hidden primary constructor (use Factory)
 
 	friend class BinFileFactory;
-	static const Result_t Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage);
-	static const Result_t Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage);
+	static const Result_t Create(const std::string &filename, CoreMetaProject *coreMetaProject,	//!<
+								 ICoreStorage* &storage, const bool &encrypted);
+	static const Result_t Open(const std::string &filename, CoreMetaProject *coreMetaProject,	//!<
+							   ICoreStorage* &storage, const std::vector<char> &encryptionKey);
 
 	// Private Methods
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
@@ -278,10 +280,10 @@ class BinFileFactory :
 	public CoreStorageFactory
 {
 public:
-	inline virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage)	{
-		return BinFile::Create(filename, metaProject, storage); }
-	inline virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage) {
-		return BinFile::Open(filename, metaProject, storage); }
+	inline virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const bool &encrypted=false)	{
+		return BinFile::Create(filename, metaProject, storage, encrypted); }
+	inline virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>()) {
+		return BinFile::Open(filename, metaProject, storage, encryptionKey); }
 };
 
 

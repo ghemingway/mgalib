@@ -14,6 +14,7 @@
 #define BINFILE_DEFAULTJOURNALING			false
 #define BINFILE_DEFAULTCOMPRESSION			true
 #define BINFILE_DEFAULTENCRYPTION			false
+#define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
 
 
 // --------------------------- IOStream Access  --------------------------- //
@@ -446,7 +447,7 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
 	_isJournaling(BINFILE_DEFAULTJOURNALING), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
 	_isCompressed(BINFILE_DEFAULTCOMPRESSION), _compressor(NULL), _decompressor(NULL),
-	_isEncrypted(BINFILE_DEFAULTENCRYPTION), _encryptionKey()
+	_isEncrypted(BINFILE_DEFAULTENCRYPTION), _encryptionKey(NULL)//, _encryptor(NULL), _decryptor(NULL)
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
@@ -457,10 +458,16 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 		this->_compressor = new CryptoPP::ZlibCompressor();
 		this->_decompressor = new CryptoPP::ZlibDecompressor();
 	}
+	// Setup encryption
+	if (this->_isEncrypted)
+	{
+//		this->_encryptor = new CryptoPP:GCM<CryptoPP::AES>Encryption();
+//		this->_decryptor = new CryptoPP:GCM<CryptoPP::AES>Decryption();
+	}
 }
 
 
-const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)
+const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const bool &encrypted)
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_META_NOTOPEN;
@@ -506,7 +513,7 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 }
 
 
-const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage)
+const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey)
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_INVALID_USAGE;
@@ -1839,5 +1846,12 @@ const Result_t BinFile::DisableEncryption(void) throw()
 	// TODO: Stop encryption
 	return S_OK;
 }
+
+/*** Main Todo List
+ *	1) Finish encryption/decryption
+ *	2) Finish Undo/Redo
+ *	3) Finish Registry/Dictionary support
+ *	4) What about a search API
+***/
 
 
