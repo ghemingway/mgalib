@@ -880,7 +880,6 @@ void BinFile::CheckCacheSize(void)
 		{
 			// Place the object back into inputFile (no need to write anything)
 			hashIter->second.location = IndexLocation::Input();
-			// TODO: Need to adjust sizeB
 		}
 		// If the object is dirty and is located in the cache, write it to the scratch file
 		else if (hashIter->second.location == IndexLocation::Cache())
