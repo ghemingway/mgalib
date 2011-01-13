@@ -641,25 +641,34 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( objectVector.size(), 3 );
 	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	Uuid atomParent = Uuid::Null();
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_FCOPARENT, atomParent), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( atomParent, rootUuid );
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
 	// Save with full path (directory + filename) from simple path
 	EXPECT_EQ( result = storage->Save("Subfolder/testOrama2.mga"), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	Uuid attributeParent = Uuid::Null();
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_ATTRPARENT, attributeParent), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( attributeParent, atomUuid );
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
 	// Save from full path (directory + filename) to simple path
 	EXPECT_EQ( result = storage->Save("testOrama3.mga"), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	std::string rootName;
+	EXPECT_EQ( result = storage->GetAttributeValue(ATTRID_NAME, rootName), S_OK ) << GetErrorInfo(result);
+	EXPECT_STREQ( rootName.c_str(), "A quick brown fox jumps over the lazy dog." ); 
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
 	// Clean up all of the saves
 	EXPECT_EQ( result = storage->Save("tmpfile.mga"), S_OK ) << GetErrorInfo(result);
-	remove("testOrama.mga");
-	remove("Subfolder/testOrama2.mga");
-	remove("testOrama3.mga");
+	EXPECT_EQ( remove("testOrama.mga"), 0 );
+	EXPECT_EQ( remove("Subfolder/testOrama2.mga"), 0 );
+	EXPECT_EQ( remove("testOrama3.mga"), 0 );
 
 	// Make sure the objects are there and correct
 	EXPECT_EQ( result = storage->ObjectVector(objectVector), S_OK ) << GetErrorInfo(result);
@@ -668,6 +677,8 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	double floatValue = 8475734.3784;
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, floatValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 }
 
@@ -685,37 +696,106 @@ TEST_F(ICoreStorageTest,CacheSize)
 	Uuid rootUuid(Uuid::Null());
 	EXPECT_EQ( result = storage->RootUuid(rootUuid), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	// Try to set cache size during a transaction (Expect E_TRANSACTION)
+	EXPECT_EQ( result = storage->SetCacheSize(8474), E_TRANSACTION ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
-	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
-	EXPECT_EQ( cacheSize, 1 );
-
 	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
-	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
-	EXPECT_EQ( cacheSize, 1 );
-//	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( cacheSize, 1 );
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
-/*
+
 	// Perform simple lookups with cacheSize == 2
 	EXPECT_EQ( result = storage->SetCacheSize(2), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
-	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
-	EXPECT_EQ( cacheSize, 1 );
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->GetCacheSize(cacheSize), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( cacheSize, 2 );
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
 
 	// Make changes to two of the three objects with cache size = 1
-	EXPECT_EQ( result = storage->SetCacheSize(2), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->SetCacheSize(1), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
-	// TODO: Makeing changes
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	std::string atomName = "I am a happy atom.";
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_NAME, atomName), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	double floatValue = 4783823.45934;
+	EXPECT_EQ( result = storage->SetAttributeValue(ATTRID_FLOATATTR, floatValue), S_OK ) << GetErrorInfo(result);
 	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
-*/
+
 	// Save with objects in cache and scratch file (from being pushed out of queue) and changes
-	// TODO: Save with objects in input, cache, and scratch
+	EXPECT_EQ( result = storage->Save("tmpfile.mga"), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+}
+
+
+TEST_F(ICoreStorageTest,Compression)
+{
+	Result_t result;
+	// Reverse the compression flag
+	bool flag;
+	Uuid rootUuid(Uuid::Null());
+	EXPECT_EQ( result = storage->RootUuid(rootUuid), S_OK ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->IsCompressed(flag), S_OK ) << GetErrorInfo(result);
+	if ( flag )
+	{
+		// First decompress, test and save
+		EXPECT_EQ( result = storage->DisableCompression(), S_OK ) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->Save("tmpfile_large.mga"), S_OK ) << GetErrorInfo(result);
+		// Then recompress, test and save
+		EXPECT_EQ( result = storage->EnableCompression(), S_OK ) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->Save("tmpfile.mga"), S_OK ) << GetErrorInfo(result);
+	}
+	else
+	{
+		// First compress, test and save
+		EXPECT_EQ( result = storage->EnableCompression(), S_OK ) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->Save("tmpfile_small.mga"), S_OK ) << GetErrorInfo(result);
+		// Then decompress, test and save
+		EXPECT_EQ( result = storage->DisableCompression(), S_OK ) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->BeginTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(atomUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(rootUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->OpenObject(attributeUuid), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->CommitTransaction(), S_OK) << GetErrorInfo(result);
+		EXPECT_EQ( result = storage->Save("tmpfile.mga"), S_OK ) << GetErrorInfo(result);
+	}
 }
 
 

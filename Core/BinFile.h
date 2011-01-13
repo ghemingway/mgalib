@@ -37,6 +37,7 @@ private:
 		INDEXLOCATION_INPUT			= 0,		//!< Located in the input file
 		INDEXLOCATION_CACHE			= 1,		//!< Located in the memory cache
 		INDEXLOCATION_SCRATCH		= 2,		//!< Located in the scratch file
+		INDEXLOCATION_OUTPUT		= 3,		//!< Located in the output file
 	} _IndexLocationEnum;
 	_IndexLocationEnum				_location;	//!< Internal location value
 	IndexLocation();							//!< Deny access to default constructor
@@ -47,6 +48,7 @@ public:
 	inline static IndexLocation Input(void)		{ return IndexLocation(INDEXLOCATION_INPUT); }	//!< Create a IndexLocation of type input
 	inline static IndexLocation Cache(void)		{ return IndexLocation(INDEXLOCATION_CACHE); }	//!< Create a IndexLocation of type cache
 	inline static IndexLocation Scratch(void)	{ return IndexLocation(INDEXLOCATION_SCRATCH); }//!< Create a IndexLocation of type scratch
+	inline static IndexLocation Output(void)	{ return IndexLocation(INDEXLOCATION_OUTPUT); }	//!< Create a IndexLocation of type output
 	//Overridden Operators
 	inline IndexLocation& operator=(const IndexLocation &loc)	{ this->_location = loc._location; return *this; }	//!< Equals operator
 	inline bool operator==(const IndexLocation &loc) const	{ return this->_location == loc._location; }			//!< Equality operator
@@ -62,6 +64,8 @@ typedef struct IndexEntry
 	IndexLocation							location;
 	std::streampos							position;
 	uint32_t								sizeB;
+	bool									isCompressed;
+	bool									isEncrypted;
 } IndexEntry;
 	typedef std::tr1::unordered_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
@@ -200,12 +204,12 @@ private:
 	// Private Methods
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
 	const Result_t ReadIndex(std::fstream &stream, const uint64_t &indexSizeB);		//!< Read an index from an MGA file
-	const Result_t WriteIndex(std::fstream &stream, uint64_t &indexSizeB) const;	//!< Write an index into an MGA file
+	const Result_t WriteIndex(std::fstream &stream, const IndexHash &index, uint64_t &indexSizeB) const;//!< Write an index into an MGA file
 	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSize);	//!< Read the options
 	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSize) const;		//!< Write the options
 	IndexHashIterator FetchObject(const Uuid &uuid);				//!< Bring an object into the cache
-	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);			//!< Move object from file to cache
-	void ObjectToFile(std::fstream &stream, IndexEntry &entry, const Uuid &uuid, const bool &comp, const bool &encryp);	//!< Move object to scratch file
+	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);//!< Move object from file to cache
+	void ObjectToFile(std::fstream &stream, IndexEntry &entry);		//!< Move object to scratch file
 	void CheckCacheSize(void);										//!< Make sure the cache is not getting too big
 	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
 	const Result_t PickleTransaction(uint32_t &sizeB);				//!<
