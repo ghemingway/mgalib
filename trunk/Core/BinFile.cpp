@@ -6,6 +6,9 @@
 #include <cryptopp/zlib.h>
 #include <cryptopp/gcm.h>
 #include <cryptopp/aes.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/filters.h>
 
 
 /*** Internally Defined Constants ***/
@@ -13,7 +16,6 @@
 #define BINFILE_DEFAULTMAXUNDO				10000000
 #define BINFILE_DEFAULTJOURNALING			false
 #define BINFILE_DEFAULTCOMPRESSION			true
-#define BINFILE_DEFAULTENCRYPTION			false
 #define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
 
 
@@ -195,6 +197,38 @@ public:
 	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Pointer()); BinAttributeBase<Uuid>::StreamWrite(stream); }
 };
 
+
+// --------------------------- BinAttribute::ValueType::Dictionary() --------------------------- //
+
+
+class BinAttributeDictionary : public BinAttributeBase<std::tr1::unordered_map<std::string,std::string> > {
+public:
+	BinAttributeDictionary(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::tr1::unordered_map<std::string,std::string> >(parent, attrID, std::tr1::unordered_map<std::string,std::string>()) { }
+	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Dictionary(); }
+	virtual inline uint32_t Size(void) const
+	{
+		ASSERT(false);
+		return 0;//(sizeof(uint32_t) + this->_value.size() * sizeof(Uuid));
+	}
+	inline virtual const Result_t Set(const std::string &key, const std::string &value)
+	{
+		ASSERT(false);
+		this->_parent->MarkDirty();
+//		this->_value = value;
+		return S_OK;
+	}
+	inline virtual std::string Get(const std::string &key) const
+	{
+		ASSERT(false);
+		return "";
+	}
+	virtual inline void StreamWrite(char* &stream) const
+	{
+		ASSERT(false);
+		_Write(stream, ValueType::LongPointer());
+//		BinAttributeBase<Uuid>::StreamWrite(stream);
+	}
+};
 
 // --------------------------- BinAttr ---------------------------
 
@@ -447,7 +481,7 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
 	_isJournaling(BINFILE_DEFAULTJOURNALING), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
 	_isCompressed(BINFILE_DEFAULTCOMPRESSION), _compressor(NULL), _decompressor(NULL),
-	_isEncrypted(BINFILE_DEFAULTENCRYPTION), _encryptionKey(NULL)//, _encryptor(NULL), _decryptor(NULL)
+	_isEncrypted(false), _encryptionKey(NULL), _encryptionIV(NULL)//, _encryptor(NULL), _decryptor(NULL)
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
@@ -457,12 +491,6 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 	{
 		this->_compressor = new CryptoPP::ZlibCompressor();
 		this->_decompressor = new CryptoPP::ZlibDecompressor();
-	}
-	// Setup encryption
-	if (this->_isEncrypted)
-	{
-//		this->_encryptor = new CryptoPP:GCM<CryptoPP::AES>Encryption();
-//		this->_decryptor = new CryptoPP:GCM<CryptoPP::AES>Decryption();
 	}
 }
 
@@ -499,6 +527,20 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 		return E_FILEOPEN;
 	}
 
+	// Is encryption enabled
+	if (encrypted)
+	{
+		// Turn on encryption for the binFile
+		binFile->_isEncrypted = true;
+		// Generate a key
+		CryptoPP::AutoSeededRandomPool randomPool;
+		binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
+		randomPool.GenerateBlock( (byte*)binFile->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE );
+		// Generate the iv
+		binFile->_encryptionIV = new char[ CryptoPP::AES::BLOCKSIZE * 16 ];
+		randomPool.GenerateBlock( (byte*)binFile->_encryptionIV, sizeof(binFile->_encryptionIV) );  
+	}
+
 	// Now just create the actual METAID_ROOT object (using a nice transaction of course)
 	Uuid rootUuid;
 	ASSERT( binFile->BeginTransaction() == S_OK );
@@ -513,7 +555,7 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 }
 
 
-const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey)
+const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey, const std::vector<char> &encryptionIV)
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_INVALID_USAGE;
@@ -528,6 +570,20 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	ASSERT( binFile != NULL );
 	// Open the metaProject and get the Uuid
 	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
+
+	// Is encryption enabled
+	if (encryptionKey.size() != 0 && encryptionIV.size() != 0)
+	{
+		// Turn on encryption for the binFile
+		binFile->_isEncrypted = true;
+		// Copy in the key
+		binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
+		memcpy(binFile->_encryptionKey, &encryptionKey[0], sizeof(binFile->_encryptionKey));
+		// Copy in the iv
+		binFile->_encryptionIV = new char[ CryptoPP::AES::BLOCKSIZE * 16 ];
+		memcpy(binFile->_encryptionIV, &encryptionIV[0], sizeof(binFile->_encryptionIV) );  
+	}
+
 	// Load the project (check for errors)
 	Result_t result = binFile->Load();
 	if (result != S_OK)
@@ -624,7 +680,18 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Is there encryption
 	if (this->_isEncrypted)
 	{
-		// TODO: Support decryption of the index
+		// Create the decryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
+							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
+		// Load up our data
+		filter.Put( (const byte*)&buffer[0], indexSizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( indexSizeB == filter.MaxRetrievable() );
+		// Decrypt and get data
+		filter.Get( (byte*)&buffer[0], indexSizeB );
 	}
 	// Is there compression
 	if (this->_isCompressed)
@@ -700,7 +767,18 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	// Is there encryption
 	if (this->_isEncrypted)
 	{
-		// TODO: Support encryption of the index
+		// Create the encryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
+							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
+		// Load up our data
+		filter.Put( (const byte*)&buffer[0], indexSizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( indexSizeB == filter.MaxRetrievable() );
+		// Encrypt and get data
+		filter.Get( (byte*)&buffer[0], indexSizeB );
 	}
 	// Now write out the data to the file
 	stream.write(&buffer[0], indexSizeB);
@@ -795,15 +873,18 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	// Is there encryption
 	if (indexEntry.isEncrypted)
 	{
-		// TODO: Enable encryption for objects coming from file
-        // Initialize key and iv
-//		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
-		// Create the encryptor
-//		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-//		encryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
-//		AuthenticatedEncryptionFilter filter( encryptor, new StringSink( ciphertext ) );
-//		filter.Put( &buffer[0], buffer.size() );
-//		filter.MessageEnd();
+		// Create the decryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
+							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
+		// Load up our data
+		filter.Put( (const byte*)&buffer[0], indexEntry.sizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( indexEntry.sizeB == filter.MaxRetrievable() );
+		// Decrypt and get data
+		filter.Get( (byte*)&buffer[0], indexEntry.sizeB );		
 	}
 	// Is there compression
 	if (indexEntry.isCompressed)
@@ -857,15 +938,18 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 	// Is there encryption
 	if (indexEntry.isEncrypted)
 	{
-		// TODO: Enable encryption for objects going to file
-        // Initialize key and iv
-//		byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
-		// Create the encryptor
-//		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-//		decryptor.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
-//		AuthenticatedEncryptionFilter filter( encryptor, new StringSink( ciphertext ) );
-//		filter.Put( &buffer[0], buffer.size() );
-//		filter.MessageEnd();
+		// Create the encryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
+							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
+		// Load up our data
+		filter.Put( (const byte*)&buffer[0], indexEntry.sizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( indexEntry.sizeB == filter.MaxRetrievable() );
+		// Encrypt and get data
+		filter.Get( (byte*)&buffer[0], indexEntry.sizeB );
 	}
 	// Write the final data into the stream
 	stream.write(&buffer[0], indexEntry.sizeB);
@@ -1544,6 +1628,19 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, Uuid &value) t
 }
 
 
+const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, const std::string &key, std::string &value) throw()
+{
+	if( !this->_inTransaction ) return E_TRANSACTION;
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
+	if( binAttribute == NULL ) return E_ATTRID;
+	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
+	// Now return the actual value of the object
+	value = ((BinAttributeDictionary*)binAttribute)->Get(key);
+	return S_OK;
+}
+
+
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
@@ -1553,13 +1650,14 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t 
 	if( binAttribute->GetValueType() != ValueType::Long() ) return E_ATTVALTYPE;
 	BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	if (attribute->Get() == value) return S_OK;
+	int32_t oldValue = attribute->Get();
+	if (oldValue == value) return S_OK;
 	// Must save old value
 	AttributeChange<int32_t>* changeRecord = new AttributeChange<int32_t>();
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->oldValue = attribute->Get();
+	changeRecord->oldValue = oldValue;
 	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
@@ -1578,13 +1676,14 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &
 	if( binAttribute->GetValueType() != ValueType::Real() ) return E_ATTVALTYPE;
 	BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	if (attribute->Get() == value) return S_OK;
+	double oldValue = attribute->Get();
+	if (oldValue == value) return S_OK;
 	// Must save old value
 	AttributeChange<double>* changeRecord = new AttributeChange<double>();
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->oldValue = attribute->Get();
+	changeRecord->oldValue = oldValue;
 	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
@@ -1603,13 +1702,14 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	if( binAttribute->GetValueType() != ValueType::String() ) return E_ATTVALTYPE;
 	BinAttributeString *attribute = (BinAttributeString*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	if (attribute->Get() == value) return S_OK;
+	std::string oldValue = attribute->Get();
+	if (oldValue == value) return S_OK;
 	// Must save old value
 	AttributeChange<std::string>* changeRecord = new AttributeChange<std::string>();
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->oldValue = attribute->Get();
+	changeRecord->oldValue = oldValue;
 	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
@@ -1637,13 +1737,14 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	    binAttribute->GetValueType() != ValueType::LongPointer() ) return E_ATTVALTYPE;
 	BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	if (attribute->Get() == value) return S_OK;
+	Uuid oldValue = attribute->Get();
+	if (oldValue == value) return S_OK;
 	// Must save old value
 	AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->oldValue = attribute->Get();
+	changeRecord->oldValue = oldValue;
 	changeRecord->newValue = value;
 	// Is this a pointer or longPointer
 	if ( binAttribute->GetValueType() == ValueType::Pointer() )
@@ -1662,6 +1763,32 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
 	// All is good...
+	return S_OK;
+}
+
+
+const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::string &key, const std::string &value) throw()
+{
+	if( !this->_inTransaction ) return E_TRANSACTION;
+	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
+	if( binAttribute == NULL ) return E_ATTRID;
+	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
+	BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
+	// Quick check to see if there is a no-change requested
+	std::string oldValue = attribute->Get(key);
+	if (oldValue == value) return S_OK;
+	// Must save old value
+	AttributeChange<std::pair<std::string,std::string> >* changeRecord = new AttributeChange<std::pair<std::string,std::string> >();
+	ASSERT( changeRecord != NULL );
+	changeRecord->uuid = this->_openedObject->first;
+	changeRecord->attrID = attrID;
+	changeRecord->oldValue = std::make_pair(key, oldValue);
+	changeRecord->newValue = std::make_pair(key, value);
+	// Add the change record into the changedObjects list
+	this->_changedObjects.push_back(changeRecord);
+	// Update the attribute value
+	attribute->Set(key, value);
 	return S_OK;
 }
 
@@ -1828,8 +1955,26 @@ const Result_t BinFile::DisableCompression(void) throw()
 }
 
 
+const Result_t BinFile::EncryptionKey(std::vector<char> &key, std::vector<char> &iv) const throw()
+{
+	// Is encryption not enabled?
+	key.clear();
+	iv.clear();
+	if (!this->_isEncrypted) return S_OK;
+	// Resize lists and copy in bytes
+	key.resize(BINFILE_ENCRYPTIONKEYSIZE);
+	memcpy(&key[0], this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE);
+	iv.resize(CryptoPP::AES::BLOCKSIZE * 16);
+	memcpy(&iv[0], this->_encryptionIV, CryptoPP::AES::BLOCKSIZE * 16);
+	// All is good
+	return S_OK;
+}
+
+
 const Result_t BinFile::EnableEncryption(const std::vector<char> &key) throw()
 {
+	// Must not be in a transaction
+	if( this->_inTransaction ) return E_TRANSACTION;
 	// Nothing to be done if we already are encrypting
 	if (this->_isEncrypted) return S_OK;
 	ASSERT(false);
@@ -1840,6 +1985,8 @@ const Result_t BinFile::EnableEncryption(const std::vector<char> &key) throw()
 
 const Result_t BinFile::DisableEncryption(void) throw()
 {
+	// Must not be in a transaction
+	if( this->_inTransaction ) return E_TRANSACTION;
 	// Nothing to be done if we already are not encryption
 	if (!this->_isEncrypted) return S_OK;
 	ASSERT(false);
@@ -1848,7 +1995,7 @@ const Result_t BinFile::DisableEncryption(void) throw()
 }
 
 /*** Main Todo List
- *	1) Finish encryption/decryption
+ *	1) Finish Enable/Disable encryption
  *	2) Finish Undo/Redo
  *	3) Finish Registry/Dictionary support
  *	4) What about a search API

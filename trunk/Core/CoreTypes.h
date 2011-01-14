@@ -62,6 +62,9 @@ extern void _SplitPath(const std::string &path, std::string &directory, std::str
 namespace MGA {
 
 
+/******************************************/
+
+
 typedef int16_t MetaID_t;
 typedef int16_t AttrID_t;
 
@@ -72,6 +75,9 @@ const AttrID_t ATTRID_NONE = 0;
 const AttrID_t ATTRID_NAME = 2;
 const AttrID_t ATTRID_FATHER = 3;
 const AttrID_t ATTRID_COLLECTION = 10000;
+
+
+/******************************************/
 
 
 class Uuid {
@@ -101,9 +107,6 @@ public:
 };
 
 
-/******************************************/
-
-
 struct Uuid_HashFunc
 {
 	size_t operator()(const Uuid &uuid) const
@@ -130,6 +133,7 @@ private:
 		VALUETYPE_LONG			= 4,			//!< Long (32 bit)
 		VALUETYPE_STRING		= 5,			//!< String type
 		VALUETYPE_REAL			= 6,			//!< Real (64 bit)
+		VALUETYPE_DICTIONARY	= 7,			//!< Key-value pair dictionary
 	} _ValueTypeEnum;
 	_ValueTypeEnum				_type;								//!< Internal type value
 	ValueType(const _ValueTypeEnum &type) : _type(type)		{ }		//!< Hidden primary constructor
@@ -146,6 +150,7 @@ public:
 	inline static ValueType Long(void)			{ return ValueType(VALUETYPE_LONG); }		//!< Create a ValueType of type long
 	inline static ValueType String(void)		{ return ValueType(VALUETYPE_STRING); }		//!< Create a ValueType of type string
 	inline static ValueType Real(void)			{ return ValueType(VALUETYPE_REAL); }		//!< Create a ValueType of type real
+	inline static ValueType Dictionary(void)	{ return ValueType(VALUETYPE_DICTIONARY); }	//!< Create a ValueType of type dictionary
 	inline static ValueType Read(char* &stream)	{ uint8_t type; memcpy(&type, stream, sizeof(uint8_t)); stream += sizeof(uint8_t); return ValueType(type); }
 	//Overridden Operators
 	inline ValueType& operator=(const ValueType &type)	{ this->_type = type._type; return *this; }	//!< Equals operator
@@ -162,6 +167,7 @@ public:
 			case VALUETYPE_LONG:		out << "ValueType::Long"; break;
 			case VALUETYPE_STRING:		out << "ValueType::String"; break;
 			case VALUETYPE_REAL:		out << "ValueType::Real"; break;
+			case VALUETYPE_DICTIONARY:	out << "ValueType::Dictionary"; break;
 			default:					out << "ValueType::Error!!!"; break;
 		}
 		return out;
