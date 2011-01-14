@@ -132,11 +132,9 @@ private:
 	CoreMetaObject						*_metaObject;				//!< MetaObject for this object
 	std::list<BinAttribute*>			_attributes;				//!< List of attributes
 	bool								_isDirty;					//!< Flag for if object attributes have been changed
-	std::tr1::unordered_map<std::string,std::string>	_dictionary;//!< String::String dictionary
 
 	BinObject();													//!< Deny access to default constructor
-	BinObject(CoreMetaObject* &metaObject, const Uuid &uuid) :
-		_uuid(uuid), _metaObject(metaObject), _attributes(), _isDirty(false), _dictionary() { }
+	BinObject(CoreMetaObject* &metaObject, const Uuid &uuid) : _uuid(uuid), _metaObject(metaObject), _attributes(), _isDirty(false) { }
 	void CreateAttributes(CoreMetaObject *metaobject);				//!< Uses metaObject to create empty attributes
 	bool IsConnected(void) const;									//!< Are any forward pointers connected?
 
@@ -191,6 +189,7 @@ private:
 	CryptoPP::ZlibDecompressor			*_decompressor;				//!< Decompressor
 	bool								_isEncrypted;				//!< Is encryption turned on
 	char								*_encryptionKey;			//!< What is the encryption key
+	char								*_encryptionIV;				//!< The encryption IV
 
 	BinFile();														//!< Deny access to default constructor
 	BinFile(const BinFile &);										//!< Deny access to copy constructor
@@ -201,7 +200,7 @@ private:
 	static const Result_t Create(const std::string &filename, CoreMetaProject *coreMetaProject,	//!<
 								 ICoreStorage* &storage, const bool &encrypted);
 	static const Result_t Open(const std::string &filename, CoreMetaProject *coreMetaProject,	//!<
-							   ICoreStorage* &storage, const std::vector<char> &encryptionKey);
+							   ICoreStorage* &storage, const std::vector<char> &encryptionKey, const std::vector<char> &encryptionIV);
 
 	// Private Methods
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
@@ -245,12 +244,14 @@ public:
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw();		//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw();	//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw();				//!<
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, const std::string &key, std::string &value) throw();	//!< Get key value
 	
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw();	//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &key, const std::string &value) throw();	//!< Set key value
 
 	virtual const Result_t Undo(Uuid &tag) throw();											//!<
 	virtual const Result_t Redo(Uuid &tag) throw();											//!<
@@ -267,6 +268,7 @@ public:
 	virtual const Result_t DisableCompression(void) throw();								//!<
 
 	virtual const Result_t IsEncrypted(bool &flag) const throw()							{ flag = this->_isEncrypted; return S_OK; }
+	virtual const Result_t EncryptionKey(std::vector<char> &key, std::vector<char> &iv) const throw();	//!<
 	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw();			//!<
 	virtual const Result_t DisableEncryption(void) throw();									//!<	
 };
@@ -282,8 +284,8 @@ class BinFileFactory :
 public:
 	inline virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const bool &encrypted=false)	{
 		return BinFile::Create(filename, metaProject, storage, encrypted); }
-	inline virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>()) {
-		return BinFile::Open(filename, metaProject, storage, encryptionKey); }
+	inline virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>(), const std::vector<char> &encryptionIV=std::vector<char>()) {
+		return BinFile::Open(filename, metaProject, storage, encryptionKey, encryptionIV); }
 };
 
 

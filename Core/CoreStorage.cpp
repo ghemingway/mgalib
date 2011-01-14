@@ -42,7 +42,7 @@ const Result_t ICoreStorage::Create(const std::string &tag, const std::string &f
 	std::map<std::string,CoreStorageFactory*>::iterator mapIter = ICoreStorage::_storageFactories.find(tag);
 	if (mapIter != ICoreStorage::_storageFactories.end()) {
 		// Create the storage
-		return mapIter->second->Create(filename, metaProject, storage);
+		return mapIter->second->Create(filename, metaProject, storage, encrypted);
 	}
 	else {
 		std::cout << "ICoreStorage::Create - not able to find factory for file type: " << tag << std::endl;
@@ -51,13 +51,13 @@ const Result_t ICoreStorage::Create(const std::string &tag, const std::string &f
 }
 
 
-const Result_t ICoreStorage::Open(const std::string &tag, const std::string &filename, CoreMetaProject* metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey) throw()
+const Result_t ICoreStorage::Open(const std::string &tag, const std::string &filename, CoreMetaProject* metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey, const std::vector<char> &encryptionIV) throw()
 {
 	// Find the tag in the list
 	std::map<std::string,CoreStorageFactory*>::iterator mapIter = ICoreStorage::_storageFactories.find(tag);
 	if (mapIter != ICoreStorage::_storageFactories.end()) {
 		// Create the storage
-		return mapIter->second->Open(filename, metaProject, storage);
+		return mapIter->second->Open(filename, metaProject, storage, encryptionKey, encryptionIV);
 	}
 	else {
 		std::cout << "ICoreStorage::Open - not able to find factory for file type: " << tag << std::endl;
