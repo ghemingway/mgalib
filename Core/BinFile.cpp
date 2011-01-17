@@ -32,10 +32,13 @@ template <> void _Read<std::string>(char* &stream, std::string &str)
 	// Read the length of the string
 	uint32_t len;
 	_Read(stream, len);
-	// Create the string
-	str.resize(len);
-	memcpy(&str[0], stream, len);
-	stream += len;
+	if (len > 0)
+	{
+		// Create the string
+		str.resize(len);
+		memcpy(&str[0], stream, len);
+		stream += len;
+	}
 }
 template <> void _Read<std::list<Uuid> >(char* &stream, std::list<Uuid> &collection)
 {
@@ -673,7 +676,7 @@ const Result_t BinFile::Load(void)
 	Uuid uuid;
 	uint32_t preambleSizeB = sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t);
 	std::vector<char> buffer;
-	buffer.reserve(preambleSizeB);
+	buffer.resize(preambleSizeB);
 	char* bufferPointer = &buffer[0];
 	this->_inputFile.read(&buffer[0], preambleSizeB);
 	_Read(bufferPointer, uuid);
@@ -722,7 +725,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Size the buffer
 	uint64_t indexSizeB = originalIndexSizeB;
 	std::vector<char> buffer;
-	buffer.reserve((unsigned int)indexSizeB);
+	buffer.resize((unsigned int)indexSizeB);
 	// Read the index from the file itself
 	stream.read(&buffer[0], indexSizeB);
 	// Is there encryption
@@ -783,7 +786,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	// Create a correctly sized output buffer
 	indexSizeB = index.size() * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::vector<char> buffer;
-	buffer.reserve((unsigned int)indexSizeB);
+	buffer.resize((unsigned int)indexSizeB);
 	// Write each item from the index into the buffer
 	char *bufferPointer = &buffer[0];
 	IndexHash::const_iterator hashIter = index.begin();
@@ -839,7 +842,7 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	ASSERT( stream.is_open() );
 	// Create a correctly sized input buffer
 	std::vector<char> buffer;
-	buffer.reserve(sizeB);
+	buffer.resize(sizeB);
 	char* bufferPointer = &buffer[0];
 	// Read data from the stream
 	stream.read(&buffer[0], sizeB);
@@ -870,7 +873,7 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 	// Size is larger if we have encryption (IV takes space)
 	if (this->_isEncrypted) sizeB += BINFILE_ENCRYPTIONIVSIZE;
 	std::vector<char> buffer;
-	buffer.reserve(sizeB);
+	buffer.resize(sizeB);
 	char* bufferPointer = &buffer[0];
 	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
 	if (this->_isEncrypted)
@@ -930,7 +933,7 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	stream.seekg(indexEntry.position);
 	// Try to read the object
 	std::vector<char> buffer;
-	buffer.reserve(indexEntry.sizeB);
+	buffer.resize(indexEntry.sizeB);
 	stream.read(&buffer[0], indexEntry.sizeB);
 	// Is there encryption
 	if (indexEntry.isEncrypted)
@@ -1235,7 +1238,7 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 {
 	// Clear the incoming vector and size it
 	objectVector.clear();
-	objectVector.reserve(this->_indexHash.size());
+	objectVector.resize(this->_indexHash.size());
 	// Load it with the indexHash
 	IndexHash::const_iterator indexIter = this->_indexHash.begin();
 	while(indexIter != this->_indexHash.end())
@@ -1304,7 +1307,7 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 
 	// Write out the preamble (metaProject Uuid + options location and options size)
 	std::vector<char> buffer;
-	buffer.reserve(preambleSize);
+	buffer.resize(preambleSize);
 	char* bufferPointer = &buffer[0];
 	_Write(bufferPointer, this->_metaProjectUuid);
 	_Write(bufferPointer, startOfOptions);
