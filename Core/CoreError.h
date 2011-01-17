@@ -23,9 +23,9 @@ typedef long Result_t;
 
 //		One or more arguments are invalid
 //*****	E_INVALIDARG
-#define E_POINTER						0x80731000
+#ifndef _WIN32
 #define S_OK							0
-
+#endif
 //		Not enough storage is available to complete this operation
 //*****	E_OUTOFMEMORY
 

@@ -722,7 +722,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Size the buffer
 	uint64_t indexSizeB = originalIndexSizeB;
 	std::vector<char> buffer;
-	buffer.reserve(indexSizeB);
+	buffer.reserve((unsigned int)indexSizeB);
 	// Read the index from the file itself
 	stream.read(&buffer[0], indexSizeB);
 	// Is there encryption
@@ -734,26 +734,26 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
 		// Load up our data
-		filter.Put( (const byte*)&buffer[0], indexSizeB );
+		filter.Put( (const byte*)&buffer[0], (size_t)indexSizeB );
 		filter.MessageEnd();
 		// Make sure we get out the same number of bytes we put in
 		ASSERT( indexSizeB == filter.MaxRetrievable() );
 		// Decrypt and get data
-		filter.Get( (byte*)&buffer[0], indexSizeB );
+		filter.Get( (byte*)&buffer[0], (size_t)indexSizeB );
 	}
 	// Is there compression
 	if (this->_isCompressed)
 	{
 		CryptoPP::ZlibDecompressor decompressor;
 		// Flush the decompressor and load it up
-		decompressor.Put((const byte*)&buffer[0], indexSizeB);
+		decompressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
 		decompressor.MessageEnd();
 		// Get the decompressed size
 		indexSizeB = decompressor.MaxRetrievable();
 		// Resize the buffer
-		buffer.resize(indexSizeB);
+		buffer.resize((unsigned int)indexSizeB);
 		// Get the data and clean up
-		decompressor.Get((byte*)&buffer[0], indexSizeB);
+		decompressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
 	}
 	// How many objects are there
 	uint64_t objCount = indexSizeB / (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
@@ -783,7 +783,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	// Create a correctly sized output buffer
 	indexSizeB = index.size() * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	std::vector<char> buffer;
-	buffer.reserve(indexSizeB);
+	buffer.reserve((unsigned int)indexSizeB);
 	// Write each item from the index into the buffer
 	char *bufferPointer = &buffer[0];
 	IndexHash::const_iterator hashIter = index.begin();
@@ -803,14 +803,14 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	{
 		CryptoPP::ZlibCompressor compressor;
 		// Clear and load up the compressor
-		compressor.Put((const byte*)&buffer[0], indexSizeB);
+		compressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
 		compressor.MessageEnd();
 		// Get the new size
 		indexSizeB = compressor.MaxRetrievable();
 		// Resize the buffer
-		buffer.resize(indexSizeB);
+		buffer.resize((unsigned int)indexSizeB);
 		// Get the data and clean up
-		compressor.Get((byte*)&buffer[0], indexSizeB);
+		compressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
 	}
 	// Is there encryption
 	if (this->_isEncrypted)
@@ -821,12 +821,12 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
 		// Load up our data
-		filter.Put( (const byte*)&buffer[0], indexSizeB );
+		filter.Put( (const byte*)&buffer[0], (size_t)indexSizeB );
 		filter.MessageEnd();
 		// Make sure we get out the same number of bytes we put in
 		ASSERT( indexSizeB == filter.MaxRetrievable() );
 		// Encrypt and get data
-		filter.Get( (byte*)&buffer[0], indexSizeB );
+		filter.Get( (byte*)&buffer[0], (size_t)indexSizeB );
 	}
 	// Now write out the data to the file
 	stream.write(&buffer[0], indexSizeB);
@@ -846,7 +846,7 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	// Parse the options
 	uint8_t tmpVal;
 	_Read<uint8_t>(bufferPointer, tmpVal);
-	this->_isEncrypted = tmpVal;
+	this->_isEncrypted = (tmpVal != false);
 	if (this->_isEncrypted)
 	{
 		// Read the encryption IV
@@ -854,7 +854,7 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 		ASSERT(false);
 	}
 	_Read<uint8_t>(bufferPointer, tmpVal);
-	this->_isCompressed = tmpVal;
+	this->_isCompressed = (tmpVal != false);
 	_Read(bufferPointer, this->_rootUuid);
 	_Read(bufferPointer, startOfIndex);
 	_Read(bufferPointer, indexSizeB);
@@ -958,9 +958,9 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 		// Get the decompressed size
 		uint64_t sizeB = decompressor.MaxRetrievable();
 		// Resize the buffer
-		buffer.resize(sizeB);
+		buffer.resize((unsigned int)sizeB);
 		// Get the data
-		decompressor.Get((byte*)&buffer[0], sizeB);
+		decompressor.Get((byte*)&buffer[0], (size_t)sizeB);
 	}
 	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid);
 	ASSERT( indexEntry.object != NULL );
@@ -991,7 +991,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		compressor.Put((const byte*)&buffer[0], indexEntry.sizeB);
 		compressor.MessageEnd();
 		// Get the new size
-		indexEntry.sizeB = compressor.MaxRetrievable();
+		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
 		// Resize the buffer
 		buffer.resize(indexEntry.sizeB);
 		// Get the data

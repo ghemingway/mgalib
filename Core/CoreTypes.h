@@ -13,6 +13,7 @@
 #include <vector>
 #ifdef _WIN32
 #include <hash_map>
+#include <unordered_map>
 #include <memory>
 #else
 #include <ext/hash_map>
@@ -53,8 +54,10 @@ extern void _SplitPath(const std::string &path, std::string &directory, std::str
 // Will need to be platform independent
 #ifdef _WIN32
 #define STDEXT stdext
+#define STDTR1 std
 #else
 #define STDEXT __gnu_cxx
+#define STDTR1 std::tr1
 #endif
 
 
