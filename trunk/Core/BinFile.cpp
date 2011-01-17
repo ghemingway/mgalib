@@ -17,6 +17,7 @@
 #define BINFILE_DEFAULTJOURNALING			false
 #define BINFILE_DEFAULTCOMPRESSION			true
 #define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
+#define BINFILE_ENCRYPTIONIVSIZE			CryptoPP::AES::BLOCKSIZE * 16
 
 
 // --------------------------- IOStream Access  --------------------------- //
@@ -50,6 +51,23 @@ template <> void _Read<std::list<Uuid> >(char* &stream, std::list<Uuid> &collect
 		collection.push_back(uuid);
 	}
 }
+template <> void _Read<DictionaryMap>(char* &stream, DictionaryMap &dictionary)
+{
+	// Read the number of dictionary entries
+	uint32_t entryCount;
+	_Read(stream, entryCount);
+	// Read entryCount number of entries
+	for (uint32_t i=0; i<entryCount; ++i)
+	{
+		std::string key="", value="";
+		// Read the key
+		_Read<std::string>(stream, key);
+		// Read the value
+		_Read<std::string>(stream, value);
+		// Entry the key-value pair into the dictionary
+		dictionary.insert( std::make_pair(key, value) );
+	}
+}
 
 template <class T> void _Write(char* &stream, const T &value)					{ memcpy(stream, &value, sizeof(T)); stream += sizeof(T); }
 template <> void _Write<ValueType>(char* &stream, const ValueType &valueType)	{ valueType.Write(stream); }
@@ -77,7 +95,23 @@ template <> inline void _Write<std::list<Uuid> >(char* &stream, const std::list<
 		++collectionIter;
 	}
 }
-
+template <> void _Write<DictionaryMap>(char* &stream, const DictionaryMap &dictionary)
+{
+	// Write the number of dictionary entries
+	uint32_t entryCount = dictionary.size();
+	_Write(stream, entryCount);
+	// Iterate through the whole map and write each key and each value
+	DictionaryMap::const_iterator dictIter = dictionary.begin();
+	while (dictIter != dictionary.end())
+	{
+		// Write the key
+		_Write<std::string>(stream, dictIter->first);
+		// Write the value
+		_Write<std::string>(stream, dictIter->second);
+		// Move to the next key-value
+		++dictIter;
+	}
+}
 
 // --------------------------- UTF-8 Encoding Check --------------------------- //
 
@@ -201,33 +235,50 @@ public:
 // --------------------------- BinAttribute::ValueType::Dictionary() --------------------------- //
 
 
-class BinAttributeDictionary : public BinAttributeBase<std::tr1::unordered_map<std::string,std::string> > {
+class BinAttributeDictionary : public BinAttributeBase<DictionaryMap> {
 public:
-	BinAttributeDictionary(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::tr1::unordered_map<std::string,std::string> >(parent, attrID, std::tr1::unordered_map<std::string,std::string>()) { }
+	BinAttributeDictionary(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<DictionaryMap>(parent, attrID, DictionaryMap()) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Dictionary(); }
 	virtual inline uint32_t Size(void) const
 	{
-		ASSERT(false);
-		return 0;//(sizeof(uint32_t) + this->_value.size() * sizeof(Uuid));
+		// Size it at least the number of elements in the dictionary
+		uint32_t size = sizeof(uint32_t);
+		// Iterate through the whole map and get the size of each key and value
+		DictionaryMap::const_iterator dictIter = this->_value.begin();
+		while (dictIter != this->_value.end())
+		{
+			// Add the size of the key (plus 4 for recording its size)
+			size += sizeof(uint32_t) + dictIter->first.size();
+			// Add the size of the value (plus 4 for recording its size)
+			size += sizeof(uint32_t) + dictIter->second.size();
+			// Move to the next key-value
+			++dictIter;
+		}
+		return size;
 	}
-	inline virtual const Result_t Set(const std::string &key, const std::string &value)
+	inline virtual const Result_t Set(const std::pair<std::string,std::string> &value)
 	{
-		ASSERT(false);
+		// Make sure both key and value are valid UTF-8
+		if (_CheckUTF8(value.first) != S_OK || _CheckUTF8(value.second) != S_OK) return E_BADUTF8STRING;
 		this->_parent->MarkDirty();
-//		this->_value = value;
+		// Look for the key in the map
+		DictionaryMap::iterator dictIter = this->_value.find(value.first);
+		// Did we not find it - we must insert it then
+		if (dictIter == this->_value.end()) this->_value.insert( value );
+		// Otherwise, just update the old value
+		else dictIter->second = value.second;
 		return S_OK;
 	}
 	inline virtual std::string Get(const std::string &key) const
 	{
-		ASSERT(false);
-		return "";
+		// Look for the key in the map
+		DictionaryMap::const_iterator dictIter = this->_value.find(key);
+		// Did we not find it
+		if (dictIter == this->_value.end()) return "";
+		// Otherwise, return the value
+		return dictIter->second;
 	}
-	virtual inline void StreamWrite(char* &stream) const
-	{
-		ASSERT(false);
-		_Write(stream, ValueType::LongPointer());
-//		BinAttributeBase<Uuid>::StreamWrite(stream);
-	}
+	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Dictionary()); BinAttributeBase<DictionaryMap>::StreamWrite(stream); }
 };
 
 // --------------------------- BinAttr ---------------------------
@@ -495,7 +546,7 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 }
 
 
-const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const bool &encrypted)
+const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const bool &encrypted) throw()
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_META_NOTOPEN;
@@ -537,8 +588,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 		binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
 		randomPool.GenerateBlock( (byte*)binFile->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE );
 		// Generate the iv
-		binFile->_encryptionIV = new char[ CryptoPP::AES::BLOCKSIZE * 16 ];
-		randomPool.GenerateBlock( (byte*)binFile->_encryptionIV, sizeof(binFile->_encryptionIV) );  
+		binFile->_encryptionIV = new char[BINFILE_ENCRYPTIONIVSIZE];
+		randomPool.GenerateBlock( (byte*)binFile->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE );  
 	}
 
 	// Now just create the actual METAID_ROOT object (using a nice transaction of course)
@@ -555,7 +606,7 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 }
 
 
-const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey, const std::vector<char> &encryptionIV)
+const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey) throw()
 {
 	if ( filename == "" ) return E_INVALID_USAGE;
 	if ( coreMetaProject == NULL ) return E_INVALID_USAGE;
@@ -572,16 +623,13 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
 
 	// Is encryption enabled
-	if (encryptionKey.size() != 0 && encryptionIV.size() != 0)
+	if (encryptionKey.size() != 0)
 	{
 		// Turn on encryption for the binFile
 		binFile->_isEncrypted = true;
 		// Copy in the key
 		binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
-		memcpy(binFile->_encryptionKey, &encryptionKey[0], sizeof(binFile->_encryptionKey));
-		// Copy in the iv
-		binFile->_encryptionIV = new char[ CryptoPP::AES::BLOCKSIZE * 16 ];
-		memcpy(binFile->_encryptionIV, &encryptionIV[0], sizeof(binFile->_encryptionIV) );  
+		memcpy(binFile->_encryptionKey, &encryptionKey[0], BINFILE_ENCRYPTIONKEYSIZE);
 	}
 
 	// Load the project (check for errors)
@@ -682,8 +730,8 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	{
 		// Create the decryptor and filter
 		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
-							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
 		// Load up our data
 		filter.Put( (const byte*)&buffer[0], indexSizeB );
@@ -769,8 +817,8 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	{
 		// Create the encryptor and filter
 		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
-							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
 		// Load up our data
 		filter.Put( (const byte*)&buffer[0], indexSizeB );
@@ -799,6 +847,12 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	uint8_t tmpVal;
 	_Read<uint8_t>(bufferPointer, tmpVal);
 	this->_isEncrypted = tmpVal;
+	if (this->_isEncrypted)
+	{
+		// Read the encryption IV
+		// TODO: Read the encryption IV (std::vector<char> of BINFILE_ENCRYPTIONIVSIZE)
+		ASSERT(false);
+	}
 	_Read<uint8_t>(bufferPointer, tmpVal);
 	this->_isCompressed = tmpVal;
 	_Read(bufferPointer, this->_rootUuid);
@@ -813,10 +867,18 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
 	uint32_t sizeB = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint64_t);
+	// Size is larger if we have encryption (IV takes space)
+	if (this->_isEncrypted) sizeB += BINFILE_ENCRYPTIONIVSIZE;
 	std::vector<char> buffer;
 	buffer.reserve(sizeB);
 	char* bufferPointer = &buffer[0];
 	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
+	if (this->_isEncrypted)
+	{
+		// Write the encryption IV
+		// TODO: Write the encryption IV (std::vector<char> of BINFILE_ENCRYPTIONIVSIZE)
+		ASSERT(false);
+	}
 	_Write<uint8_t>(bufferPointer, this->_isCompressed);
 	_Write<Uuid>(bufferPointer, this->_rootUuid);
 	_Write<uint64_t>(bufferPointer, startOfIndex);
@@ -875,8 +937,8 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	{
 		// Create the decryptor and filter
 		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
-							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
 		// Load up our data
 		filter.Put( (const byte*)&buffer[0], indexEntry.sizeB );
@@ -940,8 +1002,8 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 	{
 		// Create the encryptor and filter
 		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, sizeof(this->_encryptionKey),
-							   (const byte*)this->_encryptionIV, sizeof(this->_encryptionIV));
+		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
 		// Load up our data
 		filter.Put( (const byte*)&buffer[0], indexEntry.sizeB );
@@ -1628,7 +1690,7 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, Uuid &value) t
 }
 
 
-const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, const std::string &key, std::string &value) throw()
+const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::pair<std::string,std::string> &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
@@ -1636,7 +1698,7 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, const std::str
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
-	value = ((BinAttributeDictionary*)binAttribute)->Get(key);
+	value.second = ((BinAttributeDictionary*)binAttribute)->Get(value.first);
 	return S_OK;
 }
 
@@ -1767,8 +1829,9 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 }
 
 
-const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::string &key, const std::string &value) throw()
+const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::pair<std::string,std::string> &value) throw()
 {
+	ASSERT(false);
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
 	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
@@ -1776,19 +1839,19 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
 	BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	std::string oldValue = attribute->Get(key);
-	if (oldValue == value) return S_OK;
+	std::string oldValue = attribute->Get(value.first);
+	if (oldValue == value.second) return S_OK;
 	// Must save old value
 	AttributeChange<std::pair<std::string,std::string> >* changeRecord = new AttributeChange<std::pair<std::string,std::string> >();
 	ASSERT( changeRecord != NULL );
 	changeRecord->uuid = this->_openedObject->first;
 	changeRecord->attrID = attrID;
-	changeRecord->oldValue = std::make_pair(key, oldValue);
-	changeRecord->newValue = std::make_pair(key, value);
+	changeRecord->oldValue = std::make_pair(value.first, oldValue);
+	changeRecord->newValue = value;
 	// Add the change record into the changedObjects list
 	this->_changedObjects.push_back(changeRecord);
 	// Update the attribute value
-	attribute->Set(key, value);
+	attribute->Set(value);
 	return S_OK;
 }
 
@@ -1955,17 +2018,14 @@ const Result_t BinFile::DisableCompression(void) throw()
 }
 
 
-const Result_t BinFile::EncryptionKey(std::vector<char> &key, std::vector<char> &iv) const throw()
+const Result_t BinFile::EncryptionKey(std::vector<char> &key) const throw()
 {
 	// Is encryption not enabled?
 	key.clear();
-	iv.clear();
 	if (!this->_isEncrypted) return S_OK;
 	// Resize lists and copy in bytes
 	key.resize(BINFILE_ENCRYPTIONKEYSIZE);
 	memcpy(&key[0], this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE);
-	iv.resize(CryptoPP::AES::BLOCKSIZE * 16);
-	memcpy(&iv[0], this->_encryptionIV, CryptoPP::AES::BLOCKSIZE * 16);
 	// All is good
 	return S_OK;
 }

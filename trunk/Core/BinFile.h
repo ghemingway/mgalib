@@ -67,7 +67,7 @@ typedef struct IndexEntry
 	bool									isCompressed;
 	bool									isEncrypted;
 } IndexEntry;
-	typedef std::tr1::unordered_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
+typedef std::tr1::unordered_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
 
 typedef struct AttributeChangeBase
@@ -198,9 +198,9 @@ private:
 
 	friend class BinFileFactory;
 	static const Result_t Create(const std::string &filename, CoreMetaProject *coreMetaProject,	//!<
-								 ICoreStorage* &storage, const bool &encrypted);
+								 ICoreStorage* &storage, const bool &encrypted) throw();
 	static const Result_t Open(const std::string &filename, CoreMetaProject *coreMetaProject,	//!<
-							   ICoreStorage* &storage, const std::vector<char> &encryptionKey, const std::vector<char> &encryptionIV);
+							   ICoreStorage* &storage, const std::vector<char> &encryptionKey) throw();
 
 	// Private Methods
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
@@ -244,14 +244,14 @@ public:
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw();		//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw();	//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw();				//!<
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, const std::string &key, std::string &value) throw();	//!< Get key value
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::pair<std::string,std::string> &value) throw();	//!< Get key value
 	
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw();	//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &key, const std::string &value) throw();	//!< Set key value
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::pair<std::string,std::string> &value) throw();	//!< Set key value
 
 	virtual const Result_t Undo(Uuid &tag) throw();											//!<
 	virtual const Result_t Redo(Uuid &tag) throw();											//!<
@@ -268,7 +268,7 @@ public:
 	virtual const Result_t DisableCompression(void) throw();								//!<
 
 	virtual const Result_t IsEncrypted(bool &flag) const throw()							{ flag = this->_isEncrypted; return S_OK; }
-	virtual const Result_t EncryptionKey(std::vector<char> &key, std::vector<char> &iv) const throw();	//!<
+	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw();				//!<
 	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw();			//!<
 	virtual const Result_t DisableEncryption(void) throw();									//!<	
 };
@@ -284,8 +284,8 @@ class BinFileFactory :
 public:
 	inline virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const bool &encrypted=false)	{
 		return BinFile::Create(filename, metaProject, storage, encrypted); }
-	inline virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>(), const std::vector<char> &encryptionIV=std::vector<char>()) {
-		return BinFile::Open(filename, metaProject, storage, encryptionKey, encryptionIV); }
+	inline virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>()) {
+		return BinFile::Open(filename, metaProject, storage, encryptionKey); }
 };
 
 
