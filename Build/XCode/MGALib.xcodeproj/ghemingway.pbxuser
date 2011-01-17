@@ -132,10 +132,11 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 316928340;
-			PBXWorkspaceStateSaveDate = 316928340;
+			PBXPerProjectTemplateStateSaveDate = 316975074;
+			PBXWorkspaceStateSaveDate = 316975074;
 		};
 		perUserProjectItems = {
+			580E068612E4A81800D0759C /* PBXTextBookmark */ = 580E068612E4A81800D0759C /* PBXTextBookmark */;
 			580E305912E106DA005E8A9F /* PBXTextBookmark */ = 580E305912E106DA005E8A9F /* PBXTextBookmark */;
 			580E305D12E106DA005E8A9F /* PBXTextBookmark */ = 580E305D12E106DA005E8A9F /* PBXTextBookmark */;
 			580E305E12E106DA005E8A9F /* PBXTextBookmark */ = 580E305E12E106DA005E8A9F /* PBXTextBookmark */;
@@ -200,7 +201,6 @@
 			5877159812E486480061E05E /* PBXTextBookmark */ = 5877159812E486480061E05E /* PBXTextBookmark */;
 			5877159912E486480061E05E /* PBXTextBookmark */ = 5877159912E486480061E05E /* PBXTextBookmark */;
 			5877159A12E486480061E05E /* PBXTextBookmark */ = 5877159A12E486480061E05E /* PBXTextBookmark */;
-			5877159B12E486480061E05E /* PBXTextBookmark */ = 5877159B12E486480061E05E /* PBXTextBookmark */;
 			587715A412E491160061E05E /* PBXTextBookmark */ = 587715A412E491160061E05E /* PBXTextBookmark */;
 			587E262612BBC2430035DB9E /* PlistBookmark */ = 587E262612BBC2430035DB9E /* PlistBookmark */;
 			58801DD312C9220300935308 /* PBXTextBookmark */ = 58801DD312C9220300935308 /* PBXTextBookmark */;
@@ -283,6 +283,16 @@
 		name = stl_list.h;
 		path = "/Developer/SDKs/MacOSX10.6.sdk/usr/include/c++/4.2.1/bits/stl_list.h";
 		sourceTree = "<absolute>";
+	};
+	580E068612E4A81800D0759C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
+		name = "BinFile.cpp: 829";
+		rLen = 0;
+		rLoc = 31504;
+		rType = 0;
+		vrLen = 3799;
+		vrLoc = 30268;
 	};
 	580E305912E106DA005E8A9F /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -1033,9 +1043,9 @@
 	};
 	5843907712B9703300F4AB58 /* BinFile.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {936, 27222}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1153, 27222}}";
 			sepNavSelRange = "{31504, 0}";
-			sepNavVisRange = "{30313, 3710}";
+			sepNavVisRange = "{30268, 3799}";
 			sepNavWindowFrame = "{{61, 797}, {1046, 734}}";
 		};
 	};
@@ -1623,11 +1633,6 @@
 		name = BinFile.h;
 		path = ../../Core/BinFile.h;
 		sourceTree = "<group>";
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1111, 3328}}";
-			sepNavSelRange = "{14565, 0}";
-			sepNavVisRange = "{10743, 4180}";
-		};
 	};
 	5877159712E486480061E05E /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -1668,16 +1673,6 @@
 		rType = 0;
 		vrLen = 4180;
 		vrLoc = 10743;
-	};
-	5877159B12E486480061E05E /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 5843907712B9703300F4AB58 /* BinFile.cpp */;
-		name = "BinFile.cpp: 19";
-		rLen = 0;
-		rLoc = 660;
-		rType = 0;
-		vrLen = 1862;
-		vrLoc = 0;
 	};
 	587715A412E491160061E05E /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
