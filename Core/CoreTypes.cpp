@@ -16,8 +16,11 @@ Uuid::Uuid()
 	// Make sure to release 
 	CFRelease(cfuuidRef);
 #elif _WIN32
-	// Needs implementation
-	ASSERT(false);
+	// Needs revision: byte order issues
+	GUID& guid = *(reinterpret_cast<GUID*>(&this->_data));
+	if (FAILED(CoCreateGuid(&guid))) {
+		ASSERT(false);
+	}
 #elif __linux__
 	// Needs implementation
 	ASSERT(false);
