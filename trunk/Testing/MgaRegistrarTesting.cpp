@@ -7,13 +7,12 @@ TEST(MgaRegistrarTest,OpenXMLRegistry)
 {
 	MgaRegistrar* registrar = NULL;
 	// Open an XML registrar
-	Result_t result = XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar);
-	ASSERT_EQ( result, S_OK );
+	Result_t result;
+	ASSERT_EQ( S_OK, XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar) );
 	ASSERT_TRUE( registrar != NULL );
 	// Get info about the MetaGME paradigm
 	std::string connectionString;
 	std::string guid = "";
-	result = registrar->QueryParadigm("MetaGME", guid, connectionString);
-	EXPECT_EQ( result, S_OK );
+	EXPECT_EQ( S_OK, result = registrar->QueryParadigm("MetaGME", guid, connectionString) );
 	if (registrar != NULL) delete registrar;
 }

@@ -10,10 +10,10 @@ TEST(MgaProjectTest,OpenProject)
 	// First create an XML registry
 	MgaRegistrar* registrar;
 	Result_t result;
-	ASSERT_EQ( result = XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar), S_OK ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar) ) << GetErrorInfo(result);
 	// Open test project
 	MgaProject* mgaProject;
-	ASSERT_EQ( result = MgaProject::Open("MGA=ESMoLv3.mga", registrar, false, mgaProject), S_OK ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = MgaProject::Open("MGA=ESMoLv3.mga", registrar, false, mgaProject) ) << GetErrorInfo(result);
 	
 	// Ok, clean up
 	if (mgaProject != NULL) delete mgaProject;
@@ -27,18 +27,18 @@ TEST(MgaProjectTest,GetRootFolder)
 	Result_t result;
 	// First create an XML registry
 	MgaRegistrar* registrar;
-	ASSERT_EQ( XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar), S_OK );
+	ASSERT_EQ( S_OK, XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar) );
 	// Open test project
 	MgaProject* mgaProject = NULL;
-	ASSERT_EQ( MgaProject::Open("MGA=ESMoLv3.mga", registrar, false, mgaProject), S_OK );
+	ASSERT_EQ( S_OK, MgaProject::Open("MGA=ESMoLv3.mga", registrar, false, mgaProject) );
 	ASSERT_TRUE( mgaProject != NULL );
 
 	// Begin a transaction
 	MgaFolder* rootFolder;
-	ASSERT_EQ( result = mgaProject->BeginTransaction(NULL, false), S_OK ) << GetMgaErrorInfo(result);
-	ASSERT_EQ( result = mgaProject->GetRootFolder(rootFolder), S_OK ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = mgaProject->BeginTransaction(NULL, false) ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = mgaProject->GetRootFolder(rootFolder) ) << GetMgaErrorInfo(result);
 	ASSERT_TRUE( rootFolder != NULL );
-	ASSERT_EQ( result = mgaProject->CommitTransaction(), S_OK ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = mgaProject->CommitTransaction() ) << GetMgaErrorInfo(result);
 	
 	// Ok, clean up
 	delete rootFolder;
@@ -52,20 +52,20 @@ TEST(MgaProjectTest,GetChildFCOs)
 	Result_t result;
 	// First create an XML registry
 	MgaRegistrar* registrar;
-	ASSERT_EQ( XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar), S_OK );
+	ASSERT_EQ( S_OK, XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar) );
 	// Open test project
 	MgaProject* mgaProject = NULL;
-	ASSERT_EQ( MgaProject::Open("MGA=ESMoLv3.mga", registrar, false, mgaProject), S_OK );
+	ASSERT_EQ( S_OK, MgaProject::Open("MGA=ESMoLv3.mga", registrar, false, mgaProject) );
 	ASSERT_TRUE( mgaProject != NULL );
 	
 	// Begin a transaction
 	MgaFolder* rootFolder;
-	ASSERT_EQ( result = mgaProject->BeginTransaction(NULL, false), S_OK ) << GetMgaErrorInfo(result);
-	ASSERT_EQ( result = mgaProject->GetRootFolder(rootFolder), S_OK ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = mgaProject->BeginTransaction(NULL, false) ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = mgaProject->GetRootFolder(rootFolder) ) << GetMgaErrorInfo(result);
 	ASSERT_TRUE( rootFolder != NULL );
 	std::list<MgaFCO*> fcoList;
-	ASSERT_EQ( result = rootFolder->GetChildFCOs(fcoList), S_OK ) << GetMgaErrorInfo(result);
-	ASSERT_EQ( result = mgaProject->CommitTransaction(), S_OK ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = rootFolder->GetChildFCOs(fcoList) ) << GetMgaErrorInfo(result);
+	ASSERT_EQ( S_OK, result = mgaProject->CommitTransaction() ) << GetMgaErrorInfo(result);
 	
 	// Ok, clean up
 	MgaFCO::ReleaseList(fcoList);

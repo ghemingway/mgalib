@@ -15,7 +15,7 @@
 #define BINFILE_DEFAULTCACHESIZE			10000000
 #define BINFILE_DEFAULTMAXUNDO				10000000
 #define BINFILE_DEFAULTJOURNALING			false
-#define BINFILE_DEFAULTCOMPRESSION			true
+#define BINFILE_DEFAULTCOMPRESSION			false
 #define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
 #define BINFILE_ENCRYPTIONIVSIZE			CryptoPP::AES::BLOCKSIZE * 16
 
@@ -80,9 +80,12 @@ template <> void _Write<std::string>(char* &stream, const std::string &str)
 	// Write the length of the string
 	uint32_t len = str.length();
 	_Write(stream, len);
-	// Write the actual string
-	memcpy(stream, &str[0], len);
-	stream += len;
+	if (len > 0)
+	{
+		// Write the actual string
+		memcpy(stream, &str[0], len);
+		stream += len;
+	}
 }
 template <> inline void _Write<std::list<Uuid> >(char* &stream, const std::list<Uuid> &collection)
 {
@@ -1238,7 +1241,7 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 {
 	// Clear the incoming vector and size it
 	objectVector.clear();
-	objectVector.resize(this->_indexHash.size());
+	objectVector.reserve(this->_indexHash.size());
 	// Load it with the indexHash
 	IndexHash::const_iterator indexIter = this->_indexHash.begin();
 	while(indexIter != this->_indexHash.end())
