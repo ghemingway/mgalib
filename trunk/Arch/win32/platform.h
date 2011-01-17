@@ -32,6 +32,7 @@
 
 /*** Included Header Files ***/
 #include <Windows.h>
+#include <assert.h>
 
 
 /*****************************************************************************/

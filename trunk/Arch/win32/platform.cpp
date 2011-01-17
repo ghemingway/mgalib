@@ -1,5 +1,7 @@
 /*** Included Header Files ***/
 #include "platform.h"
+#include <string>
+#define ASSERT	assert
 //#include "scheduler.h"
 //#include "highres_timing.h"
 //#include "logger.h"
@@ -26,12 +28,14 @@ static uint16_t						_numSemaphores = 0;
  * support named semaphores, we have to wrap the create and destroy functions	*/
 Semaphore* _CreateSemaphore( char* name, uint32_t initValue ) {
 	// Check a couple of values
-	assert( name != NULL );
-	assert( _numSemaphores < MAX_SEMAPHORES );
+	ASSERT( name != NULL );
+	ASSERT( _numSemaphores < MAX_SEMAPHORES );
 	// For windows we must use CreateSemaphore
 	_semaphoreArray[_numSemaphores++] = CreateSemaphore( NULL, (LONG)initValue, 1000, NULL );
 	// Return the good semaphore
-	return _semaphoreArray[_numSemaphores-1];
+//	return _semaphoreArray[_numSemaphores-1];
+	ASSERT(false);
+	return NULL;
 }
 
 
@@ -54,8 +58,8 @@ int _WaitSemaphore( Semaphore* semaphore ) {
 /* Close the named (or in Win32 case unnamed ) semaphore */
 void _DestroySemaphore( char* name, Semaphore *semaphore ) {
 	// Check some values
-	assert( name != NULL );
-	assert( semaphore != NULL );
+	ASSERT( name != NULL );
+	ASSERT( semaphore != NULL );
 	// Just close the semaphore
 	CloseHandle( semaphore );
 }

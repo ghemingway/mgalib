@@ -98,7 +98,7 @@ public:
 	~MgaProject();
 
 	static const Result_t Create(const std::string &projectName, const std::string &paradigmName,
-								 const GUID_t &paradigmGUID, MgaRegistrar* &registrar, MgaProject* &mgaProject) throw();
+								 const Uuid &paradigmUuid, MgaRegistrar* &registrar, MgaProject* &mgaProject) throw();
 	static const Result_t Open(const std::string &projectName, MgaRegistrar* &registrar, const bool &readOnly, MgaProject* &project) throw();
 /*
 	STDMETHOD(OpenEx)(BSTR projectname, BSTR paradigmname, VARIANT paradigmGUID);
@@ -112,7 +112,7 @@ public:
 	const Result_t CreateTerritory(IMgaEventSink *handler, MgaTerritory* &territory, IMgaEventSink *handler2=NULL) throw();
 	const Result_t ActiveTerritory(MgaTerritory* &territory) throw()	{ territory = this->_baseTerritory;	return S_OK; }
 	const Result_t CreateAddOn(IMgaEventSink* handler, MgaAddOn* &addOn) throw();
-	const Result_t GetMetaObj(const MetaRef_t &metaRef, MetaBase* &metaBase);
+	const Result_t GetMetaObj(const Uuid &metaRef, MetaBase* &metaBase);
 /*
 	STDMETHOD(CheckLocks)(BSTR filename, VARIANT_BOOL clearlocks);
 	STDMETHOD(get_Territories)(IMgaTerritories **terrs);

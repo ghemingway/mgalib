@@ -130,6 +130,7 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='DLL-Import Debug|Win32'">$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DLL-Import Debug|x64'">$(Platform)\DLL_Output\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='DLL-Import Debug|x64'">$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)d</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

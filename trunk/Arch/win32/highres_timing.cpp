@@ -3,7 +3,8 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include "scheduler.h"
+#include "platform.h"
+#define ASSERT	assert
 
 
 #ifdef __cplusplus
@@ -30,8 +31,6 @@ static double								_hrtGain = 1.00;
 
 
 /*** Externall Defined Variables and Functions ***/
-extern SchedSchedulable						*_nextTask;
-extern void (*_SchedErrorHandler)(ErrorCode,void*,pfloat_t);	
 
 
 /*****************************************************************************/
@@ -135,8 +134,9 @@ double NanoSleep( double deadlineMS ) {
 	// Make sure we are not calling this too late
 	if ( currentTimeMS > deadlineMS + SCHEDULER_RESOLUTION_MS ) {
 		// Signal an error has occured
-		_SchedErrorHandler( FS_ERR_SLEEPDEADLINEMISS, NULL, deadlineMS );
-		return currentTimeMS;
+		ASSERT(false);
+//		_SchedErrorHandler( FS_ERR_SLEEPDEADLINEMISS, NULL, deadlineMS );
+	//	return currentTimeMS;
 	}
 	// Try sleeping that long - will not be accurate ( make sure differnce is positive )
 	DWORD sleepDuration = DWORD( floor( abs( deadlineMS - currentTimeMS ) ) );

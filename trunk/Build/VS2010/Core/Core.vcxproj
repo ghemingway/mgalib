@@ -49,6 +49,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)\..\..\..\Include\utf8\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -68,6 +69,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Arch\win32\highres_timing.cpp" />
+    <ClCompile Include="..\..\..\Arch\win32\platform.cpp" />
     <ClCompile Include="..\..\..\Core\BinFile.cpp" />
     <ClCompile Include="..\..\..\Core\CoreAttribute.cpp" />
     <ClCompile Include="..\..\..\Core\CoreError.cpp" />
@@ -80,6 +83,8 @@
     <ClCompile Include="..\..\..\Core\CoreTypes.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Arch\highres_timing.h" />
+    <ClInclude Include="..\..\..\Arch\win32\platform.h" />
     <ClInclude Include="..\..\..\Core\BinFile.h" />
     <ClInclude Include="..\..\..\Core\CoreAttribute.h" />
     <ClInclude Include="..\..\..\Core\CoreError.h" />
