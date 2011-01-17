@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Arch">
+      <UniqueIdentifier>{2ee27a69-8ab2-4efc-bdd0-08ab1f0a6061}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Core\BinFile.cpp">
@@ -44,6 +47,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Core\CoreTypes.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Arch\win32\highres_timing.cpp">
+      <Filter>Arch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Arch\win32\platform.cpp">
+      <Filter>Arch</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +88,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Core\CoreTypes.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Arch\highres_timing.h">
+      <Filter>Arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Arch\win32\platform.h">
+      <Filter>Arch</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

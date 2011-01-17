@@ -99,7 +99,7 @@ const Result_t MetaAttribute::GetViewable(bool &flag) const throw()
 	int32_t longValue;
 	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VIEWABLE, longValue);
 	// A bit of silly conversion magic
-	if (result == S_OK) flag = (bool)longValue;
+	if (result == S_OK) flag = (longValue != FALSE);
 	return result;
 }
 

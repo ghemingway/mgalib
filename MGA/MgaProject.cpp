@@ -28,8 +28,8 @@ MgaProject::MgaProject(CoreProject *coreProject, MetaProject *metaProject, const
 //	this->_aurcnt = 0;
 //	this->_guidstat = CLEAN;
 
-	GUID_t nGUID;
-	ASSERT( this->_metaProject->GetGUID(nGUID) == S_OK );
+	Uuid nUuid;
+	ASSERT( this->_metaProject->GetUuid(nUuid) == S_OK );
 /*
 	if(pGUID == nGUID)
 	{
@@ -55,7 +55,7 @@ MgaProject::MgaProject(CoreProject *coreProject, MetaProject *metaProject, const
 }
 
 
-const Result_t MgaProject::GetMetaObj(const MetaRef_t &metaRef, MetaBase* &metaBase)
+const Result_t MgaProject::GetMetaObj(const Uuid &metaRef, MetaBase* &metaBase)
 {
 	if( this->_metaProject == NULL ) return E_MGA_PROJECT_NOT_OPEN;
 	this->SetNamespaceInMeta();
