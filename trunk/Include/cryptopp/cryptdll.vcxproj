@@ -104,7 +104,6 @@ echo mac done &gt; "$(OutDir)"\cryptopp.mac.done
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_USRDLL;CRYPTOPP_EXPORTS;CRYPTOPP_ENABLE_COMPLIANCE_WITH_FIPS_140_2=1;USE_PRECOMPILED_HEADERS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -113,6 +112,7 @@ echo mac done &gt; "$(OutDir)"\cryptopp.mac.done
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -154,7 +154,7 @@ echo mac done &gt; "$(OutDir)"\cryptopp.mac.done
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_USRDLL;CRYPTOPP_EXPORTS;CRYPTOPP_ENABLE_COMPLIANCE_WITH_FIPS_140_2=1;USE_PRECOMPILED_HEADERS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -201,7 +201,6 @@ echo mac done &gt; "$(OutDir)"\cryptopp.mac.done
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CRYPTOPP_EXPORTS;CRYPTOPP_ENABLE_COMPLIANCE_WITH_FIPS_140_2=1;USE_PRECOMPILED_HEADERS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -209,6 +208,7 @@ echo mac done &gt; "$(OutDir)"\cryptopp.mac.done
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -247,7 +247,7 @@ echo mac done &gt; "$(OutDir)"\cryptopp.mac.done
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CRYPTOPP_EXPORTS;CRYPTOPP_ENABLE_COMPLIANCE_WITH_FIPS_140_2=1;USE_PRECOMPILED_HEADERS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <ProgramDataBaseFileName>$(OutDir)vc80.pdb</ProgramDataBaseFileName>
