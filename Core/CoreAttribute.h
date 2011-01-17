@@ -213,6 +213,110 @@ inline const Result_t CoreAttributeTemplateBase<std::list<Uuid> >::SetValue(cons
 	return S_OK;
 }
 
+/*
+template<>
+class CoreAttributeTemplateBase : public CoreAttributeBase
+	{
+	protected:
+		friend class CoreAttributeBase;
+		std::list<T>					_values;
+		
+	public:
+		CoreAttributeTemplateBase(CoreObjectBase* parent, CoreMetaAttribute* coreMetaAttribute) :
+		::CoreAttributeBase(parent, coreMetaAttribute), _values() { }
+		
+		inline const Result_t SetValue(const T &value) throw()
+		{
+			// Make sure we are in a write transaction
+			bool flag;
+			ASSERT( this->InWriteTransaction(flag) == S_OK ); 
+			if (!flag) return E_READONLY;
+			// First, make sure the storage value has been loaded
+			if (this->_values.empty())
+			{
+				T tmpValue;
+				ASSERT( this->GetValue(tmpValue) == S_OK );
+			}
+			// Is the value actually changing?
+			if (value == this->_values.back()) return S_OK;
+			// Set the value
+			this->_values.push_back(value);
+			// Mark the attribute as dirty
+			this->MarkDirty();
+			// Add attribute to the project transaction change list
+			this->RegisterTransactionItem();
+			return S_OK;
+		}
+		
+		inline const Result_t GetValue(T &value) throw()
+		{
+			// Make sure we are in a transaction
+			bool flag;
+			ASSERT( this->InTransaction(flag) == S_OK ); 
+			if (!flag) return E_TRANSACTION;
+			// Have we not read this attribute previously
+			if (this->_values.empty())
+			{
+				// Set the storage to the parent object
+				ICoreStorage* storage = this->SetStorageObject();
+				// Read the value from storage
+				AttrID_t attrID = ATTRID_NONE;
+				ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+				Result_t result = storage->GetAttributeValue(attrID, value);
+				if (result != S_OK) return result;
+				// Save the value
+				this->_values.push_back(value);
+			}
+			// Otherwise, just get the most recent value
+			else value = this->_values.back();
+			return S_OK;
+		}
+		
+		inline const Result_t GetLoadedValue(T &value) throw()
+		{
+			ASSERT(false);
+			return E_INVALID_USAGE;
+		}
+		
+		inline const Result_t GetPreviousValue(T &value) throw()
+		{
+			ASSERT(false);
+			return E_INVALID_USAGE;
+		}
+		
+		virtual const Result_t CommitTransaction(void) throw()
+		{
+			ASSERT( !this->_values.empty() );
+			ASSERT( this->_isDirty );
+			// Are there changes, if not we are good
+			if (this->_values.size() == 1) return S_OK;
+			// Set the storage to the parent object
+			ICoreStorage* storage = this->SetStorageObject();
+			ASSERT( storage != NULL );
+			// Write the value into storage
+			AttrID_t attrID = ATTRID_NONE;
+			ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+			T value = this->_values.back();
+			Result_t result = storage->SetAttributeValue(attrID, value);
+			if (result != S_OK) return result;
+			// Collapse the value list to one
+			this->_values.clear();
+			this->_values.push_back(value);
+			return S_OK;
+		}
+		
+	virtual const Result_t AbortTransaction(void) throw()
+	{
+		// There must be more than one value here (loaded + change)
+		ASSERT( this->_values.size() > 1 );
+		ASSERT( this->_isDirty );
+		// Just remove the back value
+		this->_values.pop_back();
+		return S_OK;
+	}
+};
+*/
+
 /*** Simple Attribute Type Definitions ***/
 typedef CoreAttributeTemplateBase<int32_t>						CoreAttributeLong;
 typedef CoreAttributeTemplateBase<double>						CoreAttributeReal;

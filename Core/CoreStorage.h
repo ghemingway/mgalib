@@ -22,8 +22,7 @@ class ICoreStorage;
 class CoreStorageFactory {
 public:
 	virtual const Result_t Create(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage, const bool &encrypted=false)=0;
-	virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage,
-								const std::vector<char> &encryptionKey=std::vector<char>(), const std::vector<char> &encryptionIV=std::vector<char>())=0;
+	virtual const Result_t Open(const std::string &filename, CoreMetaProject *metaProject, ICoreStorage* &coreStorage, const std::vector<char> &encryptionKey=std::vector<char>())=0;
 };
 
 
@@ -58,7 +57,7 @@ public:
 	virtual const Result_t EnableCompression(void) throw()=0;								//!<
 	virtual const Result_t DisableCompression(void) throw()=0;								//!<
 	virtual const Result_t IsEncrypted(bool &flag) const throw()=0;							//!<
-	virtual const Result_t EncryptionKey(std::vector<char> &key, std::vector<char> &iv) const throw()=0;	//!<
+	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw()=0;			//!<
 	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw()=0;		//!<
 	virtual const Result_t DisableEncryption(void) throw()=0;								//!<
 	
@@ -71,9 +70,7 @@ public:
 	static const Result_t Create(const std::string &tag, const std::string &filename,		//!< Create new storage using factory
 								 CoreMetaProject* metaProject, ICoreStorage* &storage, const bool &encrypted=false) throw();
 	static const Result_t Open(const std::string &tag, const std::string &filename,			//!< Open storage from file using factory
-							   CoreMetaProject* metaProject, ICoreStorage* &storage,
-							   const std::vector<char> &encryptionKey=std::vector<char>(),
-							   const std::vector<char> &encryptionIV=std::vector<char>()) throw();
+							   CoreMetaProject* metaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey=std::vector<char>()) throw();
 
 	// --- CoreMetaObject
 
@@ -103,14 +100,14 @@ public:
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw()=0;		//!< Get string
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw()=0;	//!< Get collection
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw()=0;			//!< Get pointer (long or regular)
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, const std::string &key, std::string &value) throw()=0;	//!< Get key value
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::pair<std::string,std::string> &value) throw()=0;	//!< Get key value
 
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()=0;	//!< Set long
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw()=0;	//!< Set real
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()=0;		//!< Set string
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw()=0;	//!< Set collection
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()=0;		//!< Set pointer (long or regular)
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &key, const std::string &value) throw()=0;	//!< Set key value
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::pair<std::string,std::string> &value) throw()=0;	//!< Set key value
 };
 
 
