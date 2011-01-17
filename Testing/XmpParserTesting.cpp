@@ -4,5 +4,5 @@
 
 TEST(XmpParserTest,Create)
 {
-//	EXPECT_EQ( XmpParser::Parse("MetaGME.xmp", "MetaGME-Parser.mta"), S_OK );
+//	EXPECT_EQ( S_OK, XmpParser::Parse("MetaGME.xmp", "MetaGME-Parser.mta") );
 }

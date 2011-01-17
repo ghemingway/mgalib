@@ -7,8 +7,8 @@ TEST_F(CoreProjectTest,OpenProject)
 	// Try opening a non-existant file
 	CoreMetaProject* coreMetaProject;
 	CoreProject* coreProject = NULL;
-	ASSERT_EQ( CreateMGACoreMetaProject(true, coreMetaProject), S_OK );
-	EXPECT_EQ( CoreProject::OpenProject("MGA=notarealmodel.mga", coreMetaProject, coreProject), E_FILEOPEN )
+	ASSERT_EQ( S_OK, CreateMGACoreMetaProject(true, coreMetaProject) );
+	EXPECT_EQ( E_FILEOPEN, CoreProject::OpenProject("MGA=notarealmodel.mga", coreMetaProject, coreProject) )
 		<< "Failure on CoreProject::OpenProject with non-existant project file.";
 	
 	// Try opening an invalid v2 file
@@ -16,14 +16,14 @@ TEST_F(CoreProjectTest,OpenProject)
 	// Try opening an invalid v3 file
 	
 	// Try opening a valid v2 file
-	ASSERT_EQ( CreateMGACoreMetaProject(true, coreMetaProject), S_OK );
-	ASSERT_EQ( CoreProject::OpenProject("MGA=ESMoLv2.mga", coreMetaProject, coreProject), S_OK) 
+	ASSERT_EQ( S_OK, CreateMGACoreMetaProject(true, coreMetaProject) );
+	ASSERT_EQ( S_OK, CoreProject::OpenProject("MGA=ESMoLv2.mga", coreMetaProject, coreProject) ) 
 		<< "Failure on CoreProject::OpenProject to open ESMoL.mga";
 	delete coreProject;
 
 	// Try opening a valid v3 file
-	ASSERT_EQ( CreateMGACoreMetaProject(true, coreMetaProject), S_OK );
-	ASSERT_EQ( CoreProject::OpenProject("MGA=ESMoLv3.mga", coreMetaProject, coreProject), S_OK)
+	ASSERT_EQ( S_OK, CreateMGACoreMetaProject(true, coreMetaProject) );
+	ASSERT_EQ( S_OK, CoreProject::OpenProject("MGA=ESMoLv3.mga", coreMetaProject, coreProject) )
 		<< "Failure on CoreProject::OpenProject to open NewESMoL.mga";
 	delete coreProject;
 }
