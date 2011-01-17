@@ -106,28 +106,28 @@ Uuid& Uuid::operator=(const std::string &string)
 	uint16_t tmp;
 	std::stringstream ssData4_1(data4_1);
 	ssData4_1 >> std::hex >> tmp;
-	this->_data[8] = tmp;
+	this->_data[8] = (uint8_t)tmp;
 	std::stringstream ssData4_2(data4_2);
 	ssData4_2 >> std::hex >> tmp;
-	this->_data[9] = tmp;
+	this->_data[9] = (uint8_t)tmp;
 	std::stringstream ssData4_3(data4_3);
 	ssData4_3 >> std::hex >> tmp;
-	this->_data[10] = tmp;
+	this->_data[10] = (uint8_t)tmp;
 	std::stringstream ssData4_4(data4_4);
 	ssData4_4 >> std::hex >> tmp;
-	this->_data[11] = tmp;
+	this->_data[11] = (uint8_t)tmp;
 	std::stringstream ssData4_5(data4_5);
 	ssData4_5 >> std::hex >> tmp;
-	this->_data[12] = tmp;
+	this->_data[12] = (uint8_t)tmp;
 	std::stringstream ssData4_6(data4_6);
 	ssData4_6 >> std::hex >> tmp;
-	this->_data[13] = tmp;
+	this->_data[13] = (uint8_t)tmp;
 	std::stringstream ssData4_7(data4_7);
 	ssData4_7 >> std::hex >> tmp;
-	this->_data[14] = tmp;
+	this->_data[14] = (uint8_t)tmp;
 	std::stringstream ssData4_8(data4_8);
 	ssData4_8 >> std::hex >> tmp;
-	this->_data[15] = tmp;
+	this->_data[15] = (uint8_t)tmp;
 	// Off we go
 	return *this;
 }

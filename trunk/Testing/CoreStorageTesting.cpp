@@ -95,7 +95,7 @@ TEST_F(ICoreStorageTest,CreateObject)
 
 	EXPECT_EQ( storage->BeginTransaction(), S_OK );
 	// CreateObject inside transaction with invalid MetaID (Expect E_METAID)
-	EXPECT_EQ( result = storage->CreateObject(123456, newUuid), E_METAID ) << GetErrorInfo(result);
+	EXPECT_EQ( result = storage->CreateObject((MGA::MetaID_t)123456, newUuid), E_METAID ) << GetErrorInfo(result);
 	EXPECT_EQ( newUuid, Uuid::Null() );
 
 	// CreateObject inside transaction with valid MetaID (Expect S_OK)

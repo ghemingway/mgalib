@@ -91,7 +91,7 @@ typedef struct JournalEntry
 	uint32_t								sizeB;
 	Uuid									tag;
 	bool									inScratch;
-};
+} JournalEntry;
 typedef std::list<JournalEntry> JournalList;
 
 

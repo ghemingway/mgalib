@@ -29,7 +29,7 @@ typedef struct Transaction
 	std::list<Uuid>					deletedObjects;
 } Transaction;
 
-typedef STDEXT::hash_map<Uuid,CoreObjectBase*,Uuid_HashFunc> ObjectHash;
+typedef std::tr1::unordered_map<Uuid,CoreObjectBase*,Uuid_HashFunc> ObjectHash;
 typedef ObjectHash::iterator ObjectHashIterator;
 
 
