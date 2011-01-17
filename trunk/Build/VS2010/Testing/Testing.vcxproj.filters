@@ -1,66 +1,90 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Core">
+      <UniqueIdentifier>{2dafb854-45e6-4a1b-b30c-38a86aaebf93}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
+    <Filter Include="Core\Headers">
+      <UniqueIdentifier>{5ed4402b-1dba-420b-b1ba-b095f1507d4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Source">
+      <UniqueIdentifier>{403e1aac-9195-4808-9c51-6b08f01239c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parser">
+      <UniqueIdentifier>{4486bdd9-5ea1-4fff-964f-acbe64d17e51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Meta">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="MGA">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="MGA\Headers">
+      <UniqueIdentifier>{53c69fb7-4f24-4fa1-9409-f2f34fe4ba0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MGA\Source">
+      <UniqueIdentifier>{236b64de-a8fd-4e36-8b44-ce8f0e667ccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parser\Headers">
+      <UniqueIdentifier>{34e8306f-8504-4bb6-bc24-eba0ecfa1886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parser\Source">
+      <UniqueIdentifier>{bca224dc-b7c3-4905-81e4-910593b26dfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Meta\Headers">
+      <UniqueIdentifier>{9d01d438-6124-4e8a-aeb2-d6c17406b6ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Meta\Source">
+      <UniqueIdentifier>{90b887c5-4c7e-4a6b-ba82-dc8c4d18cc30}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Testing\CoreMetaTesting.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Core\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Testing\CoreStorageTesting.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Core\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Testing\CoreTesting.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Core\Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Testing\MetaProjectTesting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="..\..\..\Testing\TestingHarness.cpp" />
     <ClCompile Include="..\..\..\Testing\MgaProjectTesting.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>MGA\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Testing\MgaRegistrarTesting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Testing\TestingHarness.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>MGA\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Testing\XmpParserTesting.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Parser\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Testing\MetaProjectTesting.cpp">
+      <Filter>Meta\Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Testing\CoreMetaTesting.h">
-      <Filter>Header Files</Filter>
+      <Filter>Core\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Testing\CoreStorageTesting.h">
-      <Filter>Header Files</Filter>
+      <Filter>Core\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Testing\CoreTesting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Testing\MetaProjectTesting.h">
-      <Filter>Header Files</Filter>
+      <Filter>Core\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Testing\MgaProjectTesting.h">
-      <Filter>Header Files</Filter>
+      <Filter>MGA\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Testing\MgaRegistrarTesting.h">
-      <Filter>Header Files</Filter>
+      <Filter>MGA\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Testing\XmpParserTesting.h">
-      <Filter>Header Files</Filter>
+      <Filter>Parser\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Testing\MetaProjectTesting.h">
+      <Filter>Meta\Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

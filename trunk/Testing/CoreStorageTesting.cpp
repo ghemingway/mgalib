@@ -621,7 +621,7 @@ TEST_F(ICoreStorageTest,Save)
 {
 	Result_t result;
 	// Save with "" (existing filename) as filename
-	EXPECT_EQ( S_OK, result = storage->Save("") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("") ) << GetErrorInfo(result);
 	// Make sure the three objects are there and correct
 	Uuid rootUuid(Uuid::Null());
 	EXPECT_EQ( S_OK, result = storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
@@ -635,7 +635,7 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	//Save with simple filename (no directory path)
-	EXPECT_EQ( S_OK, result = storage->Save("testOrama.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("testOrama.mga") ) << GetErrorInfo(result);
 	// Make sure the objects are there and correct
 	EXPECT_EQ( S_OK, result = storage->ObjectVector(objectVector) ) << GetErrorInfo(result);
 	EXPECT_EQ( 3, objectVector.size() );
@@ -647,7 +647,11 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Save with full path (directory + filename) from simple path
-	EXPECT_EQ( S_OK, result = storage->Save("Subfolder/testOrama2.mga") ) << GetErrorInfo(result);
+#ifdef _WIN32
+	ASSERT_EQ( S_OK, result = storage->Save("Subfolder\\testOrama2.mga") ) << GetErrorInfo(result);
+#else
+	ASSERT_EQ( S_OK, result = storage->Save("Subfolder/testOrama2.mga") ) << GetErrorInfo(result);
+#endif
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 	Uuid attributeParent = Uuid::Null();
@@ -656,7 +660,7 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Save from full path (directory + filename) to simple path
-	EXPECT_EQ( S_OK, result = storage->Save("testOrama3.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("testOrama3.mga") ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 	std::string rootName;
@@ -665,9 +669,13 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Clean up all of the saves
-	EXPECT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
 	EXPECT_EQ( 0, remove("testOrama.mga") );
+#ifdef _WIN32
+	EXPECT_EQ( 0, remove("Subfolder\\testOrama2.mga") );
+#else
 	EXPECT_EQ( 0, remove("Subfolder/testOrama2.mga") );
+#endif
 	EXPECT_EQ( 0, remove("testOrama3.mga") );
 
 	// Make sure the objects are there and correct
@@ -727,7 +735,7 @@ TEST_F(ICoreStorageTest,CacheSize)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Save with objects in cache and scratch file (from being pushed out of queue) and changes
-	EXPECT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
@@ -767,7 +775,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->Save("tmpfile_large.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_large.mga") ) << GetErrorInfo(result);
 		// Then recompress, test and save
 		EXPECT_EQ( S_OK, result = storage->EnableCompression() ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
@@ -775,7 +783,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
 	}
 	else
 	{
@@ -786,7 +794,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->Save("tmpfile_small.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_small.mga") ) << GetErrorInfo(result);
 		// Then decompress, test and save
 		EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
@@ -794,7 +802,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
 	}
 }
 
