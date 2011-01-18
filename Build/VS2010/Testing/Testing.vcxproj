@@ -84,12 +84,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Testing\CoreMetaTesting.cpp" />
     <ClCompile Include="..\..\..\Testing\CoreStorageTesting.cpp" />
-    <ClCompile Include="..\..\..\Testing\CoreTesting.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Testing\MetaProjectTesting.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\..\Testing\CoreTesting.cpp" />
+    <ClCompile Include="..\..\..\Testing\MetaProjectTesting.cpp" />
     <ClCompile Include="..\..\..\Testing\MgaProjectTesting.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
