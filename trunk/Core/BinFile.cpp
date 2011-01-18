@@ -667,7 +667,7 @@ const Result_t BinFile::Load(void)
 	std::string filename, directory, scratchFileName;
 	_SplitPath(this->_filename, directory, filename);
 	scratchFileName = directory + std::string("~") + filename;
-	this->_scratchFile.open(scratchFileName.c_str(), std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios::ate | std::ios::trunc);
+	this->_scratchFile.open(scratchFileName.c_str(), std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc );
 	if( this->_scratchFile.fail() || !this->_scratchFile.is_open() || this->_scratchFile.bad() )
 	{
 		// Close the input file
@@ -836,6 +836,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	}
 	// Now write out the data to the file
 	stream.write(&buffer[0], indexSizeB);
+	ASSERT( !stream.bad() );
 	return S_OK;
 }
 
@@ -891,6 +892,7 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 	_Write<uint64_t>(bufferPointer, indexSizeB);
 	// Write it out to the stream
 	stream.write(&buffer[0], sizeB);
+	ASSERT( !stream.bad() );
 	return sizeB;
 }
 
@@ -1020,16 +1022,10 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		// Encrypt and get data
 		filter.Get( (byte*)&buffer[0], indexEntry.sizeB );
 	}
-	// Write the final data into the stream and flush its
+	// Write the final data into the stream (make sure to seek first - windows issue)
+	stream.seekp(indexEntry.position);
 	stream.write(&buffer[0], indexEntry.sizeB);
-	if (stream.bad())
-	{
-		int err = errno;
-		std::cout << "Error: " << strerror(err) << std::endl;
-//		stream.flush();
-//		std::streampos pos = stream.tellp();
-		stream.flush();
-	}
+	ASSERT( !stream.bad() );
 }
 
 
@@ -1342,6 +1338,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	// Make sure to start writing at the beginning of the file d'uh
 	outputFile.seekp(0);
 	outputFile.write(&buffer[0], preambleSize);
+	ASSERT( !outputFile.bad() );
 
 	// Clean up the original input file
 	this->_inputFile.close();
