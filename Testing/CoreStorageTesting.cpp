@@ -694,6 +694,9 @@ TEST_F(ICoreStorageTest,Save)
 TEST_F(ICoreStorageTest,CacheSize)
 {
 	Result_t result;
+	Uuid rootUuid(Uuid::Null());
+	EXPECT_EQ( S_OK, result = storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
+#ifndef _WIN32
 	// Set cacheSize == 1
 	EXPECT_EQ( S_OK, result = storage->SetCacheSize(1) ) << GetErrorInfo(result);
 	uint64_t cacheSize;
@@ -701,8 +704,6 @@ TEST_F(ICoreStorageTest,CacheSize)
 	EXPECT_EQ( cacheSize, 1 );
 
 	// Perform simple lookups to try putting more objects into the cache than 1
-	Uuid rootUuid(Uuid::Null());
-	EXPECT_EQ( S_OK, result = storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	// Try to set cache size during a transaction (Expect E_TRANSACTION)
 	EXPECT_EQ( E_TRANSACTION, result = storage->SetCacheSize(8474) ) << GetErrorInfo(result);
@@ -735,7 +736,7 @@ TEST_F(ICoreStorageTest,CacheSize)
 	double floatValue = 4783823.45934;
 	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_FLOATATTR, floatValue) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-
+#endif
 	// Save with objects in cache and scratch file (from being pushed out of queue) and changes
 	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
