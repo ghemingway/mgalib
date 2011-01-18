@@ -777,7 +777,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_large.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_large.mga", true) ) << GetErrorInfo(result);
 		// Then recompress, test and save
 		EXPECT_EQ( S_OK, result = storage->EnableCompression() ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
@@ -785,7 +785,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
 	}
 	else
 	{
@@ -796,7 +796,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_small.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_small.mga", true) ) << GetErrorInfo(result);
 		// Then decompress, test and save
 		EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
@@ -804,7 +804,7 @@ TEST_F(ICoreStorageTest,Compression)
 		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
 	}
 }
 

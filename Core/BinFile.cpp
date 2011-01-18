@@ -1281,7 +1281,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	if (!overwrite)
 	{
 		// Try opening the file
-		std::ifstream testFile(saveAs);
+		std::ifstream testFile(saveAs.c_str());
 		if (testFile)
 		{
 			// Close the test file
