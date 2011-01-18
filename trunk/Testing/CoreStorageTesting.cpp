@@ -647,11 +647,7 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Save with full path (directory + filename) from simple path
-#ifdef _WIN32
-	ASSERT_EQ( S_OK, result = storage->Save("Subfolder\\testOrama2.mga", true) ) << GetErrorInfo(result);
-#else
 	ASSERT_EQ( S_OK, result = storage->Save("Subfolder/testOrama2.mga", true) ) << GetErrorInfo(result);
-#endif
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 	Uuid attributeParent = Uuid::Null();
@@ -671,11 +667,7 @@ TEST_F(ICoreStorageTest,Save)
 	// Clean up all of the saves
 	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
 	EXPECT_EQ( 0, remove("testOrama.mga") );
-#ifdef _WIN32
-	EXPECT_EQ( 0, remove("Subfolder\\testOrama2.mga") );
-#else
 	EXPECT_EQ( 0, remove("Subfolder/testOrama2.mga") );
-#endif
 	EXPECT_EQ( 0, remove("testOrama3.mga") );
 
 	// Make sure the objects are there and correct
