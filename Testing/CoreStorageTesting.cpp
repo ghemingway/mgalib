@@ -635,7 +635,7 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	//Save with simple filename (no directory path)
-	ASSERT_EQ( S_OK, result = storage->Save("testOrama.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("testOrama.mga", true) ) << GetErrorInfo(result);
 	// Make sure the objects are there and correct
 	EXPECT_EQ( S_OK, result = storage->ObjectVector(objectVector) ) << GetErrorInfo(result);
 	EXPECT_EQ( 3, objectVector.size() );
@@ -648,9 +648,9 @@ TEST_F(ICoreStorageTest,Save)
 
 	// Save with full path (directory + filename) from simple path
 #ifdef _WIN32
-	ASSERT_EQ( S_OK, result = storage->Save("Subfolder\\testOrama2.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("Subfolder\\testOrama2.mga", true) ) << GetErrorInfo(result);
 #else
-	ASSERT_EQ( S_OK, result = storage->Save("Subfolder/testOrama2.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("Subfolder/testOrama2.mga", true) ) << GetErrorInfo(result);
 #endif
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
@@ -660,7 +660,7 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Save from full path (directory + filename) to simple path
-	ASSERT_EQ( S_OK, result = storage->Save("testOrama3.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("testOrama3.mga", true) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 	std::string rootName;
@@ -669,7 +669,7 @@ TEST_F(ICoreStorageTest,Save)
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// Clean up all of the saves
-	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga") ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
 	EXPECT_EQ( 0, remove("testOrama.mga") );
 #ifdef _WIN32
 	EXPECT_EQ( 0, remove("Subfolder\\testOrama2.mga") );
@@ -717,6 +717,8 @@ TEST_F(ICoreStorageTest,CacheSize)
 	EXPECT_EQ( S_OK, result = storage->SetCacheSize(2) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetCacheSize(cacheSize) ) << GetErrorInfo(result);
+	EXPECT_EQ( cacheSize, 1 );
 	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->GetCacheSize(cacheSize) ) << GetErrorInfo(result);

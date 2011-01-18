@@ -79,7 +79,7 @@ public:
 	}
 	inline const Result_t NestedTransactionCount(short &count) const throw()		{ count = this->_transactionList.size(); return S_OK; }
 
-	const Result_t Save(const std::string &filename) throw();
+	const Result_t Save(const std::string &filename, const bool &force) throw();
 	const Result_t BeginTransaction(const bool &readOnly) throw();
 	const Result_t CommitTransaction(void) throw();
 	const Result_t AbortTransaction(void) throw();

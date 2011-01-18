@@ -106,11 +106,11 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 }
 
 
-const Result_t MetaProject::Save(const std::string &filename) throw()
+const Result_t MetaProject::Save(const std::string &filename, const bool &forceOverwrite) throw()
 {
 	ASSERT( this->_coreProject != NULL );
 	// Ask the coreProject to save itself
-	return this->_coreProject->Save(filename);
+	return this->_coreProject->Save(filename, forceOverwrite);
 }
 
 
