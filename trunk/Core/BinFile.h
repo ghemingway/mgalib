@@ -229,7 +229,7 @@ public:
 
 	virtual const Result_t ObjectVector(std::vector<Uuid> &objectVector) const throw();	//!< Get a vector of all objects
 	virtual inline const Result_t RootUuid(Uuid &uuid) const throw()					{ uuid = this->_rootUuid; return S_OK; }
-	virtual const Result_t Save(const std::string &filename) throw();					//!< Save the project to filename (overwrites if same as _filename)
+	virtual const Result_t Save(const std::string &filename, const bool &forceOverwrite=false) throw();//!< Save the project to filename (overwrites if same as _filename)
 	virtual const Result_t BeginTransaction(void) throw();								//!< Begin a transaction (no nesting allowed)
 	virtual const Result_t CommitTransaction(const Uuid tag=Uuid::Null()) throw();		//!< Commit a transaction (with optional transaction tag)
 	virtual const Result_t AbortTransaction(void) throw();								//!< Abort a transaction and rollback all changes

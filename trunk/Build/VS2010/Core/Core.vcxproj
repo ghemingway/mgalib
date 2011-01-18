@@ -95,7 +95,6 @@
     <ClInclude Include="..\..\..\Core\CoreObject.h" />
     <ClInclude Include="..\..\..\Core\CoreProject.h" />
     <ClInclude Include="..\..\..\Core\CoreStorage.h" />
-    <ClInclude Include="..\..\..\Core\CoreTransactionItem.h" />
     <ClInclude Include="..\..\..\Core\CoreTypes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

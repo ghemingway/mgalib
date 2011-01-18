@@ -661,14 +661,14 @@ const Result_t BinFile::Load(void)
 	ASSERT( this->_cacheQueue.empty() );
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
 	this->_inputFile.open(this->_filename.c_str(), std::ios::in | std::ios::binary);
-	if( this->_inputFile.fail() || !this->_inputFile.is_open() ) return E_FILEOPEN;
+	if( this->_inputFile.fail() || !this->_inputFile.is_open() || this->_inputFile.bad() ) return E_FILEOPEN;
 	// Get the scratch file ready for writing and reading
 	this->_scratchFile.clear();
 	std::string filename, directory, scratchFileName;
 	_SplitPath(this->_filename, directory, filename);
 	scratchFileName = directory + std::string("~") + filename;
-	this->_scratchFile.open(scratchFileName.c_str(), std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios::trunc);
-	if( this->_scratchFile.fail() || !this->_scratchFile.is_open() )
+	this->_scratchFile.open(scratchFileName.c_str(), std::ios::binary | std::ios_base::in | std::ios_base::out | std::ios::ate | std::ios::trunc);
+	if( this->_scratchFile.fail() || !this->_scratchFile.is_open() || this->_scratchFile.bad() )
 	{
 		// Close the input file
 		this->_inputFile.close();
@@ -938,6 +938,7 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	std::vector<char> buffer;
 	buffer.resize(indexEntry.sizeB);
 	stream.read(&buffer[0], indexEntry.sizeB);
+	ASSERT( !stream.bad() );
 	// Is there encryption
 	if (indexEntry.isEncrypted)
 	{
@@ -983,7 +984,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 {
 	ASSERT( stream.is_open() );
 	// Get the position of where the write it going to happen
-	indexEntry.position = (uint64_t)stream.tellp();
+	indexEntry.position = stream.tellp();
 	// Now, write to the end of scratchFile
 	std::vector<char> buffer;
 	indexEntry.object->Write(buffer);
@@ -1019,8 +1020,16 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		// Encrypt and get data
 		filter.Get( (byte*)&buffer[0], indexEntry.sizeB );
 	}
-	// Write the final data into the stream
+	// Write the final data into the stream and flush its
 	stream.write(&buffer[0], indexEntry.sizeB);
+	if (stream.bad())
+	{
+		int err = errno;
+		std::cout << "Error: " << strerror(err) << std::endl;
+//		stream.flush();
+//		std::streampos pos = stream.tellp();
+		stream.flush();
+	}
 }
 
 
@@ -1254,7 +1263,7 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 }
 
 
-const Result_t BinFile::Save(const std::string &filename) throw()
+const Result_t BinFile::Save(const std::string &filename, const bool &forceOverwrite) throw()
 {
 	// Make sure we have a valid project file open
 	ASSERT( this->_metaProject != NULL );
@@ -1268,11 +1277,26 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	else saveAs = filename;
 	// Are we overwriting the origial file?
 	bool overwrite = (this->_filename == saveAs);
+	// Does this file already exist
+	if (!overwrite)
+	{
+		// Try opening the file
+		std::ifstream testFile(saveAs);
+		if (testFile)
+		{
+			// Close the test file
+			testFile.close();
+			// File exists, but we are not allowed to overwrite
+			if (!forceOverwrite) return E_FILEOPEN;
+			// Otherwise, remove the offending file
+			ASSERT( remove(saveAs.c_str()) == 0 );
+		}
+	}
 	// Open the file for writing
 	_SplitPath(saveAs, directory, saveAs);
 	std::string tmpFilename = directory + "~_" + saveAs;
 	std::fstream outputFile;
-	outputFile.open(tmpFilename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+	outputFile.open(tmpFilename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc );
 	if( outputFile.fail() || !outputFile.is_open() ) return E_FILEOPEN;
 	// Save implies commiting any open transaction
 	if (this->_inTransaction) this->CommitTransaction();
@@ -1331,7 +1355,7 @@ const Result_t BinFile::Save(const std::string &filename) throw()
 	// Rename tmp file to desired name (make sure to grab the filename before it is changed)
 	std::string scratchFileName = this->_filename;
 	this->_filename = directory + saveAs;
-	rename(tmpFilename.c_str(), this->_filename.c_str());
+	ASSERT( rename(tmpFilename.c_str(), this->_filename.c_str()) == 0 );
 	
 	// Close and delete scratch file
 	this->_scratchFile.close();

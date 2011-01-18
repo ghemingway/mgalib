@@ -181,13 +181,13 @@ const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject*
 }
 
 
-const Result_t CoreProject::Save(const std::string &filename) throw()
+const Result_t CoreProject::Save(const std::string &filename, const bool &force) throw()
 {
 	if( filename == "" ) return E_NAMEMISSING;
 	if( !this->_transactionList.empty() ) return E_INVALID_USAGE;
 	ASSERT( this->_storage != NULL );
 	// Ask the coreStorage to save itself
-	return this->_storage->Save(filename);
+	return this->_storage->Save(filename, force);
 }
 
 

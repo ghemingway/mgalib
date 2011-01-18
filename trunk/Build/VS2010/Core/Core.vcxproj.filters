@@ -79,9 +79,6 @@
     <ClInclude Include="..\..\..\Core\CoreStorage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Core\CoreTransactionItem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Core\CoreTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -52,7 +52,7 @@ public:
 	static const Result_t Open(const std::string &connection, MetaProject* &project) throw();
 	static const Result_t Create(const std::string &connection, MetaProject* &project) throw();
 
-	const Result_t Save(const std::string &filename="") throw();
+	const Result_t Save(const std::string &filename="", const bool &forceOverwrite=false) throw();
 	const Result_t BeginTransaction(void) throw();
 	const Result_t CommitTransaction(void) throw();
 	const Result_t AbortTransaction(void) throw();
