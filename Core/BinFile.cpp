@@ -1182,9 +1182,12 @@ BinFile::~BinFile()
 	{
 		// First, close the scratch file
 		this->_scratchFile.close();
-		// Delete the scratch file
-		std::string scratchFilename = "~" + this->_filename;
-		remove(scratchFilename.c_str());
+		// Make sure we get the correct scratchfile name
+		std::string filename, directory, scratchFileName;
+		_SplitPath(this->_filename, directory, filename);
+		scratchFileName = directory + std::string("~") + filename;
+		// Remove the scratchfile
+		ASSERT( remove(scratchFileName.c_str()) == 0 );
 	}
 	// Clean up compression
 	if (this->_isCompressed)
@@ -1344,7 +1347,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	this->_inputFile.close();
 	// Are we overwriting the original inputfile, then delete it
 	ASSERT( !this->_inputFile.fail() );
-	if (overwrite) remove(this->_filename.c_str());
+	if (overwrite) ASSERT( remove(this->_filename.c_str()) == 0 );
 
 	// Close the file and we are done with it
 	outputFile.close();
@@ -1359,7 +1362,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	ASSERT( !this->_scratchFile.fail() );
 	_SplitPath(scratchFileName, directory, scratchFileName);
 	scratchFileName = directory + std::string("~") + scratchFileName;
-	remove(scratchFileName.c_str());
+	ASSERT( remove(scratchFileName.c_str()) == 0 );
 	// Now load the newly saved file and keep on truckin'
 	return this->Load();
 }

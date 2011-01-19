@@ -67,17 +67,6 @@ TEST(StaticICoreStorageTest,RegisterStorageFactory)
 }
 
 
-TEST(StaticICoreStorageTest,Open)
-{
-//	Result_t result = Open(const std::string &tag, const std::string &filename,
-//						   CoreMetaProject* metaProject, ICoreStorage* &storage);
-
-	// TODO: Open with simple filename (no directory path)
-
-	// TODO: Open with full path (directory + filename)
-}
-
-
 // --------------------------- ICoreStorage Standard --------------------------- //
 
 
@@ -248,7 +237,6 @@ TEST_F(ICoreStorageTest,CommitTransaction)
 	EXPECT_EQ( E_TRANSACTION, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 
 	// TODO: Event (Create, Change, Delete) ordering permutations
-	//...
 }
 
 
@@ -259,7 +247,6 @@ TEST_F(ICoreStorageTest,AbortTransaction)
 	EXPECT_EQ( E_TRANSACTION, result = storage->AbortTransaction() ) << GetErrorInfo(result);
 
 	// TODO: Event (Create, Change, Delete) ordering permutations
-	//...
 }
 
 
@@ -755,49 +742,104 @@ TEST_F(ICoreStorageTest,CacheSize)
 TEST_F(ICoreStorageTest,Compression)
 {
 	Result_t result;
-	// Reverse the compression flag
-	bool flag;
 	Uuid rootUuid(Uuid::Null());
 	EXPECT_EQ( S_OK, result = storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->IsCompressed(flag) ) << GetErrorInfo(result);
-	if ( flag )
-	{
-		// First decompress, test and save
-		EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_large.mga", true) ) << GetErrorInfo(result);
-		// Then recompress, test and save
-		EXPECT_EQ( S_OK, result = storage->EnableCompression() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
-	}
-	else
-	{
-		// First compress, test and save
-		EXPECT_EQ( S_OK, result = storage->EnableCompression() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile_small.mga", true) ) << GetErrorInfo(result);
-		// Then decompress, test and save
-		EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
-		EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-		ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
-	}
+	// First decompress, test and save
+	EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("Subfolder/tmpfile_uncompressed.mga", true) ) << GetErrorInfo(result);
+	// Then recompress, test and save
+	EXPECT_EQ( S_OK, result = storage->EnableCompression() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("tmpfile_duplicate.mga", true) ) << GetErrorInfo(result);
+}
+
+
+TEST_F(ICoreStorageTest,Encryption)
+{
+	Result_t result;
+	Uuid rootUuid(Uuid::Null());
+	EXPECT_EQ( S_OK, result = storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
+	// First encrypt, test and save
+//	EXPECT_EQ( S_OK, result = storage->EnableEncryption() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("tmpfile_encrypted.mga", true) ) << GetErrorInfo(result);
+	// Then decrypt, test and save
+	EXPECT_EQ( S_OK, result = storage->DisableEncryption() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
+	ASSERT_EQ( S_OK, result = storage->Save("tmpfile.mga", true) ) << GetErrorInfo(result);
+}
+
+
+TEST_F(ICoreStorageTest,Open)
+{
+	Result_t result;
+	CoreMetaProject	*coreMetaProject = NULL;
+	EXPECT_EQ( S_OK, result = CreateMGACoreMetaProject(coreMetaProject)) << GetErrorInfo(result);
+	// Open with unknown tag (Expect E_UNKNOWN_STORAGE)
+	ICoreStorage* openStorage = NULL;
+	EXPECT_EQ( E_UNKNOWN_STORAGE, result = ICoreStorage::Open("ASD", "foo.mga", NULL, openStorage) ) << GetErrorInfo(result);
+	// Open with known tag, but empty filename (Expect E_INVALID_USAGE)
+	EXPECT_EQ( E_INVALID_USAGE, result = ICoreStorage::Open("MGA", "", NULL, openStorage) ) << GetErrorInfo(result);
+	// Open with good tag but unknown file (Expect E_FILEOPEN)
+	EXPECT_EQ( E_FILEOPEN, result = ICoreStorage::Open("MGA", "asdfg.mga", coreMetaProject, openStorage) ) << GetErrorInfo(result);
+	// Open with good tag but invalid CoreMetaProject (Expect E_INVALID_USAGE)
+	EXPECT_EQ( E_INVALID_USAGE, result = ICoreStorage::Open("MGA", "asdfg.mga", NULL, openStorage) ) << GetErrorInfo(result);
+
+	// Open with good tag, CoreMetaProject and filename (Expect S_OK)
+	ASSERT_EQ( S_OK, result = ICoreStorage::Open("MGA", "tmpfile_duplicate.mga", coreMetaProject, openStorage) ) << GetErrorInfo(result);
+	ASSERT_TRUE( openStorage != NULL );
+	// Do some reads and writes for fun
+	EXPECT_EQ( S_OK, result = openStorage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	Uuid rootUuid(Uuid::Null());
+	EXPECT_EQ( S_OK, result = openStorage->RootUuid(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->CommitTransaction() ) << GetErrorInfo(result);
+	delete openStorage;
+	openStorage = NULL;
+	EXPECT_EQ( 0, remove("tmpfile_duplicate.mga") );
+
+	// Open with full path (directory + filename) and how about uncompressed
+	ASSERT_EQ( S_OK, result = ICoreStorage::Open("MGA", "Subfolder/tmpfile_uncompressed.mga", coreMetaProject, openStorage) ) << GetErrorInfo(result);
+	ASSERT_TRUE( openStorage != NULL );
+	EXPECT_EQ( S_OK, result = openStorage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->CommitTransaction() ) << GetErrorInfo(result);
+	delete openStorage;
+	openStorage = NULL;
+	EXPECT_EQ( 0, remove("Subfolder/tmpfile_uncompressed.mga") );
+
+	// Open with simple path and how about encrypted
+	ASSERT_EQ( S_OK, result = ICoreStorage::Open("MGA", "tmpfile_encrypted.mga", coreMetaProject, openStorage) ) << GetErrorInfo(result);
+	ASSERT_TRUE( openStorage != NULL );
+	EXPECT_EQ( S_OK, result = openStorage->BeginTransaction() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(rootUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = openStorage->CommitTransaction() ) << GetErrorInfo(result);
+	delete openStorage;
+	openStorage = NULL;
+	EXPECT_EQ( 0, remove("tmpfile_encrypted.mga") );
 }
 
 
