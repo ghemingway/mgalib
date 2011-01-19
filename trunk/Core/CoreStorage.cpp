@@ -45,7 +45,7 @@ const Result_t ICoreStorage::Create(const std::string &tag, const std::string &f
 		return mapIter->second->Create(filename, metaProject, storage, encrypted);
 	}
 	else {
-		std::cout << "ICoreStorage::Create - not able to find factory for file type: " << tag << std::endl;
+//		std::cout << "ICoreStorage::Create - not able to find factory for file type: " << tag << std::endl;
 		return E_UNKNOWN_STORAGE;
 	}
 }
@@ -60,7 +60,7 @@ const Result_t ICoreStorage::Open(const std::string &tag, const std::string &fil
 		return mapIter->second->Open(filename, metaProject, storage, encryptionKey);
 	}
 	else {
-		std::cout << "ICoreStorage::Open - not able to find factory for file type: " << tag << std::endl;
+//		std::cout << "ICoreStorage::Open - not able to find factory for file type: " << tag << std::endl;
 		return E_UNKNOWN_STORAGE;
 	}
 }
