@@ -125,6 +125,35 @@ struct Uuid_HashFunc
 /******************************************/
 
 
+typedef struct AttributeID
+{
+	Uuid									uuid;
+	AttrID_t								attrID;
+
+	bool operator==(const AttributeID &attributeID) const
+	{
+		return (this->uuid == attributeID.uuid) && (this->attrID == attributeID.attrID);
+	}
+} AttributeID;
+
+
+struct AttributeID_HashFunc
+{
+	size_t operator()(const AttributeID &attributeID) const
+	{
+		size_t returnValue;
+		// Copy in the uuid value for all of the bytes
+		memcpy(&returnValue, &(attributeID.uuid), sizeof(size_t));
+		// Copy in the attrID value for the first 2 bytes
+		memcpy(&returnValue, &(attributeID.attrID), sizeof(AttrID_t));
+		return returnValue;
+	}
+};
+
+
+/******************************************/
+
+
 // ValueType class
 class ValueType {
 private:

@@ -90,7 +90,7 @@ ARFLAGS = -static -o
 CXX = c++
 IS_GCC2 = $(shell $(CXX) -v 2>&1 | $(EGREP) -c gcc-932)
 ifeq ($(IS_GCC2),1)
-CXXFLAGS += -fno-coalesce-templates -fno-coalesce-static-vtables
+CXXFLAGS += -fno-coalesce-templates -fno-coalesce-static-vtables -DCRYPTOPP_DISABLE_X86ASM
 LDLIBS += -lstdc++
 LDFLAGS += -flat_namespace -undefined suppress -m
 endif

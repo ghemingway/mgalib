@@ -535,20 +535,19 @@ BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
 	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(),
 	_indexHash(),_cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
-	_openedObject(), _createdObjects(), _changedObjects(), _deletedObjects(),
+	_openedObject(), _createdObjects(), _changedAttributes(), _deletedObjects(),
 	_isJournaling(BINFILE_DEFAULTJOURNALING), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
 	_isCompressed(BINFILE_DEFAULTCOMPRESSION), _compressor(NULL), _decompressor(NULL),
-	_isEncrypted(false), _encryptionKey(NULL), _encryptionIV(NULL)//, _encryptor(NULL), _decryptor(NULL)
+	_isEncrypted(false), _encryptor(NULL), _decryptor(NULL), _encryptionKey(NULL), _encryptionIV(NULL)
 {
 	ASSERT(filename != "" );
 	ASSERT( coreMetaProject != NULL );
 	this->_openedObject = this->_indexHash.end();
-	// Setup compression
-	if (this->_isCompressed)
-	{
-		this->_compressor = new CryptoPP::ZlibCompressor();
-		this->_decompressor = new CryptoPP::ZlibDecompressor();
-	}
+	// Setup CryptoPP filters
+	this->_compressor = new CryptoPP::ZlibCompressor();
+	ASSERT( this->_compressor != NULL );
+	this->_decompressor = new CryptoPP::ZlibDecompressor();
+	ASSERT( this->_decompressor != NULL );
 }
 
 
@@ -856,9 +855,10 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	this->_isEncrypted = (tmpVal != false);
 	if (this->_isEncrypted)
 	{
-		// Read the encryption IV
-		// TODO: Read the encryption IV (std::vector<char> of BINFILE_ENCRYPTIONIVSIZE)
 		ASSERT(false);
+		// Read the encryption IV
+		memcpy(this->_encryptionIV, bufferPointer, BINFILE_ENCRYPTIONIVSIZE);
+		bufferPointer += BINFILE_ENCRYPTIONIVSIZE;
 	}
 	_Read<uint8_t>(bufferPointer, tmpVal);
 	this->_isCompressed = (tmpVal != false);
@@ -882,9 +882,11 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
 	if (this->_isEncrypted)
 	{
-		// Write the encryption IV
-		// TODO: Write the encryption IV (std::vector<char> of BINFILE_ENCRYPTIONIVSIZE)
 		ASSERT(false);
+		ASSERT(this->_encryptionIV != NULL);
+		// Write the encryption IV
+		memcpy(bufferPointer, this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
+		bufferPointer += BINFILE_ENCRYPTIONIVSIZE;
 	}
 	_Write<uint8_t>(bufferPointer, this->_isCompressed);
 	_Write<Uuid>(bufferPointer, this->_rootUuid);
@@ -1090,41 +1092,63 @@ void BinFile::FlushCache(void)
 
 const Result_t BinFile::PickleTransaction(uint32_t &sizeB)
 {
+	ASSERT(false);
 	// How big is this transaction (deleted, changed, created)
 	sizeB = 0;
 	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 	while (deletedIter != this->_deletedObjects.end())
 	{
+		// Get the size of the deleted object and add it to the total
 		sizeB += deletedIter->second.object->Size();
 		++deletedIter;
 	}
+/*
 	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
 	while (changeIter != this->_changedObjects.end())
 	{
+		// Figure out the size here...
 		++changeIter;
 	}
+*/
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while( createdIter != this->_createdObjects.end() )
 	{
-		sizeB += sizeof(Uuid) + sizeof(MetaID_t);
+		sizeB += sizeof(MetaID_t) + sizeof(Uuid);
 		++createdIter;
 	}
 	// Serialize the three transaction lists (created, changed, deleted) to the end of the scratch file
-	
-	// TODO: Serialize the three transaction lists
+	std::vector<char> buffer;
+	buffer.resize(sizeB);
+	char* bufferPointer = &buffer[0];
+	// Serialize the three transaction lists, start with created objects
+	createdIter = this->_createdObjects.begin();
+	while( createdIter != this->_createdObjects.end() )
+	{
+		// Write the MetaID
+		_Write(bufferPointer, createdIter->second);
+		// Write the resulting UUID that was created
+		_Write(bufferPointer, createdIter->first);
+		// Move to the next created object
+		++createdIter;
+	}
 	// Is there compression
-	// TODO: Support compression
+	if (this->_isCompressed)
+	{
+		// TODO: Support compression of pickled transactions
+	}
 	// Is there encryption
-	// TODO: Support encryption
-	// Return the size of the resulting pickle
-	sizeB = 0;
-	// All is good
+	if (this->_isEncrypted)
+	{
+		// TODO: Support encryption of pickled transactions
+	}
+	// All is good (remember, sizeB has already been set)
 	return S_OK;
 }
 
 
 const Result_t BinFile::UnpickleTransaction(const JournalEntry &entry)
 {
+	ASSERT(false);
 	// Is the entry in the scratch file or input file
 	// TODO: Locate entry
 	// Is there encryption
@@ -1190,11 +1214,8 @@ BinFile::~BinFile()
 		ASSERT( remove(scratchFileName.c_str()) == 0 );
 	}
 	// Clean up compression
-	if (this->_isCompressed)
-	{
-		delete this->_compressor;
-		delete this->_decompressor;
-	}
+	delete this->_compressor;
+	delete this->_decompressor;
 	// Clear the cache (and its objects)
 	this->FlushCache();
 }
@@ -1374,7 +1395,7 @@ const Result_t BinFile::BeginTransaction(void) throw()
 	// Make sure we are clean
 	ASSERT( this->_deletedObjects.empty() );
 	ASSERT( this->_createdObjects.empty() );
-	ASSERT( this->_changedObjects.empty() );
+	ASSERT( this->_changedAttributes.empty() );
 	// Get ready for new transaction
 	this->_openedObject = this->_indexHash.end();
 	this->_inTransaction = true;
@@ -1388,7 +1409,7 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 	// Close any opened object - and mark as no longer in transaction
 	this->CloseObject();
 	// Is this transaction actually going to do anything - if not, we are done
-	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedObjects.empty() )
+	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedAttributes.empty() )
 	{
 		// Ok, so we are doing something, mark the binFile as dirty
 		this->MarkDirty();
@@ -1409,12 +1430,12 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 		}
 
 		// Changed objects - discard pre/post values
-		ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
-		while (changeIter != this->_changedObjects.end())
+		ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
+		while (changeIter != this->_changedAttributes.end())
 		{
 			// Simply delete the AttributeChange
-			ASSERT( *changeIter != NULL );
-			delete *changeIter;
+			ASSERT( changeIter->second != NULL );
+			delete changeIter->second;
 			++changeIter;
 		}
 		// Must actually delete all objects in deletedObjects list
@@ -1430,7 +1451,7 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 		}
 		// Clear the transaction lists
 		this->_createdObjects.clear();
-		this->_changedObjects.clear();
+		this->_changedAttributes.clear();
 		this->_deletedObjects.clear();
 	}
 	// We are good - wrap it up
@@ -1447,7 +1468,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 	this->CloseObject();
 
 	// Is this transaction actually going to do anything - if not, we are done
-	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedObjects.empty() )
+	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedAttributes.empty() )
 	{
 		// Must move all deletedObjects back to cache
 		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
@@ -1463,22 +1484,22 @@ const Result_t BinFile::AbortTransaction(void) throw()
 		// Clear the deleted objects list
 		this->_deletedObjects.clear();
 		
-		// Changed objects - rollback changes in reverse order
-		ChangedObjectsList::reverse_iterator changeIter = this->_changedObjects.rbegin();
-		while (changeIter != this->_changedObjects.rend())
+		// Changed attributes - rollback changes
+		ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
+		while (changeIter != this->_changedAttributes.end())
 		{
 			// Get the attribute change record
-			IndexHashIterator binIter = this->FetchObject((*changeIter)->uuid);
+			IndexHashIterator binIter = this->FetchObject(changeIter->first.uuid);
 			ASSERT( binIter != this->_indexHash.end() );
 			BinObject* binObject = binIter->second.object;
 			ASSERT( binObject != NULL );
-			BinAttribute* binAttribute = binObject->GetAttribute((*changeIter)->attrID);
+			BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
 			ASSERT( binAttribute != NULL );
 			// Is the changed attribute a LONG
 			if (binAttribute->GetValueType() == ValueType::Long()) {
 				BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)*changeIter;
+				AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
 			}
@@ -1486,7 +1507,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			else if (binAttribute->GetValueType() == ValueType::Real()) {
 				BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange<double>* changeRecord = (AttributeChange<double>*)*changeIter;
+				AttributeChange<double>* changeRecord = (AttributeChange<double>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
 			}
@@ -1494,7 +1515,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			else if (binAttribute->GetValueType() == ValueType::String()) {
 				BinAttributeString *attribute = (BinAttributeString*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)*changeIter;
+				AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
 			}
@@ -1502,7 +1523,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			else if (binAttribute->GetValueType() == ValueType::LongPointer()) {
 				BinAttributeLongPointer *attribute = (BinAttributeLongPointer*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
+				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
 			}
@@ -1510,7 +1531,7 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			else if (binAttribute->GetValueType() == ValueType::Pointer()) {
 				BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 				ASSERT( attribute != NULL );
-				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)*changeIter;
+				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				this->PointerUpdate(binAttribute->GetAttributeID(), changeRecord->uuid, changeRecord->newValue, changeRecord->oldValue);
 				attribute->Set(changeRecord->oldValue);
@@ -1518,11 +1539,11 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			// Never should be here!
 			else ASSERT(false);
 			// Finally, delete the AttributeChange and move on to the next
-			delete *changeIter;
+			delete changeIter->second;
 			++changeIter;
 		}
 		// Clear the changes list
-		this->_changedObjects.clear();
+		this->_changedAttributes.clear();
 		
 		// Delete all Created objects
 		std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
@@ -1744,16 +1765,31 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t 
 	// Quick check to see if there is a no-change requested
 	int32_t oldValue = attribute->Get();
 	if (oldValue == value) return S_OK;
-	// Must save old value
-	AttributeChange<int32_t>* changeRecord = new AttributeChange<int32_t>();
-	ASSERT( changeRecord != NULL );
-	changeRecord->uuid = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->oldValue = oldValue;
-	changeRecord->newValue = value;
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
+	// Is there already a changeRecord for this attribute
+	AttributeID attributeID = { this->_openedObject->first, attrID };
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
+	AttributeChange<int32_t>* changeRecord = NULL;
+	// A changed record already exists
+	if (changeIter != this->_changedAttributes.end())
+	{
+		// Must update the change record with the new value
+		changeRecord = (AttributeChange<int32_t>*)changeIter->second;
+		ASSERT( oldValue == changeRecord->oldValue );
+	}
+	// A changed record does not already exist
+	else
+	{
+		// Must create a new change record and save old value
+		changeRecord = new AttributeChange<int32_t>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+		changeRecord->oldValue = oldValue;
+		// Add the change record into the changedAttributes hash
+		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
+	}
 	// Update the attribute value
+	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
 }
@@ -1770,16 +1806,31 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &
 	// Quick check to see if there is a no-change requested
 	double oldValue = attribute->Get();
 	if (oldValue == value) return S_OK;
-	// Must save old value
-	AttributeChange<double>* changeRecord = new AttributeChange<double>();
-	ASSERT( changeRecord != NULL );
-	changeRecord->uuid = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->oldValue = oldValue;
-	changeRecord->newValue = value;
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
+	// Is there already a changeRecord for this attribute
+	AttributeID attributeID = { this->_openedObject->first, attrID };
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
+	AttributeChange<double>* changeRecord = NULL;
+	// A changed record already exists
+	if (changeIter != this->_changedAttributes.end())
+	{
+		// Must update the change record with the new value
+		changeRecord = (AttributeChange<double>*)changeIter->second;
+		ASSERT( oldValue == changeRecord->oldValue );
+	}
+	// A changed record does not already exist
+	else
+	{
+		// Must create a new change record and save old value
+		changeRecord = new AttributeChange<double>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+		changeRecord->oldValue = oldValue;
+		// Add the change record into the changedAttributes hash
+		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
+	}
 	// Update the attribute value
+	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
 }
@@ -1796,16 +1847,31 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	// Quick check to see if there is a no-change requested
 	std::string oldValue = attribute->Get();
 	if (oldValue == value) return S_OK;
-	// Must save old value
-	AttributeChange<std::string>* changeRecord = new AttributeChange<std::string>();
-	ASSERT( changeRecord != NULL );
-	changeRecord->uuid = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->oldValue = oldValue;
-	changeRecord->newValue = value;
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
+	// Is there already a changeRecord for this attribute
+	AttributeID attributeID = { this->_openedObject->first, attrID };
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
+	AttributeChange<std::string>* changeRecord = NULL;
+	// A changed record already exists
+	if (changeIter != this->_changedAttributes.end())
+	{
+		// Must update the change record with the new value
+		changeRecord = (AttributeChange<std::string>*)changeIter->second;
+		ASSERT( oldValue == changeRecord->oldValue );
+	}
+	// A changed record does not already exist
+	else
+	{
+		// Must create a new change record and save old value
+		changeRecord = new AttributeChange<std::string>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+		changeRecord->oldValue = oldValue;
+		// Add the change record into the changedAttributes hash
+		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
+	}
 	// Update the attribute value
+	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
 }
@@ -1831,14 +1897,34 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	// Quick check to see if there is a no-change requested
 	Uuid oldValue = attribute->Get();
 	if (oldValue == value) return S_OK;
-	// Must save old value
-	AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
-	ASSERT( changeRecord != NULL );
-	changeRecord->uuid = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->oldValue = oldValue;
+	// Is there already a changeRecord for this attribute
+	AttributeID attributeID = { this->_openedObject->first, attrID };
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
+	AttributeChange<Uuid>* changeRecord = NULL;
+	bool newRecord = false;
+	// A changed record already exists
+	if (changeIter != this->_changedAttributes.end())
+	{
+		// Must update the change record with the new value
+		changeRecord = (AttributeChange<Uuid>*)changeIter->second;
+		ASSERT( oldValue == changeRecord->oldValue );
+	}
+	// A changed record does not already exist
+	else
+	{
+		// Must create a new change record and save old value
+		newRecord = true;
+		changeRecord = new AttributeChange<Uuid>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+		changeRecord->oldValue = oldValue;
+		// Add the change record into the changedAttributes hash
+		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
+	}
+	// Update the attribute value
 	changeRecord->newValue = value;
-	// Is this a pointer or longPointer
+	// Is this a pointer?
 	if ( binAttribute->GetValueType() == ValueType::Pointer() )
 	{
 		// Try to update the attribute value for a pointer type
@@ -1846,15 +1932,16 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 		if (result != S_OK)
 		{
 			// Delete the change record and return the error code
-			delete changeRecord;
+			if (newRecord)
+			{
+				this->_changedAttributes.erase( attributeID );
+				delete changeRecord;
+			}
 			return result;
 		}		
 	}
-	// Now set the value
+	
 	attribute->Set(value);
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
-	// All is good...
 	return S_OK;
 }
 
@@ -1871,16 +1958,32 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::pai
 	// Quick check to see if there is a no-change requested
 	std::string oldValue = attribute->Get(value.first);
 	if (oldValue == value.second) return S_OK;
-	// Must save old value
-	AttributeChange<std::pair<std::string,std::string> >* changeRecord = new AttributeChange<std::pair<std::string,std::string> >();
-	ASSERT( changeRecord != NULL );
-	changeRecord->uuid = this->_openedObject->first;
-	changeRecord->attrID = attrID;
-	changeRecord->oldValue = std::make_pair(value.first, oldValue);
-	changeRecord->newValue = value;
-	// Add the change record into the changedObjects list
-	this->_changedObjects.push_back(changeRecord);
+	ASSERT(false);
+	// Is there already a changeRecord for this attribute
+	AttributeID attributeID = { this->_openedObject->first, attrID };
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
+	AttributeChange<std::pair<std::string,std::string> >* changeRecord = NULL;
+	// A changed record already exists
+	if (changeIter != this->_changedAttributes.end())
+	{
+		// Must update the change record with the new value
+		changeRecord = (AttributeChange<std::pair<std::string,std::string> >*)changeIter->second;
+//		ASSERT( oldValue == changeRecord->oldValue );
+	}
+	// A changed record does not already exist
+	else
+	{
+		// Must create a new change record and save old value
+		changeRecord = new AttributeChange<std::pair<std::string,std::string> >();
+		ASSERT( changeRecord != NULL );
+		changeRecord->uuid = this->_openedObject->first;
+		changeRecord->attrID = attrID;
+//		changeRecord->oldValue = oldValue;
+		// Add the change record into the changedAttributes hash
+		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
+	}
 	// Update the attribute value
+	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
 }
@@ -1891,7 +1994,7 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	// Must not be in a transaction
 	if( this->_inTransaction ) return E_TRANSACTION;
 	ASSERT( this->_createdObjects.empty() );
-	ASSERT( this->_changedObjects.empty() );
+	ASSERT( this->_changedAttributes.empty() );
 	ASSERT( this->_deletedObjects.empty() );
 	if( this->_undoList.empty() ) return S_OK;
 	// Unpickle journaled transaction
@@ -1910,8 +2013,8 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 		++deletedIter;
 	}
 	// Must unchange all changed attributes
-	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
-	while (changeIter != this->_changedObjects.end())
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
+	while (changeIter != this->_changedAttributes.end())
 	{
 		// Revert the attribute value change
 		// TODO: Revert the attribute value change
@@ -1929,7 +2032,7 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	}
 	// Clear the transaction lists
 	this->_createdObjects.clear();
-	this->_changedObjects.clear();
+	this->_changedAttributes.clear();
 	this->_deletedObjects.clear();
 	
 	// Move journal entry to redo list
@@ -1946,7 +2049,7 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	// Must not be in a transaction
 	if( this->_inTransaction ) return E_TRANSACTION;
 	ASSERT( this->_createdObjects.empty() );
-	ASSERT( this->_changedObjects.empty() );
+	ASSERT( this->_changedAttributes.empty() );
 	ASSERT( this->_deletedObjects.empty() );
 	// Make sure there is something to redo
 	if( this->_redoList.empty() ) return E_INVALID_USAGE;
@@ -1966,8 +2069,8 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 		++createdIter;
 	}
 	// Changed objects
-	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
-	while (changeIter != this->_changedObjects.end())
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
+	while (changeIter != this->_changedAttributes.end())
 	{
 		// Make the attribute value change
 		// TODO: Make the attribute value change
@@ -1985,7 +2088,7 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	}
 	// Clear the transaction lists
 	this->_createdObjects.clear();
-	this->_changedObjects.clear();
+	this->_changedAttributes.clear();
 	this->_deletedObjects.clear();
 
 	// Move entry to undoList from redoList
