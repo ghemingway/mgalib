@@ -10,8 +10,7 @@
 
 
 namespace CryptoPP {
-	class ZlibCompressor;
-	class ZlibDecompressor;
+	class Filter;
 }
 
 
@@ -70,20 +69,14 @@ typedef struct IndexEntry
 typedef std::tr1::unordered_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
 
-typedef struct AttributeChangeBase
-{
-	Uuid									uuid;
-	AttrID_t								attrID;
-} AttributeChangeBase;
-
 template <class T>
-struct AttributeChange : public AttributeChangeBase
+struct AttributeChange : public AttributeID
 {
 	T										oldValue;
 	T										newValue;
 };
-typedef std::list<AttributeChangeBase*> ChangedObjectsList;
-typedef ChangedObjectsList::iterator ChangedObjectsListIterator;
+typedef std::tr1::unordered_map<AttributeID,AttributeID*,AttributeID_HashFunc> ChangedAttributesHash;
+typedef ChangedAttributesHash::iterator ChangedAttributesHashIterator;
 
 typedef struct JournalEntry
 {
@@ -176,7 +169,7 @@ private:
 	IndexHashIterator					_openedObject;				//!< Iterator to currently opened object
 	// Transaction Variables
 	std::list<std::pair<Uuid,MetaID_t> >_createdObjects;			//!< List of all objects created in current transaction
-	ChangedObjectsList					_changedObjects;			//!< List of all object changes from current transaction
+	ChangedAttributesHash				_changedAttributes;			//!< Hash of all attributes changed during current transaction
 	std::list<std::pair<Uuid,IndexEntry> >_deletedObjects;			//!< List of all objects deleted in current transaction
 	// Undo/Redo Variables
 	bool								_isJournaling;				//!< Is journaling turned on
@@ -185,8 +178,8 @@ private:
 	JournalList							_redoList;					//!< List of redo journal entries
 	// Encryption & Compression Variables
 	bool								_isCompressed;				//!< Is compression turned on
-	CryptoPP::ZlibCompressor			*_compressor;				//!< Compressor
-	CryptoPP::ZlibDecompressor			*_decompressor;				//!< Decompressor
+	CryptoPP::Filter					*_compressor, *_decompressor;	//!< Compression filters
+	CryptoPP::Filter					*_encryptor, *_decryptor;	//!< Encryption filters
 	bool								_isEncrypted;				//!< Is encryption turned on
 	char								*_encryptionKey;			//!< What is the encryption key
 	char								*_encryptionIV;				//!< The encryption IV
