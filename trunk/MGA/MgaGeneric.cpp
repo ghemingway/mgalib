@@ -21,7 +21,6 @@ const Result_t MGA::CreateMGACoreMetaProject(CoreMetaProject* &metaProject)
 	ASSERT( result == S_OK );
 
 #define CREATE_POINTER(metaid, token, name) \
-	ASSERT(metaid == ATTRID_FATHER || metaid >= ATTRID_REF_MIN);\
 	result = object->AddAttribute(metaid, token, name, ValueType::Pointer(), attribute); \
 	ASSERT( result == S_OK );
 
@@ -30,7 +29,6 @@ const Result_t MGA::CreateMGACoreMetaProject(CoreMetaProject* &metaProject)
 	ASSERT( result == S_OK );
 
 #define CREATE_ATTRIBUTE(metaid, token, name, valtype) \
-	ASSERT(metaid < ATTRID_REF_MIN);\
 	result = object->AddAttribute(metaid, token, name, valtype, attribute); \
 	ASSERT( result == S_OK );
 
@@ -64,13 +62,13 @@ const Result_t MGA::CreateMGACoreMetaProject(CoreMetaProject* &metaProject)
 		CREATE_POINTER(ATTRID_CONSTROWNER, "ConstraintOf", "Owner Kind");
 
 //REGNODE
-		CREATE_OBJECT(DTID_REGNODE, "RegNode", "Template For Registry Node");
-		CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "RegNode Name",		ValueType::String());
-		CREATE_ATTRIBUTE(ATTRID_REGFLAGS, "RegistryFlags", "Registry Flags", ValueType::Long());
-		CREATE_POINTER(ATTRID_REGNOWNER, "RegNodeOf", "Parent Object/Regnode");
-		CREATE_COLLECTION(ATTRID_REGNOWNER, "RegNodes", "Registry Nodes");
-		CREATE_ATTRIBUTE(ATTRID_REGNODEVALUE, "RegNodeValue", "RegNode Value",ValueType::String());
-		CREATE_POINTER(ATTRID_XREF,	"FCOref", "Referenced FCO");
+//		CREATE_OBJECT(DTID_REGNODE, "RegNode", "Template For Registry Node");
+//		CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "RegNode Name",		ValueType::String());
+//		CREATE_ATTRIBUTE(ATTRID_REGFLAGS, "RegistryFlags", "Registry Flags", ValueType::Long());
+//		CREATE_POINTER(ATTRID_REGNOWNER, "RegNodeOf", "Parent Object/Regnode");
+//		CREATE_COLLECTION(ATTRID_REGNOWNER, "RegNodes", "Registry Nodes");
+//		CREATE_ATTRIBUTE(ATTRID_REGNODEVALUE, "RegNodeValue", "RegNode Value",ValueType::String());
+//		CREATE_POINTER(ATTRID_XREF,	"FCOref", "Referenced FCO");
 
 //////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// DATA ///////////////////////////////////////////////////
@@ -87,7 +85,7 @@ const Result_t MGA::CreateMGACoreMetaProject(CoreMetaProject* &metaProject)
 		CREATE_POINTER(ATTRID_PARENT, "Parent", "Parent Object");
 		CREATE_COLLECTION(ATTRID_PARENT, "Children", "Child Objects");
 		CREATE_COLLECTION(ATTRID_CONSTROWNER, "Constraints", "Constraints");
-		CREATE_COLLECTION(ATTRID_REGNOWNER, "RegNodes", "Registry Nodes");
+		CREATE_ATTRIBUTE(ATTRID_REGISTRY, "Registry", "Key-Value Registry", ValueType::Dictionary());
 		CREATE_ATTRIBUTE(ATTRID_PERMISSIONS, "Permissions", "Permissions", ValueType::Long());
 		
 //FCO
@@ -98,7 +96,7 @@ const Result_t MGA::CreateMGACoreMetaProject(CoreMetaProject* &metaProject)
 		CREATE_ATTRIBUTE(ATTRID_ROLEMETA, "RoleMeta", "Role Meta Identifier",ValueType::Long());\
 		CREATE_POINTER(ATTRID_FCOPARENT, "Parent", "Parent Object");\
 		CREATE_COLLECTION(ATTRID_CONSTROWNER, "Constraints", "Constraints");\
-		CREATE_COLLECTION(ATTRID_REGNOWNER, "RegNodes", "Registry Nodes");\
+		CREATE_ATTRIBUTE(ATTRID_REGISTRY, "Registry", "Key-Value Registry", ValueType::Dictionary());\
 		CREATE_COLLECTION(ATTRID_REFERENCE, "References", "Referenced by");\
 		CREATE_COLLECTION(ATTRID_XREF,		"XReferences", "Cross refs");\
 		CREATE_COLLECTION(ATTRID_ATTRPARENT,"Attributes", "Attributes");\

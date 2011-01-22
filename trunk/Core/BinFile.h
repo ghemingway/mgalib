@@ -19,9 +19,7 @@ namespace MGA {
 
 
 /*** Class Predefinitions ***/
-class BinFile;
 class BinObject;
-class BinAttribute;
 class BinFileFactory;
 
 
