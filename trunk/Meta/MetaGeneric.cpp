@@ -35,7 +35,7 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 #define DECLARE_BASE() \
 	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String()); \
 	CREATE_ATTRIBUTE(ATTRID_DISPNAME, "DispName", "Displayed Name", ValueType::String()); \
-	CREATE_COLLECTION(ATTRID_REGNODES_COLL, "RegNodes", "Registry Nodes"); \
+	CREATE_ATTRIBUTE(ATTRID_REGISTRY, "Registry", "Key-Value Registry", ValueType::Dictionary()); \
 	CREATE_COLLECTION(ATTRID_CONSTRAINT_PTR, "Constraints", "Constraints");
 
 // ------- Folder
@@ -178,11 +178,11 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 
 // ------- RegNode
 
-	CREATE_OBJECT(METAID_METAREGNODE, "MetaRegNode", "Meta Registry Node");
-	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String());
-	CREATE_ATTRIBUTE(ATTRID_VALUE, "Value", "Value", ValueType::String());
-	CREATE_POINTER(ATTRID_REGNODES_COLL, "RegNodeParent", "Parent");
-	CREATE_COLLECTION(ATTRID_REGNODES_COLL, "RegNodes", "Registry Nodes");
+//	CREATE_OBJECT(METAID_METAREGNODE, "MetaRegNode", "Meta Registry Node");
+//	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String());
+//	CREATE_ATTRIBUTE(ATTRID_VALUE, "Value", "Value", ValueType::String());
+//	CREATE_POINTER(ATTRID_REGNODES_COLL, "RegNodeParent", "Parent");
+//	CREATE_COLLECTION(ATTRID_REGNODES_COLL, "RegNodes", "Registry Nodes");
 
 // ------- EnumItem
 

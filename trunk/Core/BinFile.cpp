@@ -262,30 +262,9 @@ public:
 		}
 		return size;
 	}
-	inline virtual const Result_t Set(const std::pair<std::string,std::string> &value)
-	{
-		// Make sure both key and value are valid UTF-8
-		if (_CheckUTF8(value.first) != S_OK || _CheckUTF8(value.second) != S_OK) return E_BADUTF8STRING;
-		this->_parent->MarkDirty();
-		// Look for the key in the map
-		DictionaryMap::iterator dictIter = this->_value.find(value.first);
-		// Did we not find it - we must insert it then
-		if (dictIter == this->_value.end()) this->_value.insert( value );
-		// Otherwise, just update the old value
-		else dictIter->second = value.second;
-		return S_OK;
-	}
-	inline virtual std::string Get(const std::string &key) const
-	{
-		// Look for the key in the map
-		DictionaryMap::const_iterator dictIter = this->_value.find(key);
-		// Did we not find it
-		if (dictIter == this->_value.end()) return "";
-		// Otherwise, return the value
-		return dictIter->second;
-	}
 	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Dictionary()); BinAttributeBase<DictionaryMap>::StreamWrite(stream); }
 };
+
 
 // --------------------------- BinAttr ---------------------------
 
@@ -318,6 +297,8 @@ BinAttribute *BinAttribute::Read(BinObject *parent, char* &stream)
 		binAttribute = new BinAttributeCollection(parent, attrID);
 	else if (valueType == ValueType::Pointer())
 		binAttribute = new BinAttributePointer(parent, attrID);
+	else if (valueType == ValueType::Dictionary())
+		binAttribute = new BinAttributeDictionary(parent, attrID);
 	// Return what we have
 	ASSERT( binAttribute != NULL );
 	// Command the attribute to finish reading itself
@@ -346,6 +327,8 @@ BinAttribute* BinAttribute::Create(BinObject *parent, const ValueType &valueType
 		binAttribute = new BinAttributeCollection(parent, attrID);
 	else if (valueType == ValueType::Pointer())
 		binAttribute = new BinAttributePointer(parent, attrID);
+	else if (valueType == ValueType::Dictionary())
+		binAttribute = new BinAttributeDictionary(parent, attrID);
 	// Return what we have
 	ASSERT( binAttribute != NULL );	
 	// Return the new attribute
@@ -1436,6 +1419,7 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			// Simply delete the AttributeChange
 			ASSERT( changeIter->second != NULL );
 			delete changeIter->second;
+			// Move on to the next attributeChange
 			++changeIter;
 		}
 		// Must actually delete all objects in deletedObjects list
@@ -1496,50 +1480,64 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
 			ASSERT( binAttribute != NULL );
 			// Is the changed attribute a LONG
-			if (binAttribute->GetValueType() == ValueType::Long()) {
+			if (binAttribute->GetValueType() == ValueType::Long())
+			{
 				BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
 				ASSERT( attribute != NULL );
 				AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
 			}
 			// Is the changed attribute a REAL
-			else if (binAttribute->GetValueType() == ValueType::Real()) {
+			else if (binAttribute->GetValueType() == ValueType::Real())
+			{
 				BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
 				ASSERT( attribute != NULL );
 				AttributeChange<double>* changeRecord = (AttributeChange<double>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
 			}
 			// Is the changed attribute a STRING
-			else if (binAttribute->GetValueType() == ValueType::String()) {
+			else if (binAttribute->GetValueType() == ValueType::String())
+			{
 				BinAttributeString *attribute = (BinAttributeString*)binAttribute;
 				ASSERT( attribute != NULL );
 				AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
 			}
 			// Is the changed attribute a LONGPOINTER
-			else if (binAttribute->GetValueType() == ValueType::LongPointer()) {
+			else if (binAttribute->GetValueType() == ValueType::LongPointer())
+			{
 				BinAttributeLongPointer *attribute = (BinAttributeLongPointer*)binAttribute;
 				ASSERT( attribute != NULL );
 				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
 				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
 			}
 			// Is the changed attribute a POINTER
-			else if (binAttribute->GetValueType() == ValueType::Pointer()) {
+			else if (binAttribute->GetValueType() == ValueType::Pointer())
+			{
 				BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 				ASSERT( attribute != NULL );
 				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
 				ASSERT( changeRecord != NULL );
-				this->PointerUpdate(binAttribute->GetAttributeID(), changeRecord->uuid, changeRecord->newValue, changeRecord->oldValue);
+				this->PointerUpdate(binAttribute->GetAttributeID(), changeIter->first.uuid, attribute->Get(), changeRecord->oldValue);
 				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
+			}
+			// Is the changed attribute a DICTIONARY
+			else if (binAttribute->GetValueType() == ValueType::Dictionary())
+			{
+				ASSERT(false);
 			}
 			// Never should be here!
 			else ASSERT(false);
-			// Finally, delete the AttributeChange and move on to the next
-			delete changeIter->second;
+			// Move on to the next change
 			++changeIter;
 		}
 		// Clear the changes list
@@ -1741,7 +1739,7 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, Uuid &value) t
 }
 
 
-const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::pair<std::string,std::string> &value) throw()
+const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, DictionaryMap &value) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
@@ -1749,7 +1747,7 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::pair<std:
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
-	value.second = ((BinAttributeDictionary*)binAttribute)->Get(value.first);
+	value = ((BinAttributeDictionary*)binAttribute)->Get();
 	return S_OK;
 }
 
@@ -1763,32 +1761,26 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t 
 	if( binAttribute->GetValueType() != ValueType::Long() ) return E_ATTVALTYPE;
 	BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	int32_t oldValue = attribute->Get();
-	if (oldValue == value) return S_OK;
+	int32_t currentValue = attribute->Get();
+	if (currentValue == value) return S_OK;
 	// Is there already a changeRecord for this attribute
 	AttributeID attributeID = { this->_openedObject->first, attrID };
+	AttributeChange<int32_t> *changeRecord = NULL;
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	AttributeChange<int32_t>* changeRecord = NULL;
 	// A changed record already exists
-	if (changeIter != this->_changedAttributes.end())
-	{
-		// Must update the change record with the new value
-		changeRecord = (AttributeChange<int32_t>*)changeIter->second;
-		ASSERT( oldValue == changeRecord->oldValue );
-	}
-	// A changed record does not already exist
-	else
+	if (changeIter == this->_changedAttributes.end())
 	{
 		// Must create a new change record and save old value
 		changeRecord = new AttributeChange<int32_t>();
 		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-		changeRecord->oldValue = oldValue;
+		changeRecord->oldValue = currentValue;
+		changeRecord->type = ValueType::Long();
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
-	// Update the attribute value
+	// Just grab the old changeRecord
+	else changeRecord = (AttributeChange<int32_t>*)changeIter->second;
+	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
@@ -1804,32 +1796,26 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &
 	if( binAttribute->GetValueType() != ValueType::Real() ) return E_ATTVALTYPE;
 	BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	double oldValue = attribute->Get();
-	if (oldValue == value) return S_OK;
+	double currentValue = attribute->Get();
+	if (currentValue == value) return S_OK;
 	// Is there already a changeRecord for this attribute
 	AttributeID attributeID = { this->_openedObject->first, attrID };
+	AttributeChange<double> *changeRecord = NULL;
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	AttributeChange<double>* changeRecord = NULL;
 	// A changed record already exists
-	if (changeIter != this->_changedAttributes.end())
-	{
-		// Must update the change record with the new value
-		changeRecord = (AttributeChange<double>*)changeIter->second;
-		ASSERT( oldValue == changeRecord->oldValue );
-	}
-	// A changed record does not already exist
-	else
+	if (changeIter == this->_changedAttributes.end())
 	{
 		// Must create a new change record and save old value
 		changeRecord = new AttributeChange<double>();
 		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-		changeRecord->oldValue = oldValue;
+		changeRecord->oldValue = currentValue;
+		changeRecord->type = ValueType::Real();
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
-	// Update the attribute value
+	// Just grab the old changeRecord
+	else changeRecord = (AttributeChange<double>*)changeIter->second;
+	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
@@ -1845,32 +1831,26 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 	if( binAttribute->GetValueType() != ValueType::String() ) return E_ATTVALTYPE;
 	BinAttributeString *attribute = (BinAttributeString*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	std::string oldValue = attribute->Get();
-	if (oldValue == value) return S_OK;
+	std::string currentValue = attribute->Get();
+	if (currentValue == value) return S_OK;
 	// Is there already a changeRecord for this attribute
 	AttributeID attributeID = { this->_openedObject->first, attrID };
+	AttributeChange<std::string> *changeRecord = NULL;
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	AttributeChange<std::string>* changeRecord = NULL;
 	// A changed record already exists
-	if (changeIter != this->_changedAttributes.end())
-	{
-		// Must update the change record with the new value
-		changeRecord = (AttributeChange<std::string>*)changeIter->second;
-		ASSERT( oldValue == changeRecord->oldValue );
-	}
-	// A changed record does not already exist
-	else
+	if (changeIter == this->_changedAttributes.end())
 	{
 		// Must create a new change record and save old value
 		changeRecord = new AttributeChange<std::string>();
 		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-		changeRecord->oldValue = oldValue;
+		changeRecord->oldValue = currentValue;
+		changeRecord->type = ValueType::Real();
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
-	// Update the attribute value
+	// Just grab the old changeRecord
+	else changeRecord = (AttributeChange<std::string>*)changeIter->second;
+	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;
@@ -1891,62 +1871,48 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
 	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Pointer() &&
-	    binAttribute->GetValueType() != ValueType::LongPointer() ) return E_ATTVALTYPE;
+	// Get the value type (we kind of use it a lot here)
+	ValueType valueType = binAttribute->GetValueType();
+	if( valueType != ValueType::Pointer() && valueType != ValueType::LongPointer() ) return E_ATTVALTYPE;
 	BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
 	// Quick check to see if there is a no-change requested
-	Uuid oldValue = attribute->Get();
-	if (oldValue == value) return S_OK;
+	Uuid currentValue = attribute->Get();
+	if (currentValue == value) return S_OK;
+
+	// Is this a pointer?
+	if ( valueType == ValueType::Pointer() )
+	{
+		// Try to update the attribute value for a pointer type
+		ASSERT( binAttribute->GetAttributeID() == attrID );
+		Result_t result = this->PointerUpdate(binAttribute->GetAttributeID(), this->_openedObject->first, currentValue, value);
+		if (result != S_OK) return result;
+	}
+
 	// Is there already a changeRecord for this attribute
 	AttributeID attributeID = { this->_openedObject->first, attrID };
+	AttributeChange<Uuid> *changeRecord = NULL;
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	AttributeChange<Uuid>* changeRecord = NULL;
-	bool newRecord = false;
 	// A changed record already exists
-	if (changeIter != this->_changedAttributes.end())
-	{
-		// Must update the change record with the new value
-		changeRecord = (AttributeChange<Uuid>*)changeIter->second;
-		ASSERT( oldValue == changeRecord->oldValue );
-	}
-	// A changed record does not already exist
-	else
+	if (changeIter == this->_changedAttributes.end())
 	{
 		// Must create a new change record and save old value
-		newRecord = true;
 		changeRecord = new AttributeChange<Uuid>();
 		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-		changeRecord->oldValue = oldValue;
+		changeRecord->oldValue = currentValue;
+		changeRecord->type = valueType;
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
-	// Update the attribute value
+	// Just grab the old changeRecord
+	else changeRecord = (AttributeChange<Uuid>*)changeIter->second;
+	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
-	// Is this a pointer?
-	if ( binAttribute->GetValueType() == ValueType::Pointer() )
-	{
-		// Try to update the attribute value for a pointer type
-		Result_t result = this->PointerUpdate(binAttribute->GetAttributeID(), changeRecord->uuid,changeRecord->oldValue, changeRecord->newValue);
-		if (result != S_OK)
-		{
-			// Delete the change record and return the error code
-			if (newRecord)
-			{
-				this->_changedAttributes.erase( attributeID );
-				delete changeRecord;
-			}
-			return result;
-		}		
-	}
-	
 	attribute->Set(value);
 	return S_OK;
 }
 
 
-const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::pair<std::string,std::string> &value) throw()
+const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw()
 {
 	ASSERT(false);
 	if( !this->_inTransaction ) return E_TRANSACTION;
@@ -1955,34 +1921,26 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::pai
 	if( binAttribute == NULL ) return E_ATTRID;
 	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
 	BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
-	// Quick check to see if there is a no-change requested
-	std::string oldValue = attribute->Get(value.first);
-	if (oldValue == value.second) return S_OK;
-	ASSERT(false);
+	// Get current value of the dictionary map
+	DictionaryMap currentValue = attribute->Get();
 	// Is there already a changeRecord for this attribute
 	AttributeID attributeID = { this->_openedObject->first, attrID };
+	AttributeChange<DictionaryMap> *changeRecord = NULL;
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	AttributeChange<std::pair<std::string,std::string> >* changeRecord = NULL;
 	// A changed record already exists
-	if (changeIter != this->_changedAttributes.end())
-	{
-		// Must update the change record with the new value
-		changeRecord = (AttributeChange<std::pair<std::string,std::string> >*)changeIter->second;
-//		ASSERT( oldValue == changeRecord->oldValue );
-	}
-	// A changed record does not already exist
-	else
+	if (changeIter == this->_changedAttributes.end())
 	{
 		// Must create a new change record and save old value
-		changeRecord = new AttributeChange<std::pair<std::string,std::string> >();
+		changeRecord = new AttributeChange<DictionaryMap>();
 		ASSERT( changeRecord != NULL );
-		changeRecord->uuid = this->_openedObject->first;
-		changeRecord->attrID = attrID;
-//		changeRecord->oldValue = oldValue;
+		changeRecord->oldValue = currentValue;
+		changeRecord->type = ValueType::Real();
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
-	// Update the attribute value
+	// Just grab the old changeRecord
+	else changeRecord = (AttributeChange<DictionaryMap>*)changeIter->second;
+	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
 	attribute->Set(value);
 	return S_OK;

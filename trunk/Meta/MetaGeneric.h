@@ -55,7 +55,7 @@ const Result_t CreateMetaCoreMetaProject(CoreMetaProject* &metaProject);
 #define METAID_METAFOLDERLINK			224
 #define METAID_METAROOTOBJLINK			225
 #define METAID_METAATTRLINK				226
-#define METAID_METAREGNODE				227
+//#define METAID_METAREGNODE				227
 #define METAID_METAENUMITEM				228
 #define METAID_METACONSTRAINT			229
 
@@ -105,7 +105,7 @@ const Result_t CreateMetaCoreMetaProject(CoreMetaProject* &metaProject);
 #define ATTRID_ROLENAMES				285
 #define ATTRID_CONNJOINTS_COLL			291
 #define ATTRID_PTRSPECS_COLL			292
-#define ATTRID_REGNODES_COLL			293
+#define ATTRID_REGISTRY					293
 #define ATTRID_ENUMITEMS_COLL			294
 #define ATTRID_CONSEXPR					300
 #define ATTRID_CONSMASK					301

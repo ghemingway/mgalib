@@ -23,7 +23,7 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject &coreObject, const std::
 		// Get the collection of backpointers to registry nodes
 		CoreObject node;
 		std::list<Uuid> coreObjectIDs;
-		coreObject->GetAttributeValue(ATTRID_REGNODES_COLL, coreObjectIDs);
+//		coreObject->GetAttributeValue(ATTRID_REGNODES_COLL, coreObjectIDs);
 		
 		std::list<Uuid>::iterator idIter = coreObjectIDs.begin();
 		while( idIter != coreObjectIDs.end() )
@@ -46,10 +46,11 @@ const Result_t MetaRegNodes::GetRegistryNode(CoreObject &coreObject, const std::
 		// Did we find the node we were looking for
 		if( node == NULL )
 		{
+			ASSERT(false);
 			// Create the node
-			Result_t result = coreProject->CreateObject(METAID_METAREGNODE, node);
-			if ( result == E_TRANSACTION ) return E_NOTFOUND;
-			if ( result != S_OK ) return result;
+//			Result_t result = coreProject->CreateObject(METAID_METAREGNODE, node);
+//			if ( result == E_TRANSACTION ) return E_NOTFOUND;
+//			if ( result != S_OK ) return result;
 			ASSERT( node != NULL );
 //			node->SetAttributeValue(ATTRID_REGNODES_COLL, coreObject);
 			node->SetAttributeValue(ATTRID_NAME, name);

@@ -69,13 +69,17 @@ typedef struct IndexEntry
 typedef std::tr1::unordered_map<Uuid,IndexEntry,Uuid_HashFunc> IndexHash;
 typedef IndexHash::iterator IndexHashIterator;
 
+typedef struct AttributeChangeBase
+{
+	ValueType								type;
+} AttributeChangeBase;
 template <class T>
-struct AttributeChange : public AttributeID
+struct AttributeChange : public AttributeChangeBase
 {
 	T										oldValue;
 	T										newValue;
 };
-typedef std::tr1::unordered_map<AttributeID,AttributeID*,AttributeID_HashFunc> ChangedAttributesHash;
+typedef std::tr1::unordered_map<AttributeID,AttributeChangeBase*,AttributeID_HashFunc> ChangedAttributesHash;
 typedef ChangedAttributesHash::iterator ChangedAttributesHashIterator;
 
 typedef struct JournalEntry
@@ -237,14 +241,14 @@ public:
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw();		//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw();	//!<
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw();				//!<
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::pair<std::string,std::string> &value) throw();	//!< Get key value
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, DictionaryMap &value) throw();		//!< Get key value
 	
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw();	//!<
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();//!<
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw();	//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::pair<std::string,std::string> &value) throw();	//!< Set key value
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw();	//!< Set key value
 
 	virtual const Result_t Undo(Uuid &tag) throw();											//!<
 	virtual const Result_t Redo(Uuid &tag) throw();											//!<

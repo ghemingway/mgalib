@@ -71,6 +71,7 @@ namespace MGA {
 typedef int16_t MetaID_t;
 typedef int16_t AttrID_t;
 typedef std::tr1::unordered_map<std::string,std::string> DictionaryMap;
+typedef std::tr1::unordered_map<std::string,std::string>::iterator DictionaryMapIter;
 
 
 const MetaID_t METAID_NONE = 0;

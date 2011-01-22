@@ -29,9 +29,8 @@ const Result_t CoreAttributeBase::Create(CoreObjectBase *parent, CoreMetaAttribu
 		attribute = new CoreAttributeCollection(parent, metaAttribute);
 	else if (valueType == ValueType::Pointer())
 		attribute = new CoreAttributeTemplateBase<Uuid>(parent, metaAttribute);
-//	else if (valueType == ValueType::Pointer())
-//		attribute = new CoreAttributeTemplateBase<DictionaryMap>(parent, metaAttribute);
-	else ASSERT(false);
+	else if (valueType == ValueType::Dictionary())
+		attribute = new CoreAttributeTemplateBase<DictionaryEntry>(parent, metaAttribute);
 	ASSERT( attribute != NULL );
 	// All must be good
 	return S_OK;
