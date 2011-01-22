@@ -712,10 +712,7 @@
 			mainGroup = 0867D691FE84028FC02AAC07 /* GME_OSX */;
 			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
 			projectDirPath = "";
-			projectRoots = (
-				"",
-				../../..,
-			);
+			projectRoot = "";
 			targets = (
 				58E90A1E124CEFFF00B8E3CF /* MGALib */,
 				5843398E125B8AFC00DD904D /* MGALibTestHarness */,
