@@ -65,11 +65,7 @@ const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 #define	ATTRID_CONSTROCL				450
 #define	ATTRID_CONSTRPRIORITY			451
 #define	ATTRID_CONSTROWNER				652
-#define	ATTRID_REGNOWNER				655
-#define	ATTRID_REGNODENAME				456
-#define	ATTRID_REGNODEVALUE				457
-#define	ATTRID_REGFLAGS					458
-
+#define	ATTRID_REGISTRY					655
 
 // OBJECT ID'S
 #define DTID_ROOT						1
@@ -93,7 +89,6 @@ const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 #define DTID_REFATTR					115
 // contigious block ends
 #define DTID_CONSTRAINT					120	
-#define DTID_REGNODE					121	
 #define DTID_SETNODE					122	
 
 #define VALTYPE_METAREF					VALTYPE_LONG

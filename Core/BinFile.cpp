@@ -14,7 +14,7 @@
 /*** Internally Defined Constants ***/
 #define BINFILE_DEFAULTCACHESIZE			10000000
 #define BINFILE_DEFAULTMAXUNDO				10000000
-#define BINFILE_DEFAULTJOURNALING			false
+#define BINFILE_DEFAULTJOURNALING			true
 #define BINFILE_DEFAULTCOMPRESSION			true
 #define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
 #define BINFILE_ENCRYPTIONIVSIZE			CryptoPP::AES::BLOCKSIZE * 16
@@ -119,6 +119,34 @@ template <> void _Write<DictionaryMap>(char* &stream, const DictionaryMap &dicti
 	}
 }
 
+
+// --------------------------- Attribute Sizing Functions --------------------------- //
+
+
+template <class T> static inline uint32_t _Size(const T &value)	{ return sizeof(T); }
+template <> static inline uint32_t _Size<std::string>(const std::string &value)
+	{ return (sizeof(uint32_t) + value.size()); }
+template <> static inline uint32_t _Size<std::list<Uuid> >(const std::list<Uuid> &value)
+	{ return (sizeof(uint32_t) + (value.size() * sizeof(Uuid))); }
+template <> static inline uint32_t _Size<DictionaryMap>(const DictionaryMap &value)
+	{
+		// Size it at least the number of elements in the dictionary
+		uint32_t size = sizeof(uint32_t);
+		// Iterate through the whole map and get the size of each key and value
+		DictionaryMap::const_iterator dictIter = value.begin();
+		while (dictIter != value.end())
+		{
+			// Add the size of the key (plus 4 for recording its size)
+			size += sizeof(uint32_t) + dictIter->first.size();
+			// Add the size of the value (plus 4 for recording its size)
+			size += sizeof(uint32_t) + dictIter->second.size();
+			// Move to the next key-value
+			++dictIter;
+		}
+		return size;
+	}
+
+
 // --------------------------- UTF-8 Encoding Check --------------------------- //
 
 
@@ -151,7 +179,7 @@ public:
 	BinAttributeBase<T>(BinObject* parent, const AttrID_t &attrID, const T &value) : ::BinAttribute(parent, attrID), _value(value) { }
 	inline virtual const Result_t Set(const T &value)	{ this->_parent->MarkDirty(); this->_value = value; return S_OK; }
 	inline virtual T Get(void) const					{ return this->_value; }
-	inline virtual uint32_t Size(void) const			{ return sizeof(T); }
+	inline virtual uint32_t Size(void) const			{ return _Size(this->_value); }
 	inline virtual void StreamRead(char* &stream)		{ _Read(stream, this->_value); }
 	inline virtual void StreamWrite(char* &stream) const{ _Write(stream, this->_attrID); _Write(stream, this->_value); }
 };
@@ -161,7 +189,8 @@ public:
 
 
 
-class BinAttributeLong : public BinAttributeBase<int32_t> {
+class BinAttributeLong : public BinAttributeBase<int32_t>
+{
 public:
 	BinAttributeLong(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<int32_t>(parent, attrID, 0) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Long(); }
@@ -172,7 +201,8 @@ public:
 // --------------------------- BinAttribute::ValueType::Real() --------------------------- //
 
 
-class BinAttributeReal : public BinAttributeBase<double> {
+class BinAttributeReal : public BinAttributeBase<double>
+{
 public:
 	BinAttributeReal(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<double>(parent, attrID, 0.0) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Real(); }
@@ -183,11 +213,11 @@ public:
 // --------------------------- BinAttribute::ValueType::String() --------------------------- //
 
 
-class BinAttributeString : public BinAttributeBase<std::string> {
+class BinAttributeString : public BinAttributeBase<std::string>
+{
 public:
 	BinAttributeString(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::string>(parent, attrID, "") { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::String(); }
-	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size()); }
 	virtual inline const Result_t Set(const std::string &value)
 	{
 		// Make sure string is valid UTF-8
@@ -204,7 +234,8 @@ public:
 // --------------------------- BinAttribute::ValueType::LongPointer() --------------------------- //
 
 
-class BinAttributeLongPointer : public BinAttributeBase<Uuid> {
+class BinAttributeLongPointer : public BinAttributeBase<Uuid>
+{
 public:
 	BinAttributeLongPointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::LongPointer(); }
@@ -215,13 +246,13 @@ public:
 // --------------------------- BinAttribute::ValueType::Collection() --------------------------- //
 
 
-class BinAttributeCollection : public BinAttributeBase<std::list<Uuid> > {
+class BinAttributeCollection : public BinAttributeBase<std::list<Uuid> >
+{
 public:
 	BinAttributeCollection(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<std::list<Uuid> >(parent, attrID, std::list<Uuid>()) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Collection(); }
 	inline void Add(const Uuid &value)					{ this->_parent->MarkDirty(); this->_value.push_back(value); }
 	inline void Remove(const Uuid &value)				{ this->_parent->MarkDirty(); this->_value.remove(value); }
-	virtual inline uint32_t Size(void) const			{ return (sizeof(uint32_t) + this->_value.size() * sizeof(Uuid)); }
 	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Collection()); BinAttributeBase<std::list<Uuid> >::StreamWrite(stream); }
 };
 
@@ -229,7 +260,8 @@ public:
 // --------------------------- BinAttribute::ValueType::Pointer() --------------------------- //
 
 
-class BinAttributePointer : public BinAttributeBase<Uuid> {
+class BinAttributePointer : public BinAttributeBase<Uuid>
+{
 public:
 	BinAttributePointer(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<Uuid>(parent, attrID, Uuid(Uuid::Null())) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Pointer(); }
@@ -241,27 +273,11 @@ public:
 // --------------------------- BinAttribute::ValueType::Dictionary() --------------------------- //
 
 
-class BinAttributeDictionary : public BinAttributeBase<DictionaryMap> {
+class BinAttributeDictionary : public BinAttributeBase<DictionaryMap>
+{
 public:
 	BinAttributeDictionary(BinObject* parent, const AttrID_t &attrID) : ::BinAttributeBase<DictionaryMap>(parent, attrID, DictionaryMap()) { }
 	virtual inline const ValueType GetValueType(void) const throw()	{ return ValueType::Dictionary(); }
-	virtual inline uint32_t Size(void) const
-	{
-		// Size it at least the number of elements in the dictionary
-		uint32_t size = sizeof(uint32_t);
-		// Iterate through the whole map and get the size of each key and value
-		DictionaryMap::const_iterator dictIter = this->_value.begin();
-		while (dictIter != this->_value.end())
-		{
-			// Add the size of the key (plus 4 for recording its size)
-			size += sizeof(uint32_t) + dictIter->first.size();
-			// Add the size of the value (plus 4 for recording its size)
-			size += sizeof(uint32_t) + dictIter->second.size();
-			// Move to the next key-value
-			++dictIter;
-		}
-		return size;
-	}
 	virtual inline void StreamWrite(char* &stream) const{ _Write(stream, ValueType::Dictionary()); BinAttributeBase<DictionaryMap>::StreamWrite(stream); }
 };
 
@@ -795,8 +811,6 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 		compressor.MessageEnd();
 		// Get the new size
 		indexSizeB = compressor.MaxRetrievable();
-		// Resize the buffer
-		buffer.resize((unsigned int)indexSizeB);
 		// Get the data and clean up
 		compressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
 	}
@@ -986,8 +1000,6 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		compressor.MessageEnd();
 		// Get the new size
 		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
-		// Resize the buffer
-		buffer.resize(indexEntry.sizeB);
 		// Get the data
 		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
 	}
@@ -1075,55 +1087,118 @@ void BinFile::FlushCache(void)
 
 const Result_t BinFile::PickleTransaction(uint32_t &sizeB)
 {
-	ASSERT(false);
 	// How big is this transaction (deleted, changed, created)
 	sizeB = 0;
 	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 	while (deletedIter != this->_deletedObjects.end())
 	{
+		// First, count the Uuid of the soon to be deleted object
+		sizeB += sizeof(Uuid);
 		// Get the size of the deleted object and add it to the total
 		sizeB += deletedIter->second.object->Size();
 		++deletedIter;
 	}
-/*
-	ChangedObjectsList::iterator changeIter = this->_changedObjects.begin();
-	while (changeIter != this->_changedObjects.end())
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
+	while (changeIter != this->_changedAttributes.end())
 	{
-		// Figure out the size here...
+		// Add the sizes of the Uuid, AttrID_t and ValueType
+		sizeB += sizeof(Uuid) + sizeof(AttrID_t) + sizeof(uint8_t);
+		// Add the size of the attribute old and new values (size depends on type unfortunately)
+		if (changeIter->second->type == ValueType::Long())				sizeB += (2 * sizeof(int32_t));
+		else if (changeIter->second->type == ValueType::Real())			sizeB += (2 * sizeof(double));
+		else if (changeIter->second->type == ValueType::LongPointer())	sizeB += (2 * sizeof(Uuid));
+		else if (changeIter->second->type == ValueType::Pointer())		sizeB += (2 * sizeof(Uuid));
+		else if (changeIter->second->type == ValueType::String())
+		{
+			AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)changeIter->second;
+			sizeB += _Size(changeRecord->oldValue);
+			sizeB += _Size(changeRecord->newValue);
+		}
+		else if (changeIter->second->type == ValueType::Dictionary())
+		{
+			AttributeChange<DictionaryMap>* changeRecord = (AttributeChange<DictionaryMap>*)changeIter->second;
+			sizeB += _Size(changeRecord->oldValue);
+			sizeB += _Size(changeRecord->newValue);			
+		}
+		else ASSERT(false);
+		// Move on to the next changed attribute
 		++changeIter;
 	}
-*/
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while( createdIter != this->_createdObjects.end() )
 	{
 		sizeB += sizeof(MetaID_t) + sizeof(Uuid);
 		++createdIter;
 	}
-	// Serialize the three transaction lists (created, changed, deleted) to the end of the scratch file
+	// Setup the output buffer
 	std::vector<char> buffer;
 	buffer.resize(sizeB);
 	char* bufferPointer = &buffer[0];
+//	std::cout << "Pickle: " << sizeB << std::endl;
+	return S_OK;
+
 	// Serialize the three transaction lists, start with created objects
 	createdIter = this->_createdObjects.begin();
 	while( createdIter != this->_createdObjects.end() )
 	{
-		// Write the MetaID
+		// Write the MetaID and Uuid
 		_Write(bufferPointer, createdIter->second);
-		// Write the resulting UUID that was created
 		_Write(bufferPointer, createdIter->first);
-		// Move to the next created object
 		++createdIter;
 	}
+	// Then on to changed attributes
+	changeIter = this->_changedAttributes.begin();
+	while (changeIter != this->_changedAttributes.end())
+	{
+		// Write out the change record (Uuid, attrID)
+		_Write(bufferPointer, changeIter->first.uuid);
+		_Write(bufferPointer, changeIter->first.attrID);
+		// TODO: Write out the changed attribute record info
+		ASSERT(false);
+		// Move to the next changed attribute
+		++changeIter;
+	}
+	// Finally, write out the deleted objects
+	deletedIter = this->_deletedObjects.begin();
+	while (deletedIter != this->_deletedObjects.end())
+	{
+		// Write out the deleted object
+		// TODO: Write out the deleted object
+		ASSERT(false);
+		// Move to the next delete object
+		++deletedIter;
+	}
+
 	// Is there compression
 	if (this->_isCompressed)
 	{
-		// TODO: Support compression of pickled transactions
+		CryptoPP::ZlibCompressor compressor;
+		// Clear and load up the compressor
+		compressor.Put((const byte*)&buffer[0], (size_t)sizeB);
+		compressor.MessageEnd();
+		// Get the new size
+		sizeB = compressor.MaxRetrievable();
+		// Get the data and clean up
+		compressor.Get((byte*)&buffer[0], (size_t)sizeB);
 	}
 	// Is there encryption
 	if (this->_isEncrypted)
 	{
-		// TODO: Support encryption of pickled transactions
+		// Create the encryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
+		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
+		// Load up our data
+		filter.Put( (const byte*)&buffer[0], sizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( sizeB == filter.MaxRetrievable() );
+		// Encrypt and get data
+		filter.Get( (byte*)&buffer[0], sizeB );
 	}
+	// Now write this data out to the scratch file
+	// TODO: Write data to scratch file
 	// All is good (remember, sizeB has already been set)
 	return S_OK;
 }
@@ -1412,6 +1487,9 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			this->_undoList.push_back(entry);
 		}
 
+		// Don't need to do anything for created objects...
+		this->_createdObjects.clear();
+
 		// Changed objects - discard pre/post values
 		ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
 		while (changeIter != this->_changedAttributes.end())
@@ -1422,6 +1500,8 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			// Move on to the next attributeChange
 			++changeIter;
 		}
+		this->_changedAttributes.clear();
+
 		// Must actually delete all objects in deletedObjects list
 		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 		while ( deletedIter != this->_deletedObjects.end() )
@@ -1433,9 +1513,6 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			// Move to the next deleted object in the list
 			++deletedIter;
 		}
-		// Clear the transaction lists
-		this->_createdObjects.clear();
-		this->_changedAttributes.clear();
 		this->_deletedObjects.clear();
 	}
 	// We are good - wrap it up
@@ -1844,7 +1921,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::str
 		changeRecord = new AttributeChange<std::string>();
 		ASSERT( changeRecord != NULL );
 		changeRecord->oldValue = currentValue;
-		changeRecord->type = ValueType::Real();
+		changeRecord->type = ValueType::String();
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
@@ -1934,7 +2011,7 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Dictiona
 		changeRecord = new AttributeChange<DictionaryMap>();
 		ASSERT( changeRecord != NULL );
 		changeRecord->oldValue = currentValue;
-		changeRecord->type = ValueType::Real();
+		changeRecord->type = ValueType::Dictionary();
 		// Add the change record into the changedAttributes hash
 		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
 	}
@@ -2148,7 +2225,6 @@ const Result_t BinFile::DisableEncryption(void) throw()
 /*** Main Todo List
  *	1) Finish Enable/Disable encryption
  *	2) Finish Undo/Redo
- *	3) Finish Registry/Dictionary support
  *	4) What about a search API
 ***/
 
