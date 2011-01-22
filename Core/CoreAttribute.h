@@ -213,109 +213,139 @@ inline const Result_t CoreAttributeTemplateBase<std::list<Uuid> >::SetValue(cons
 	return S_OK;
 }
 
-/*
+
+// Specialization of the entire CoreAttributeTemplateBase class for std::pair<std::string,std::string> (Dictionary)
+typedef std::pair<std::string,std::string> DictionaryEntry;
 template<>
-class CoreAttributeTemplateBase : public CoreAttributeBase
+class CoreAttributeTemplateBase<DictionaryEntry> : public CoreAttributeBase
+{
+protected:
+	friend class CoreAttributeBase;
+	bool										_isLoaded;
+	DictionaryMap								_dictionary;
+	std::list<std::pair<DictionaryEntry,std::string> > _values;
+
+	inline const Result_t LoadValue(void)
 	{
-	protected:
-		friend class CoreAttributeBase;
-		std::list<T>					_values;
-		
-	public:
-		CoreAttributeTemplateBase(CoreObjectBase* parent, CoreMetaAttribute* coreMetaAttribute) :
-		::CoreAttributeBase(parent, coreMetaAttribute), _values() { }
-		
-		inline const Result_t SetValue(const T &value) throw()
+		// Have we not read this attribute previously
+		if (!this->_isLoaded)
 		{
-			// Make sure we are in a write transaction
-			bool flag;
-			ASSERT( this->InWriteTransaction(flag) == S_OK ); 
-			if (!flag) return E_READONLY;
-			// First, make sure the storage value has been loaded
-			if (this->_values.empty())
-			{
-				T tmpValue;
-				ASSERT( this->GetValue(tmpValue) == S_OK );
-			}
-			// Is the value actually changing?
-			if (value == this->_values.back()) return S_OK;
-			// Set the value
-			this->_values.push_back(value);
-			// Mark the attribute as dirty
-			this->MarkDirty();
-			// Add attribute to the project transaction change list
-			this->RegisterTransactionItem();
-			return S_OK;
-		}
-		
-		inline const Result_t GetValue(T &value) throw()
-		{
-			// Make sure we are in a transaction
-			bool flag;
-			ASSERT( this->InTransaction(flag) == S_OK ); 
-			if (!flag) return E_TRANSACTION;
-			// Have we not read this attribute previously
-			if (this->_values.empty())
-			{
-				// Set the storage to the parent object
-				ICoreStorage* storage = this->SetStorageObject();
-				// Read the value from storage
-				AttrID_t attrID = ATTRID_NONE;
-				ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
-				Result_t result = storage->GetAttributeValue(attrID, value);
-				if (result != S_OK) return result;
-				// Save the value
-				this->_values.push_back(value);
-			}
-			// Otherwise, just get the most recent value
-			else value = this->_values.back();
-			return S_OK;
-		}
-		
-		inline const Result_t GetLoadedValue(T &value) throw()
-		{
-			ASSERT(false);
-			return E_INVALID_USAGE;
-		}
-		
-		inline const Result_t GetPreviousValue(T &value) throw()
-		{
-			ASSERT(false);
-			return E_INVALID_USAGE;
-		}
-		
-		virtual const Result_t CommitTransaction(void) throw()
-		{
-			ASSERT( !this->_values.empty() );
-			ASSERT( this->_isDirty );
-			// Are there changes, if not we are good
-			if (this->_values.size() == 1) return S_OK;
 			// Set the storage to the parent object
 			ICoreStorage* storage = this->SetStorageObject();
-			ASSERT( storage != NULL );
-			// Write the value into storage
+			// Read the value from storage
 			AttrID_t attrID = ATTRID_NONE;
 			ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
-			T value = this->_values.back();
-			Result_t result = storage->SetAttributeValue(attrID, value);
+			Result_t result = storage->GetAttributeValue(attrID, this->_dictionary);
 			if (result != S_OK) return result;
-			// Collapse the value list to one
-			this->_values.clear();
-			this->_values.push_back(value);
-			return S_OK;
+			// Mark as loaded
+			this->_isLoaded = true;
 		}
-		
+		return S_OK;
+	}
+
+public:
+	CoreAttributeTemplateBase<DictionaryEntry>(CoreObjectBase* parent, CoreMetaAttribute* coreMetaAttribute) :
+		::CoreAttributeBase(parent, coreMetaAttribute), _isLoaded(false), _dictionary(), _values() { }
+
+	inline const Result_t SetValue(const DictionaryEntry &value) throw()
+	{
+		// Make sure we are in a write transaction
+		bool flag;
+		ASSERT( this->InWriteTransaction(flag) == S_OK ); 
+		if (!flag) return E_READONLY;
+		// Make sure we are loaded
+		ASSERT( this->LoadValue() == S_OK );
+
+		// Does this key alread exist
+		std::string currentValue = "";
+		DictionaryMapIter mapIter = this->_dictionary.find(value.first);
+		// Key exists
+		if (mapIter != this->_dictionary.end())
+		{
+			// Get the current value
+			currentValue = mapIter->second;
+			// Update the map entry value
+			mapIter->second = value.second;
+		}
+		// Key does not exist
+		else
+		{
+			// Insert the value into the dictionary
+			this->_dictionary.insert(value);
+		}
+		// Record the change into the list of values
+		this->_values.push_back(std::make_pair(value,currentValue));
+
+		// Mark the attribute as dirty
+		this->MarkDirty();
+		// Add attribute to the project transaction change list
+		this->RegisterTransactionItem();
+		return S_OK;
+	}
+
+	inline const Result_t GetValue(DictionaryEntry &value) throw()
+	{
+		// Make sure we are in a transaction
+		bool flag;
+		ASSERT( this->InTransaction(flag) == S_OK ); 
+		if (!flag) return E_TRANSACTION;
+		// Make sure we are loaded
+		ASSERT( this->LoadValue() == S_OK );
+		// Now, get the value from the dictionary
+		DictionaryMapIter mapIter = this->_dictionary.find(value.first);
+		if (mapIter == this->_dictionary.end()) value.second = "";
+		else value.second = mapIter->second;
+		return S_OK;
+	}
+
+	inline const Result_t GetLoadedValue(DictionaryEntry &value) throw()
+	{
+		ASSERT(false);
+		return E_INVALID_USAGE;
+	}
+
+	inline const Result_t GetPreviousValue(DictionaryEntry &value) throw()
+	{
+		ASSERT(false);
+		return E_INVALID_USAGE;
+	}
+
+	virtual const Result_t CommitTransaction(void) throw()
+	{
+		ASSERT( !this->_values.empty() );
+		ASSERT( this->_isDirty );
+		ASSERT( this->_isLoaded );
+		// Set the storage to the parent object
+		ICoreStorage* storage = this->SetStorageObject();
+		ASSERT( storage != NULL );
+		// Write the value into storage
+		AttrID_t attrID = ATTRID_NONE;
+		ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+		Result_t result = storage->SetAttributeValue(attrID, this->_dictionary);
+		if (result != S_OK) return result;
+		// Clear the intermediate values list
+		this->_values.clear();
+		return S_OK;
+	}
+
 	virtual const Result_t AbortTransaction(void) throw()
 	{
 		// There must be more than one value here (loaded + change)
-		ASSERT( this->_values.size() > 1 );
+		ASSERT( !this->_values.empty() );
 		ASSERT( this->_isDirty );
-		// Just remove the back value
-		this->_values.pop_back();
+		ASSERT( this->_isLoaded );
+		// Find the correct dictionary entry
+		std::pair<DictionaryEntry,std::string> value = this->_values.back();
+		DictionaryMapIter mapIter = this->_dictionary.find(value.first.first);
+		ASSERT( mapIter != this->_dictionary.end() );
+		// Change the value back to before the change
+		mapIter->second = value.second;
+		// Remove this entry from the list of changes
+		this->_values.pop_back();		
 		return S_OK;
 	}
 };
-*/
+
 
 /*** Simple Attribute Type Definitions ***/
 typedef CoreAttributeTemplateBase<int32_t>						CoreAttributeLong;
@@ -324,6 +354,7 @@ typedef CoreAttributeTemplateBase<std::string>					CoreAttributeString;
 typedef CoreAttributeTemplateBase<Uuid>							CoreAttributeLongPointer;
 typedef CoreAttributeTemplateBase< std::list<Uuid> >			CoreAttributeCollection;
 typedef CoreAttributeTemplateBase<Uuid>							CoreAttributePointer;
+typedef CoreAttributeTemplateBase<DictionaryEntry>				CoreAttributeDictionary;
 
 
 /*** End of MGA Namespace ***/

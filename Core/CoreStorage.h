@@ -100,14 +100,14 @@ public:
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::string &value) throw()=0;		//!< Get string
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw()=0;	//!< Get collection
 	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, Uuid &value) throw()=0;			//!< Get pointer (long or regular)
-	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, std::pair<std::string,std::string> &value) throw()=0;	//!< Get key value
+	virtual const Result_t GetAttributeValue(const AttrID_t &attrID, DictionaryMap &value) throw()=0;	//!< Get key value
 
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()=0;	//!< Set long
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const double &value) throw()=0;	//!< Set real
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()=0;		//!< Set string
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw()=0;	//!< Set collection
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()=0;		//!< Set pointer (long or regular)
-	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::pair<std::string,std::string> &value) throw()=0;	//!< Set key value
+	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw()=0;		//!< Set key value
 };
 
 
