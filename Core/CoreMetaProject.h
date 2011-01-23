@@ -33,7 +33,7 @@ public:
 		_objects(), _token(token), _name(name), _uuid(uuid) { }
 	~CoreMetaProject();
 
-	inline const Result_t GetUuid(Uuid &uuid) const throw()			{ uuid = this->_uuid; return S_OK; }
+	inline const Result_t GetUuid(Uuid &uuid) const throw()				{ uuid = this->_uuid; return S_OK; }
 	inline const Result_t GetToken(std::string &token) const throw()	{ token = this->_token; return S_OK; }
 	inline const Result_t GetName(std::string &name) const throw()		{ name = this->_name; return S_OK; }
 	inline const Result_t GetObjects(std::list<CoreMetaObject*> &objectList) const throw()	{ objectList = this->_objects; return S_OK; }

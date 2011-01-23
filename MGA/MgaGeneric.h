@@ -56,16 +56,16 @@ const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 #define ATTRID_BOOLATTR					424
 #define ATTRID_FCOREFATTR				525
 // contigious block ends
-#define	ATTRID_CDATE					430
-#define	ATTRID_MDATE					431
+#define	ATTRID_CDATE					207
+#define	ATTRID_MDATE					208
 #define	ATTRID_CREATOR					432
 #define	ATTRID_EXTDATA					433
-#define	ATTRID_VERSION					434
+#define	ATTRID_VERSION					204
 #define	ATTRID_PARVERSION				435
 #define	ATTRID_CONSTROCL				450
 #define	ATTRID_CONSTRPRIORITY			451
 #define	ATTRID_CONSTROWNER				652
-#define	ATTRID_REGISTRY					655
+#define	ATTRID_REGISTRY					293
 
 // OBJECT ID'S
 #define DTID_ROOT						1
@@ -91,9 +91,9 @@ const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 #define DTID_CONSTRAINT					120	
 #define DTID_SETNODE					122	
 
-#define VALTYPE_METAREF					VALTYPE_LONG
-#define VALTYPE_DATE					VALTYPE_STRING
-#define VALTYPE_BOOL					VALTYPE_LONG
+#define VALTYPE_METAREF					ValueType::Long()
+#define VALTYPE_DATE					ValueType::String()
+#define VALTYPE_BOOL					ValueType::Long()
 
 #define PRIM_PARTTYP					1
 #define SEC_PARTTYP						2

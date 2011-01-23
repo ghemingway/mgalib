@@ -39,7 +39,7 @@ public:
 	~CoreMetaObject();
 
 	inline const Result_t GetProject(CoreMetaProject* &project) const throw()	{ project = this->_project; return S_OK; }
-	inline const Result_t GetMetaID(MetaID_t &metaID) const throw()			{ metaID = this->_metaID; return S_OK; }
+	inline const Result_t GetMetaID(MetaID_t &metaID) const throw()				{ metaID = this->_metaID; return S_OK; }
 	inline const Result_t GetToken(std::string &token) const throw()			{ token = this->_token; return S_OK; }
 	inline const Result_t GetName(std::string &name) const throw()				{ name = this->_name; return S_OK; }
 	inline const Result_t GetAttributes(std::list<CoreMetaAttribute*> &attrList) const	throw()	{ attrList = this->_attributes; return S_OK; }

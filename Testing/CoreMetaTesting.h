@@ -3,27 +3,32 @@
 
 
 /*** Included Header Files ***/
-#include "Core/CoreMetaAttribute.h"
-#include "Core/CoreMetaObject.h"
-#include "Core/CoreMetaProject.h"
-#include "MGA/MgaGeneric.h"
 #include <gtest/gtest.h>
+#include "Core/CoreMetaProject.h"
 
 
-
-/*** Externally Defined Functions ***/
-extern std::string testFileName;
+// --------------------------- CoreMetaTest Class  --------------------------- //
 
 
 class CoreMetaTest : public ::testing::Test {
 protected:
-	CoreMetaTest() { }
-	virtual ~CoreMetaTest() { }
-	
-	virtual void SetUp() { }
-	virtual void TearDown() { }
-};
+	static 	CoreMetaProject		*mgaCoreMetaProject;
+	static 	CoreMetaProject		*metaCoreMetaProject;
 
+	static void SetUpTestCase()
+	{
+		// Make sure projects are NULL
+		CoreMetaTest::mgaCoreMetaProject = NULL;
+		CoreMetaTest::metaCoreMetaProject = NULL;
+	}
+
+	static void TearDownTestCase()
+	{
+		// Close the projects and delete the objects
+		if (CoreMetaTest::mgaCoreMetaProject != NULL) delete CoreMetaTest::mgaCoreMetaProject;
+		if (CoreMetaTest::metaCoreMetaProject != NULL)delete CoreMetaTest::metaCoreMetaProject;
+	}
+};
 
 
 #endif // __COREMETA_TESTING_H__

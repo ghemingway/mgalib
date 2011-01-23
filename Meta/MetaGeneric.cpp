@@ -5,7 +5,7 @@
 const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 {
 	Uuid uuid = "{DC5D7DEE-A590-C947-B707ADB3E98E2879}";
-	metaProject = new CoreMetaProject("MgaMetaProject", "MgaMetaProject", uuid);
+	metaProject = new CoreMetaProject("MetaCoreMetaProject", "Meta CoreMetaProject", uuid);
 	ASSERT( metaProject != NULL );
 
 // ------- Macros
