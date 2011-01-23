@@ -70,16 +70,20 @@ namespace MGA {
 
 typedef int16_t MetaID_t;
 typedef int16_t AttrID_t;
-typedef std::tr1::unordered_map<std::string,std::string> DictionaryMap;
-typedef std::tr1::unordered_map<std::string,std::string>::iterator DictionaryMapIter;
-
-
 const MetaID_t METAID_NONE = 0;
 const MetaID_t METAID_ROOT = 1;
 const AttrID_t ATTRID_NONE = 0;
 const AttrID_t ATTRID_NAME = 2;
 const AttrID_t ATTRID_FATHER = 3;
 const AttrID_t ATTRID_COLLECTION = 10000;
+
+
+/******************************************/
+
+
+typedef std::tr1::unordered_map<std::string,std::string> DictionaryMap;
+typedef std::tr1::unordered_map<std::string,std::string>::iterator DictionaryMapIter;
+inline const bool operator==(const DictionaryMap &mapA, const DictionaryMap &mapB) { return false; }
 
 
 /******************************************/
@@ -155,23 +159,25 @@ struct AttributeID_HashFunc
 /******************************************/
 
 
+// Type Enum - Do not use these unless you really mean to!!!
+typedef enum ValueTypeEnum {
+	VALUETYPE_NONE			= 0,			//!< No value type
+	VALUETYPE_COLLECTION	= 1,			//!< Collection
+	VALUETYPE_POINTER		= 2,			//!< Pointer
+	VALUETYPE_LONGPOINTER	= 3,			//!< Long-Pointer
+	VALUETYPE_LONG			= 4,			//!< Long (32 bit)
+	VALUETYPE_STRING		= 5,			//!< String type
+	VALUETYPE_REAL			= 6,			//!< Real (64 bit)
+	VALUETYPE_DICTIONARY	= 7,			//!< Key-value pair dictionary
+} ValueTypeEnum;
+
+
 // ValueType class
 class ValueType {
 private:
-	// Hidden Type Enum
-	typedef enum _ValueTypeEnum {
-		VALUETYPE_NONE			= 0,			//!< No value type
-		VALUETYPE_COLLECTION	= 1,			//!< Collection
-		VALUETYPE_POINTER		= 2,			//!< Pointer
-		VALUETYPE_LONGPOINTER	= 3,			//!< Long-Pointer
-		VALUETYPE_LONG			= 4,			//!< Long (32 bit)
-		VALUETYPE_STRING		= 5,			//!< String type
-		VALUETYPE_REAL			= 6,			//!< Real (64 bit)
-		VALUETYPE_DICTIONARY	= 7,			//!< Key-value pair dictionary
-	} _ValueTypeEnum;
-	_ValueTypeEnum				_type;								//!< Internal type value
-	ValueType(const _ValueTypeEnum &type) : _type(type)		{ }		//!< Hidden primary constructor
-	ValueType(const uint8_t &type) : _type((_ValueTypeEnum)type)	{ }		//!< Hidden primary constructor
+	ValueTypeEnum				_type;								//!< Internal type value
+	ValueType(const ValueTypeEnum &type) : _type(type)			{ }	//!< Hidden primary constructor
+	ValueType(const uint8_t &type) : _type((ValueTypeEnum)type)	{ }	//!< Hidden primary constructor
 public:
 	ValueType() : _type(VALUETYPE_NONE)						{ }		//!< Deny access to default constructor
 	ValueType(const ValueType& type) : _type(type._type)	{ }		//!< Copy constructor
@@ -188,8 +194,11 @@ public:
 	inline static ValueType Read(char* &stream)	{ uint8_t type; memcpy(&type, stream, sizeof(uint8_t)); stream += sizeof(uint8_t); return ValueType(type); }
 	//Overridden Operators
 	inline ValueType& operator=(const ValueType &type)	{ this->_type = type._type; return *this; }	//!< Equals operator
+	inline ValueType& operator=(const ValueTypeEnum &type)	{ this->_type = type; return *this; }	//!< Equals operator on enum
 	inline bool operator==(const ValueType &type) const	{ return this->_type == type._type; }		//!< Equality operator
 	inline bool operator!=(const ValueType &type) const	{ return this->_type != type._type; }		//!< Inequality operator
+	inline bool operator==(const ValueTypeEnum &type) const	{ return this->_type == type; }			//!< Equality operator on enum
+	inline bool operator!=(const ValueTypeEnum &type) const	{ return this->_type != type; }			//!< Inequality operator on enum
 	inline void Write(char* &stream) const	{ uint8_t type=(uint8_t)this->_type; memcpy(stream, &type, sizeof(uint8_t)); stream += sizeof(uint8_t); }
 	//Friend Methods
 	friend std::ostream& operator<<(std::ostream& out, const ValueType &type) {
