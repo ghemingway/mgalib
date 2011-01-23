@@ -748,12 +748,13 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Is there compression
 	if (this->_isCompressed)
 	{
+		// Clear the decompressor and load it up
 		CryptoPP::ZlibDecompressor decompressor;
-		// Flush the decompressor and load it up
 		decompressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
 		decompressor.MessageEnd();
 		// Get the decompressed size
 		indexSizeB = decompressor.MaxRetrievable();
+		ASSERT( indexSizeB != 0 );
 		// Resize the buffer
 		buffer.resize((unsigned int)indexSizeB);
 		// Get the data and clean up
@@ -805,14 +806,15 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	// Is there compression
 	if (this->_isCompressed)
 	{
-		CryptoPP::ZlibCompressor compressor;
 		// Clear and load up the compressor
-		compressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
-		compressor.MessageEnd();
+		this->_compressor->Detach();
+		this->_compressor->Put((const byte*)&buffer[0], (size_t)indexSizeB);
+		this->_compressor->MessageEnd();
 		// Get the new size
-		indexSizeB = compressor.MaxRetrievable();
+		indexSizeB = this->_compressor->MaxRetrievable();
+		ASSERT( indexSizeB != 0 );
 		// Get the data and clean up
-		compressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
+		this->_compressor->Get((byte*)&buffer[0], (size_t)indexSizeB);
 	}
 	// Is there encryption
 	if (this->_isEncrypted)
@@ -1085,7 +1087,7 @@ void BinFile::FlushCache(void)
 }
 
 
-const Result_t BinFile::PickleTransaction(uint32_t &sizeB)
+const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &sizeB)
 {
 	// How big is this transaction (deleted, changed, created)
 	sizeB = 0;
@@ -1131,11 +1133,9 @@ const Result_t BinFile::PickleTransaction(uint32_t &sizeB)
 		++createdIter;
 	}
 	// Setup the output buffer
-	std::vector<char> buffer;
 	buffer.resize(sizeB);
-	char* bufferPointer = &buffer[0];
-//	std::cout << "Pickle: " << sizeB << std::endl;
 	return S_OK;
+	char* bufferPointer = &buffer[0];
 
 	// Serialize the three transaction lists, start with created objects
 	createdIter = this->_createdObjects.begin();
@@ -1197,8 +1197,6 @@ const Result_t BinFile::PickleTransaction(uint32_t &sizeB)
 		// Encrypt and get data
 		filter.Get( (byte*)&buffer[0], sizeB );
 	}
-	// Now write this data out to the scratch file
-	// TODO: Write data to scratch file
 	// All is good (remember, sizeB has already been set)
 	return S_OK;
 }
@@ -1478,12 +1476,12 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			if (this->_undoList.size() == this->_maxUndoSize) this->_undoList.pop_front();
 			// Clear the redo list
 			this->_redoList.clear();
-			// Pickle the transaction - and write it to the scratch file
-			std::streampos position = this->_scratchFile.tellp();
-			uint32_t sizeB;
-			ASSERT( this->PickleTransaction(sizeB) == S_OK );
 			// Add pickled transaction to undo list
-			JournalEntry entry = { position, sizeB, tag, true };
+			JournalEntry entry = { std::vector<char>(), IndexLocation::Cache(), 0, 0, tag,
+				this->_createdObjects.size(), this->_changedAttributes.size(), this->_deletedObjects.size(),
+				this->_isCompressed, this->_isEncrypted };
+			// Pickle the transaction and add it to the undo list
+			ASSERT( this->PickleTransaction(entry.buffer, entry.sizeB) == S_OK );
 			this->_undoList.push_back(entry);
 		}
 
@@ -1752,55 +1750,49 @@ const Result_t BinFile::DeleteObject(void) throw()
 }
 
 
-const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw()
+template<class T, class P, ValueTypeEnum VT>
+inline const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, T &value) throw()
 {
+	// Make sure we are in a transaction
 	if( !this->_inTransaction ) return E_TRANSACTION;
+	// Make sure there is a valid open object
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	// Make sure the requested attrID is valid
 	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Long() ) return E_ATTVALTYPE;
+	// Make sure the type of the attribute matches the type of Value
+	if( binAttribute->GetValueType() != VT ) return E_ATTVALTYPE;
 	// Now return the actual value of the object
-	value = ((BinAttributeLong*)binAttribute)->Get();
+	value = ((P*)binAttribute)->Get();
 	return S_OK;
+}
+
+
+const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, int32_t &value) throw()
+{
+	// Just call to the templated private method
+	return this->GetAttributeValue<int32_t,BinAttributeLong,VALUETYPE_LONG>(attrID,value);
 }
 
 
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, double &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Real() ) return E_ATTVALTYPE;
-	// Now return the actual value of the object
-	value = ((BinAttributeReal*)binAttribute)->Get();
-	return S_OK;
+	// Just call to the templated private method
+	return this->GetAttributeValue<double,BinAttributeReal,VALUETYPE_REAL>(attrID,value);
 }
 
 
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::string &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::String() ) return E_ATTVALTYPE;
-	// Now return the actual value of the object
-	value = ((BinAttributeString*)binAttribute)->Get();
-	return S_OK;
+	// Just call to the templated private method
+	return this->GetAttributeValue<std::string,BinAttributeString,VALUETYPE_STRING>(attrID,value);
 }
 
 
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, std::list<Uuid> &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Collection() ) return E_ATTVALTYPE;
-	// Now return the actual value of the object
-	value = ((BinAttributeCollection*)binAttribute)->Get();
-	return S_OK;
+	// Just call to the templated private method
+	return this->GetAttributeValue<std::list<Uuid>,BinAttributeCollection,VALUETYPE_COLLECTION>(attrID,value);
 }
 
 
@@ -1823,119 +1815,69 @@ const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, Uuid &value) t
 
 const Result_t BinFile::GetAttributeValue(const AttrID_t &attrID, DictionaryMap &value) throw()
 {
+	// Just call to the templated private method
+	return this->GetAttributeValue<DictionaryMap,BinAttributeDictionary,VALUETYPE_DICTIONARY>(attrID,value);
+}
+
+
+template<class T, class P, ValueTypeEnum VT>
+inline const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const T &value) throw()
+{
+	// Make sure we are in a transaction
 	if( !this->_inTransaction ) return E_TRANSACTION;
+	// Make sure we have a valid open object
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	// Make sure the attribute exists
 	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
 	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
-	// Now return the actual value of the object
-	value = ((BinAttributeDictionary*)binAttribute)->Get();
+	// Make sure the attribute is of the correct type for the given Value
+	if( binAttribute->GetValueType() != VT ) return E_ATTVALTYPE;
+	P *attribute = (P*)binAttribute;
+	// Quick check to see if there is a no-change requested
+	T currentValue = attribute->Get();
+	if (currentValue == value) return S_OK;
+	// Is there already a changeRecord for this attribute
+	AttributeID attributeID = { this->_openedObject->first, attrID };
+	AttributeChange<T> *changeRecord = NULL;
+	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
+	// A changed record already exists
+	if (changeIter == this->_changedAttributes.end())
+	{
+		// Must create a new change record and save old value
+		changeRecord = new AttributeChange<T>();
+		ASSERT( changeRecord != NULL );
+		changeRecord->oldValue = currentValue;
+		changeRecord->type = VT;
+		// Add the change record into the changedAttributes hash
+		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
+	}
+	// Just grab the old changeRecord
+	else changeRecord = (AttributeChange<T>*)changeIter->second;
+	// Update the value in the record and the attribute
+	changeRecord->newValue = value;
+	attribute->Set(value);
 	return S_OK;
 }
 
 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const int32_t &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Long() ) return E_ATTVALTYPE;
-	BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
-	// Quick check to see if there is a no-change requested
-	int32_t currentValue = attribute->Get();
-	if (currentValue == value) return S_OK;
-	// Is there already a changeRecord for this attribute
-	AttributeID attributeID = { this->_openedObject->first, attrID };
-	AttributeChange<int32_t> *changeRecord = NULL;
-	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	// A changed record already exists
-	if (changeIter == this->_changedAttributes.end())
-	{
-		// Must create a new change record and save old value
-		changeRecord = new AttributeChange<int32_t>();
-		ASSERT( changeRecord != NULL );
-		changeRecord->oldValue = currentValue;
-		changeRecord->type = ValueType::Long();
-		// Add the change record into the changedAttributes hash
-		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
-	}
-	// Just grab the old changeRecord
-	else changeRecord = (AttributeChange<int32_t>*)changeIter->second;
-	// Update the value in the record and the attribute
-	changeRecord->newValue = value;
-	attribute->Set(value);
-	return S_OK;
+	// Just call to the templated private method
+	return this->SetAttributeValue<int32_t,BinAttributeLong,VALUETYPE_LONG>(attrID,value);
 }
 
 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const double &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Real() ) return E_ATTVALTYPE;
-	BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
-	// Quick check to see if there is a no-change requested
-	double currentValue = attribute->Get();
-	if (currentValue == value) return S_OK;
-	// Is there already a changeRecord for this attribute
-	AttributeID attributeID = { this->_openedObject->first, attrID };
-	AttributeChange<double> *changeRecord = NULL;
-	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	// A changed record already exists
-	if (changeIter == this->_changedAttributes.end())
-	{
-		// Must create a new change record and save old value
-		changeRecord = new AttributeChange<double>();
-		ASSERT( changeRecord != NULL );
-		changeRecord->oldValue = currentValue;
-		changeRecord->type = ValueType::Real();
-		// Add the change record into the changedAttributes hash
-		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
-	}
-	// Just grab the old changeRecord
-	else changeRecord = (AttributeChange<double>*)changeIter->second;
-	// Update the value in the record and the attribute
-	changeRecord->newValue = value;
-	attribute->Set(value);
-	return S_OK;
+	// Just call to the templated private method
+	return this->SetAttributeValue<double,BinAttributeReal,VALUETYPE_REAL>(attrID,value);
 }
 
 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const std::string &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::String() ) return E_ATTVALTYPE;
-	BinAttributeString *attribute = (BinAttributeString*)binAttribute;
-	// Quick check to see if there is a no-change requested
-	std::string currentValue = attribute->Get();
-	if (currentValue == value) return S_OK;
-	// Is there already a changeRecord for this attribute
-	AttributeID attributeID = { this->_openedObject->first, attrID };
-	AttributeChange<std::string> *changeRecord = NULL;
-	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	// A changed record already exists
-	if (changeIter == this->_changedAttributes.end())
-	{
-		// Must create a new change record and save old value
-		changeRecord = new AttributeChange<std::string>();
-		ASSERT( changeRecord != NULL );
-		changeRecord->oldValue = currentValue;
-		changeRecord->type = ValueType::String();
-		// Add the change record into the changedAttributes hash
-		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
-	}
-	// Just grab the old changeRecord
-	else changeRecord = (AttributeChange<std::string>*)changeIter->second;
-	// Update the value in the record and the attribute
-	changeRecord->newValue = value;
-	attribute->Set(value);
-	return S_OK;
+	// Just call to the templated private method
+	return this->SetAttributeValue<std::string,BinAttributeString,VALUETYPE_STRING>(attrID,value);
 }
 
 
@@ -1996,35 +1938,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw()
 {
-	if( !this->_inTransaction ) return E_TRANSACTION;
-	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
-	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
-	if( binAttribute == NULL ) return E_ATTRID;
-	if( binAttribute->GetValueType() != ValueType::Dictionary() ) return E_ATTVALTYPE;
-	BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
-	// Get current value of the dictionary map
-	DictionaryMap currentValue = attribute->Get();
-	// Is there already a changeRecord for this attribute
-	AttributeID attributeID = { this->_openedObject->first, attrID };
-	AttributeChange<DictionaryMap> *changeRecord = NULL;
-	ChangedAttributesHashIterator changeIter = this->_changedAttributes.find(attributeID);
-	// A changed record already exists
-	if (changeIter == this->_changedAttributes.end())
-	{
-		// Must create a new change record and save old value
-		changeRecord = new AttributeChange<DictionaryMap>();
-		ASSERT( changeRecord != NULL );
-		changeRecord->oldValue = currentValue;
-		changeRecord->type = ValueType::Dictionary();
-		// Add the change record into the changedAttributes hash
-		this->_changedAttributes.insert( std::make_pair(attributeID, changeRecord));
-	}
-	// Just grab the old changeRecord
-	else changeRecord = (AttributeChange<DictionaryMap>*)changeIter->second;
-	// Update the value in the record and the attribute
-	changeRecord->newValue = value;
-	attribute->Set(value);
-	return S_OK;
+	// Just call to the templated private method
+	return this->SetAttributeValue<DictionaryMap,BinAttributeDictionary,VALUETYPE_DICTIONARY>(attrID,value);
 }
 
 

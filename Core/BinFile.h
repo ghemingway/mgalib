@@ -82,10 +82,14 @@ typedef ChangedAttributesHash::iterator ChangedAttributesHashIterator;
 
 typedef struct JournalEntry
 {
+	std::vector<char>						buffer;
+	IndexLocation							location;
 	std::streampos							position;
 	uint32_t								sizeB;
 	Uuid									tag;
-	bool									inScratch;
+	uint32_t								numCreated, numChanged, numDeleted;
+	bool									isCompressed;
+	bool									isEncrypted;
 } JournalEntry;
 typedef std::list<JournalEntry> JournalList;
 
@@ -208,9 +212,14 @@ private:
 	void ObjectToFile(std::fstream &stream, IndexEntry &entry);		//!< Move object to scratch file
 	void CheckCacheSize(void);										//!< Make sure the cache is not getting too big
 	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
-	const Result_t PickleTransaction(uint32_t &sizeB);				//!<
+	const Result_t PickleTransaction(std::vector<char> &buffer, uint32_t &sizeB);	//!<
 	const Result_t UnpickleTransaction(const JournalEntry &entry);	//!<
 	const Result_t PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, const Uuid &oldVal, const Uuid &newVal);	//!< Update a pointer & backpointers
+
+	template<class T, class P, ValueTypeEnum VT>
+	const Result_t GetAttributeValue(const AttrID_t &attrID, T &value) throw();
+	template<class T, class P, ValueTypeEnum VT>
+	const Result_t SetAttributeValue(const AttrID_t &attrID, const T &value) throw();
 
 public:
 	virtual ~BinFile();
