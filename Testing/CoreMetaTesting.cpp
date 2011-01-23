@@ -7,7 +7,6 @@
 
 
 // Initialize the static members outside of the class
-CoreMetaProject* CoreMetaTest::mgaCoreMetaProject = NULL;
 CoreMetaProject* CoreMetaTest::metaCoreMetaProject = NULL;
 
 
@@ -18,8 +17,10 @@ TEST_F(CoreMetaTest,CreateMgaCoreMetaProject)
 {
 	// Create a new CoreMetaProject using extern function (expect success)
 	Result_t result;
-	EXPECT_EQ( S_OK, result = CreateMGACoreMetaProject(CoreMetaTest::mgaCoreMetaProject) ) << GetErrorInfo(result);
-	ASSERT_TRUE(CoreMetaTest::mgaCoreMetaProject != NULL);
+	CoreMetaProject* project = NULL;
+	EXPECT_EQ( S_OK, result = CreateMGACoreMetaProject(project) ) << GetErrorInfo(result);
+	ASSERT_TRUE(project != NULL);
+	delete project;
 }
 
 

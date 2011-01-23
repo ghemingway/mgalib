@@ -606,70 +606,70 @@ TEST_F(ICoreStorageTest,PointerAttribute)
 
 TEST_F(ICoreStorageTest,DictionaryAttribute)
 {
-/*
 	Uuid uuid(Uuid::Null());
 	Result_t result;
 	// GetAttributeValue outside of transaction (Expect E_TRANSACTION)
 	DictionaryMap value;
-	EXPECT_EQ( E_TRANSACTION, result = storage->GetAttributeValue(ATTRID_FCOPARENT, value) ) << GetErrorInfo(result);
+	EXPECT_EQ( E_TRANSACTION, result = storage->GetAttributeValue(ATTRID_REGISTRY, value) ) << GetErrorInfo(result);
 	
 	// GetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-	EXPECT_EQ( E_INVALID_USAGE, result = storage->GetAttributeValue(ATTRID_FCOPARENT, value) ) << GetErrorInfo(result);
+	EXPECT_EQ( E_INVALID_USAGE, result = storage->GetAttributeValue(ATTRID_REGISTRY, value) ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	EXPECT_EQ( S_OK, result = storage->CreateObject(DTID_ATOM, uuid) ) << GetErrorInfo(result);
-	ASSERT_NE( uuid, Uuid::Null() );
-	ICoreStorageTest::atomUuid = uuid;
+	Uuid atomUuid = ICoreStorageTest::atomUuid;
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
 	EXPECT_EQ( E_ATTRID, result = storage->GetAttributeValue(12345, value) ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
 	EXPECT_EQ( E_ATTVALTYPE, result = storage->GetAttributeValue(ATTRID_NAME, value) ) << GetErrorInfo(result);
-	
+
 	// GetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PERMISSIONS, value) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_REGISTRY, value) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-	
+	// Dictionary should be empty at this point
+	EXPECT_EQ( 0, value.size() );
+
 	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
-	int32_t newValue = 34879;
-	EXPECT_EQ( E_TRANSACTION, result = storage->SetAttributeValue(ATTRID_FCOPARENT, newValue) ) << GetErrorInfo(result);
+	DictionaryMap newValue;
+	newValue.insert( std::make_pair("TestKey", "Test Value") );
+	EXPECT_EQ( E_TRANSACTION, result = storage->SetAttributeValue(ATTRID_REGISTRY, newValue) ) << GetErrorInfo(result);
 	
 	// SetAttributeValue within transaction without open object (Expect E_INVALID_USAGE)
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-	EXPECT_EQ( E_INVALID_USAGE, result = storage->SetAttributeValue(ATTRID_FCOPARENT, newValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( E_INVALID_USAGE, result = storage->SetAttributeValue(ATTRID_REGISTRY, newValue) ) << GetErrorInfo(result);
 	
 	// SetAttributeValue with transaction and with open object but invalid AttrID (Expect E_ATTRID)
-	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
 	EXPECT_EQ( E_ATTRID, result = storage->SetAttributeValue(12345, newValue) ) << GetErrorInfo(result);
 	
 	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
 	EXPECT_EQ( E_ATTVALTYPE, result = storage->SetAttributeValue(ATTRID_NAME, newValue) ) << GetErrorInfo(result);
-	
+
 	// SetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_PERMISSIONS, newValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_REGISTRY, newValue) ) << GetErrorInfo(result);
 	// Test to make sure value was accepted
-	int32_t tmpValue;
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PERMISSIONS, tmpValue) ) << GetErrorInfo(result);
-	EXPECT_EQ( newValue, tmpValue );
+	DictionaryMap tmpValue;
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_REGISTRY, tmpValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( 1, tmpValue.size() );
 	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
 	// Test to make sure old value was restored
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PERMISSIONS, tmpValue) ) << GetErrorInfo(result);
-	EXPECT_EQ( value, tmpValue );
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_REGISTRY, tmpValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( 0, tmpValue.size() );
 	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
-	
+
 	// SetAttributeValue within a commit transaction (Expect S_OK)
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_PERMISSIONS, newValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_REGISTRY, newValue) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PERMISSIONS, tmpValue) ) << GetErrorInfo(result);
-	EXPECT_EQ( newValue, tmpValue );
-	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
-*/
+	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_REGISTRY, tmpValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( newValue.size(), tmpValue.size() );
+	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 }
 
 

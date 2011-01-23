@@ -1610,7 +1610,12 @@ const Result_t BinFile::AbortTransaction(void) throw()
 			// Is the changed attribute a DICTIONARY
 			else if (binAttribute->GetValueType() == ValueType::Dictionary())
 			{
-				ASSERT(false);
+				BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
+				ASSERT( attribute != NULL );
+				AttributeChange<DictionaryMap>* changeRecord = (AttributeChange<DictionaryMap>*)(changeIter->second);
+				ASSERT( changeRecord != NULL );
+				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
 			}
 			// Never should be here!
 			else ASSERT(false);
@@ -1991,7 +1996,6 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 
 const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw()
 {
-	ASSERT(false);
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
 	BinAttribute* binAttribute = this->_openedObject->second.object->GetAttribute(attrID);
@@ -2225,7 +2229,7 @@ const Result_t BinFile::DisableEncryption(void) throw()
 /*** Main Todo List
  *	1) Finish Enable/Disable encryption
  *	2) Finish Undo/Redo
- *	4) What about a search API
+ *	3) What about a search API
 ***/
 
 

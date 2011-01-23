@@ -16,6 +16,7 @@ class CoreMetaObject;
 
 // --------------------------- CoreMetaProject ---------------------------
 
+
 class CoreMetaProject 
 {
 private:
