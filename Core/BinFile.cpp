@@ -807,14 +807,14 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	if (this->_isCompressed)
 	{
 		// Clear and load up the compressor
-		this->_compressor->Detach();
-		this->_compressor->Put((const byte*)&buffer[0], (size_t)indexSizeB);
-		this->_compressor->MessageEnd();
+		CryptoPP::ZlibCompressor compressor;
+		compressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
+		compressor.MessageEnd();
 		// Get the new size
-		indexSizeB = this->_compressor->MaxRetrievable();
+		indexSizeB = compressor.MaxRetrievable();
 		ASSERT( indexSizeB != 0 );
 		// Get the data and clean up
-		this->_compressor->Get((byte*)&buffer[0], (size_t)indexSizeB);
+		compressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
 	}
 	// Is there encryption
 	if (this->_isEncrypted)
