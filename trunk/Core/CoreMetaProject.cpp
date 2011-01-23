@@ -16,7 +16,6 @@ CoreMetaProject::~CoreMetaProject()
 		// Pop the object from the list
 		this->_objects.pop_front();
 	}
-	// What else is there...
 }
 
 
