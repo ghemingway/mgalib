@@ -1,8 +1,8 @@
 /*** Copyright Vanderbilt ***/
 
 
-#ifndef __FRODO_WIN32_PLATFORM_H__
-#define __FRODO_WIN32_PLATFORM_H__
+#ifndef __WIN32_PLATFORM_H__
+#define __WIN32_PLATFORM_H__
 
 
 /*** Optional Optimization Global Values ***/
@@ -33,7 +33,8 @@
 /*** Included Header Files ***/
 #include <Windows.h>
 #include <assert.h>
-
+// Stupid workaround because Windows uses #defines for stupid things!!!
+#undef GetObject
 
 /*****************************************************************************/
 
@@ -76,5 +77,5 @@ typedef HANDLE							pthread_t;
 /*****************************************************************************/
 
 
-#endif // __FRODO_WIN32_PLATFORM_H__
+#endif // __WIN32_PLATFORM_H__
 
