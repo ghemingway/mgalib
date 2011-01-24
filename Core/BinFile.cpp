@@ -967,6 +967,7 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 		decompressor.MessageEnd();
 		// Get the decompressed size
 		uint64_t sizeB = decompressor.MaxRetrievable();
+		ASSERT( sizeB != 0 );
 		// Resize the buffer
 		buffer.resize((unsigned int)sizeB);
 		// Get the data
@@ -1002,6 +1003,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		compressor.MessageEnd();
 		// Get the new size
 		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
+		ASSERT( indexEntry.sizeB != 0 );
 		// Get the data
 		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
 	}
@@ -1199,7 +1201,8 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 		compressor.Put((const byte*)&entry.buffer[0], (size_t)entry.sizeB);
 		compressor.MessageEnd();
 		// Get the new size
-		entry.sizeB = compressor.MaxRetrievable();
+		entry.sizeB = (uint32_t)compressor.MaxRetrievable();
+		ASSERT( entry.sizeB != 0 );
 		// Get the data and clean up
 		compressor.Get((byte*)&entry.buffer[0], (size_t)entry.sizeB);
 	}
