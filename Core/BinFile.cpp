@@ -813,6 +813,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 		// Get the new size
 		indexSizeB = compressor.MaxRetrievable();
 		ASSERT( indexSizeB != 0 );
+		buffer.resize(indexSizeB);
 		// Get the data and clean up
 		compressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
 	}
@@ -1004,8 +1005,8 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		// Get the new size
 		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
 		ASSERT( indexEntry.sizeB != 0 );
-		// Get the data
 		buffer.resize(indexEntry.sizeB);
+		// Get the data
 		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
 	}
 	// Is there encryption
@@ -1202,8 +1203,9 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 		compressor.Put((const byte*)&entry.buffer[0], (size_t)entry.sizeB);
 		compressor.MessageEnd();
 		// Get the new size
-		entry.sizeB = (uint32_t)compressor.MaxRetrievable();
-		ASSERT( entry.sizeB != 0 );
+		uint32_t sizeB = (uint32_t)compressor.MaxRetrievable();
+		ASSERT( sizeB > 0 && sizeB <= entry.sizeB );
+		entry.sizeB = sizeB;
 		// Get the data and clean up
 		compressor.Get((byte*)&entry.buffer[0], (size_t)entry.sizeB);
 	}
