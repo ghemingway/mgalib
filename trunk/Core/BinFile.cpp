@@ -765,7 +765,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Read in each item for the index
 	char *bufferPointer = &buffer[0];
 	Uuid uuid;
-	IndexEntry entry = { NULL, IndexLocation::Input(), 0, 0, this->_isCompressed, this->_isEncrypted };
+	IndexEntry entry = { NULL, EntryLocation::Input(), 0, 0, this->_isCompressed, this->_isEncrypted };
 	for (uint64_t i=0; i < objCount; ++i)
 	{
 		// Copy the Uuid into the variable
@@ -905,7 +905,7 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid)
 	// Did we not find it in the index?
 	if( indexIter == this->_indexHash.end() ) return indexIter;
 	//Is the object in the cache
-	if (indexIter->second.location == IndexLocation::Cache())
+	if (indexIter->second.location == EntryLocation::Cache())
 	{
 		// Remove the object from the cacheQueue
 		this->_cacheQueue.remove(uuid);
@@ -913,13 +913,13 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid)
 		this->_cacheQueue.push_front(uuid);
 	}
 	// Next, try the inputFile
-	else if (indexIter->second.location == IndexLocation::Input())
+	else if (indexIter->second.location == EntryLocation::Input())
 	{
 		// Move the object from the scratch file to the cache
 		this->ObjectFromFile(this->_inputFile, indexIter->second, indexIter->first);
 	}
 	// Object must be in the scratch file
-	else if (indexIter->second.location == IndexLocation::Scratch())
+	else if (indexIter->second.location == EntryLocation::Scratch())
 	{
 		// Move the object from the scratch file to the cache
 		this->ObjectFromFile(this->_scratchFile, indexIter->second, indexIter->first);
@@ -975,7 +975,7 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid);
 	ASSERT( indexEntry.object != NULL );
 	// Set the object and mark it as in cache
-	indexEntry.location = IndexLocation::Cache();
+	indexEntry.location = EntryLocation::Cache();
 	// Move the object to the cache and to the front of the cacheQueue
 	this->_cacheQueue.push_front(uuid);
 	// Make sure there is space in the cache
@@ -1042,15 +1042,15 @@ void BinFile::CheckCacheSize(void)
 		if (!hashIter->second.object->IsDirty())
 		{
 			// Place the object back into inputFile (no need to write anything)
-			hashIter->second.location = IndexLocation::Input();
+			hashIter->second.location = EntryLocation::Input();
 		}
 		// If the object is dirty and is located in the cache, write it to the scratch file
-		else if (hashIter->second.location == IndexLocation::Cache())
+		else if (hashIter->second.location == EntryLocation::Cache())
 		{
 			// Set the IndexEntry flags correctly
 			hashIter->second.isCompressed = this->_isCompressed;
 			hashIter->second.isEncrypted = this->_isEncrypted;
-			hashIter->second.location = IndexLocation::Scratch();
+			hashIter->second.location = EntryLocation::Scratch();
 			// Write to file
 			this->ObjectToFile(this->_scratchFile, hashIter->second);
 		}
@@ -1075,7 +1075,7 @@ void BinFile::FlushCache(void)
 		// Find the index for this object
 		IndexHashIterator indexIter = this->_indexHash.find(*cacheIter);
 		// Delete the object if it exists
-		ASSERT( indexIter->second.location == IndexLocation::Cache() || indexIter->second.location == IndexLocation::Output() );
+		ASSERT( indexIter->second.location == EntryLocation::Cache() || indexIter->second.location == EntryLocation::Output() );
 		ASSERT( indexIter->second.object != NULL );
 		delete indexIter->second.object;
 		indexIter->second.object = NULL;
@@ -1087,24 +1087,33 @@ void BinFile::FlushCache(void)
 }
 
 
-const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &sizeB)
+const Result_t BinFile::PickleTransaction(const Uuid &tag)
 {
-	// How big is this transaction (deleted, changed, created)
-	sizeB = 0;
+	// Create the journal entry
+	JournalEntry entry = { NULL, EntryLocation::Cache(), 0, 0, tag,
+		this->_createdObjects.size(), this->_changedAttributes.size(), this->_deletedObjects.size(),
+		this->_isCompressed, this->_isEncrypted };
+	// Record the size of changes and deletes along the way
+	std::list<uint32_t> changeSizes, deleteSizes;
+	
 	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 	while (deletedIter != this->_deletedObjects.end())
 	{
 		// First, count the Uuid of the soon to be deleted object
-		sizeB += sizeof(Uuid);
+		uint32_t sizeB = sizeof(Uuid);
 		// Get the size of the deleted object and add it to the total
 		sizeB += deletedIter->second.object->Size();
+		// Add the size
+		deleteSizes.push_back(sizeB);
+		entry.sizeB += sizeB;
+		// Move on to the next deleted object
 		++deletedIter;
 	}
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
 	while (changeIter != this->_changedAttributes.end())
 	{
 		// Add the sizes of the Uuid, AttrID_t and ValueType
-		sizeB += sizeof(Uuid) + sizeof(AttrID_t) + sizeof(uint8_t);
+		uint32_t sizeB = sizeof(Uuid) + sizeof(AttrID_t) + sizeof(uint8_t);
 		// Add the size of the attribute old and new values (size depends on type unfortunately)
 		if (changeIter->second->type == ValueType::Long())				sizeB += (2 * sizeof(int32_t));
 		else if (changeIter->second->type == ValueType::Real())			sizeB += (2 * sizeof(double));
@@ -1123,19 +1132,23 @@ const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &s
 			sizeB += _Size(changeRecord->newValue);			
 		}
 		else ASSERT(false);
+		// Add the size
+		changeSizes.push_back(sizeB);
+		entry.sizeB += sizeB;
 		// Move on to the next changed attribute
 		++changeIter;
 	}
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while( createdIter != this->_createdObjects.end() )
 	{
-		sizeB += sizeof(MetaID_t) + sizeof(Uuid);
+		// Created are just a MetaID and the resulting Uuid
+		entry.sizeB += sizeof(MetaID_t) + sizeof(Uuid);
 		++createdIter;
 	}
-	// Setup the output buffer
-	buffer.resize(sizeB);
+	// Setup the entry buffer
 	return S_OK;
-	char* bufferPointer = &buffer[0];
+	entry.buffer = new char[entry.sizeB];
+	char* bufferPointer = entry.buffer;
 
 	// Serialize the three transaction lists, start with created objects
 	createdIter = this->_createdObjects.begin();
@@ -1148,6 +1161,7 @@ const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &s
 	}
 	// Then on to changed attributes
 	changeIter = this->_changedAttributes.begin();
+	std::list<uint32_t>::iterator changeSizesIter = changeSizes.begin();
 	while (changeIter != this->_changedAttributes.end())
 	{
 		// Write out the change record (Uuid, attrID)
@@ -1160,11 +1174,19 @@ const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &s
 	}
 	// Finally, write out the deleted objects
 	deletedIter = this->_deletedObjects.begin();
+	std::list<uint32_t>::iterator deleteSizesIter = deleteSizes.begin();
 	while (deletedIter != this->_deletedObjects.end())
 	{
-		// Write out the deleted object
-		// TODO: Write out the deleted object
-		ASSERT(false);
+		ASSERT(false); // deleteSizesIter includes the size of Uuid, but the memcpy does not need that!
+		// Write out the deleted object's Uuid
+		_Write(bufferPointer, deletedIter->first);
+		// Write out the deleted object itself
+		std::vector<char> deletedBuffer;
+		deletedIter->second.object->Write(deletedBuffer);
+		memcpy(bufferPointer, &deletedBuffer[0], *deleteSizesIter);
+		// Move the bufferPointer and deleteSizesIter forward
+		bufferPointer += *deleteSizesIter;
+		++deleteSizesIter;
 		// Move to the next delete object
 		++deletedIter;
 	}
@@ -1174,12 +1196,12 @@ const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &s
 	{
 		CryptoPP::ZlibCompressor compressor;
 		// Clear and load up the compressor
-		compressor.Put((const byte*)&buffer[0], (size_t)sizeB);
+		compressor.Put((const byte*)&entry.buffer[0], (size_t)entry.sizeB);
 		compressor.MessageEnd();
 		// Get the new size
-		sizeB = compressor.MaxRetrievable();
+		entry.sizeB = compressor.MaxRetrievable();
 		// Get the data and clean up
-		compressor.Get((byte*)&buffer[0], (size_t)sizeB);
+		compressor.Get((byte*)&entry.buffer[0], (size_t)entry.sizeB);
 	}
 	// Is there encryption
 	if (this->_isEncrypted)
@@ -1190,14 +1212,15 @@ const Result_t BinFile::PickleTransaction(std::vector<char> &buffer, uint32_t &s
 							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
 		// Load up our data
-		filter.Put( (const byte*)&buffer[0], sizeB );
+		filter.Put( (const byte*)&entry.buffer[0], entry.sizeB );
 		filter.MessageEnd();
 		// Make sure we get out the same number of bytes we put in
-		ASSERT( sizeB == filter.MaxRetrievable() );
+		ASSERT( entry.sizeB == filter.MaxRetrievable() );
 		// Encrypt and get data
-		filter.Get( (byte*)&buffer[0], sizeB );
+		filter.Get( (byte*)&entry.buffer[0], entry.sizeB );
 	}
-	// All is good (remember, sizeB has already been set)
+	// All is good add the entry to the back of the undo list
+	this->_undoList.push_back(entry);
 	return S_OK;
 }
 
@@ -1389,7 +1412,7 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 		// Set the indexEntry flags appropriately
 		hashIter->second.isCompressed = this->_isCompressed;
 		hashIter->second.isEncrypted = this->_isEncrypted;
-		hashIter->second.location = IndexLocation::Output();
+		hashIter->second.location = EntryLocation::Output();
 		// Write the object out to file
 		this->ObjectToFile(outputFile, hashIter->second);
 		// Move on to the next item in the hash
@@ -1476,18 +1499,11 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			if (this->_undoList.size() == this->_maxUndoSize) this->_undoList.pop_front();
 			// Clear the redo list
 			this->_redoList.clear();
-			// Add pickled transaction to undo list
-			JournalEntry entry = { std::vector<char>(), IndexLocation::Cache(), 0, 0, tag,
-				this->_createdObjects.size(), this->_changedAttributes.size(), this->_deletedObjects.size(),
-				this->_isCompressed, this->_isEncrypted };
 			// Pickle the transaction and add it to the undo list
-			ASSERT( this->PickleTransaction(entry.buffer, entry.sizeB) == S_OK );
-			this->_undoList.push_back(entry);
+			ASSERT( this->PickleTransaction(tag) == S_OK );
 		}
-
 		// Don't need to do anything for created objects...
 		this->_createdObjects.clear();
-
 		// Changed objects - discard pre/post values
 		ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
 		while (changeIter != this->_changedAttributes.end())
@@ -1499,7 +1515,6 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			++changeIter;
 		}
 		this->_changedAttributes.clear();
-
 		// Must actually delete all objects in deletedObjects list
 		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 		while ( deletedIter != this->_deletedObjects.end() )
@@ -1685,7 +1700,7 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	ASSERT( binObject != NULL );
 
 	// Put the object into the index and queue
-	IndexEntry indexEntry = { binObject, IndexLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
+	IndexEntry indexEntry = { binObject, EntryLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
 	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
 	this->_cacheQueue.push_front(uuid);

@@ -23,33 +23,33 @@ class BinObject;
 class BinFileFactory;
 
 
-// --------------------------- IndexLocation Class  --------------------------- //
+// --------------------------- EntryLocation Class  --------------------------- //
 
 
-// IndexLocation Helper Class
-class IndexLocation {
+// EntryLocation Helper Class
+class EntryLocation {
 private:
 	// Hidden Type Enum
-	typedef enum _IndexLocationEnum {
-		INDEXLOCATION_INPUT			= 0,		//!< Located in the input file
-		INDEXLOCATION_CACHE			= 1,		//!< Located in the memory cache
-		INDEXLOCATION_SCRATCH		= 2,		//!< Located in the scratch file
-		INDEXLOCATION_OUTPUT		= 3,		//!< Located in the output file
-	} _IndexLocationEnum;
-	_IndexLocationEnum				_location;	//!< Internal location value
-	IndexLocation();							//!< Deny access to default constructor
-	IndexLocation(const _IndexLocationEnum &loc) : _location(loc) { }			//!< Hidden primary constructor
+	typedef enum _EntryLocationEnum {
+		ENTRYLOCATION_INPUT			= 0,		//!< Located in the input file
+		ENTRYLOCATION_CACHE			= 1,		//!< Located in the memory cache
+		ENTRYLOCATION_SCRATCH		= 2,		//!< Located in the scratch file
+		ENTRYLOCATION_OUTPUT		= 3,		//!< Located in the output file
+	} _EntryLocationEnum;
+	_EntryLocationEnum				_location;	//!< Internal location value
+	EntryLocation();							//!< Deny access to default constructor
+	EntryLocation(const _EntryLocationEnum &loc) : _location(loc) { }			//!< Hidden primary constructor
 public:
-	IndexLocation(const IndexLocation &loc) : _location(loc._location)	{ }		//!< Copy constructor
+	EntryLocation(const EntryLocation &loc) : _location(loc._location)	{ }		//!< Copy constructor
 	//Static Creation Methods
-	inline static IndexLocation Input(void)		{ return IndexLocation(INDEXLOCATION_INPUT); }	//!< Create a IndexLocation of type input
-	inline static IndexLocation Cache(void)		{ return IndexLocation(INDEXLOCATION_CACHE); }	//!< Create a IndexLocation of type cache
-	inline static IndexLocation Scratch(void)	{ return IndexLocation(INDEXLOCATION_SCRATCH); }//!< Create a IndexLocation of type scratch
-	inline static IndexLocation Output(void)	{ return IndexLocation(INDEXLOCATION_OUTPUT); }	//!< Create a IndexLocation of type output
+	inline static EntryLocation Input(void)		{ return EntryLocation(ENTRYLOCATION_INPUT); }	//!< Create a EntryLocation of type input
+	inline static EntryLocation Cache(void)		{ return EntryLocation(ENTRYLOCATION_CACHE); }	//!< Create a EntryLocation of type cache
+	inline static EntryLocation Scratch(void)	{ return EntryLocation(ENTRYLOCATION_SCRATCH); }//!< Create a EntryLocation of type scratch
+	inline static EntryLocation Output(void)	{ return EntryLocation(ENTRYLOCATION_OUTPUT); }	//!< Create a EntryLocation of type output
 	//Overridden Operators
-	inline IndexLocation& operator=(const IndexLocation &loc)	{ this->_location = loc._location; return *this; }	//!< Equals operator
-	inline bool operator==(const IndexLocation &loc) const	{ return this->_location == loc._location; }			//!< Equality operator
-	inline bool operator!=(const IndexLocation &loc) const	{ return this->_location != loc._location; }			//!< Inequality operator
+	inline EntryLocation& operator=(const EntryLocation &loc)	{ this->_location = loc._location; return *this; }	//!< Equals operator
+	inline bool operator==(const EntryLocation &loc) const	{ return this->_location == loc._location; }			//!< Equality operator
+	inline bool operator!=(const EntryLocation &loc) const	{ return this->_location != loc._location; }			//!< Inequality operator
 };
 
 
@@ -58,7 +58,7 @@ public:
 typedef struct IndexEntry
 {
 	BinObject								*object;
-	IndexLocation							location;
+	EntryLocation							location;
 	std::streampos							position;
 	uint32_t								sizeB;
 	bool									isCompressed;
@@ -82,8 +82,8 @@ typedef ChangedAttributesHash::iterator ChangedAttributesHashIterator;
 
 typedef struct JournalEntry
 {
-	std::vector<char>						buffer;
-	IndexLocation							location;
+	char									*buffer;
+	EntryLocation							location;
 	std::streampos							position;
 	uint32_t								sizeB;
 	Uuid									tag;
@@ -212,7 +212,7 @@ private:
 	void ObjectToFile(std::fstream &stream, IndexEntry &entry);		//!< Move object to scratch file
 	void CheckCacheSize(void);										//!< Make sure the cache is not getting too big
 	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
-	const Result_t PickleTransaction(std::vector<char> &buffer, uint32_t &sizeB);	//!<
+	const Result_t PickleTransaction(const Uuid &tag);				//!<
 	const Result_t UnpickleTransaction(const JournalEntry &entry);	//!<
 	const Result_t PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, const Uuid &oldVal, const Uuid &newVal);	//!< Update a pointer & backpointers
 
