@@ -1005,6 +1005,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
 		ASSERT( indexEntry.sizeB != 0 );
 		// Get the data
+		buffer.resize(indexEntry.sizeB);
 		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
 	}
 	// Is there encryption
