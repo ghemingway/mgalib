@@ -140,7 +140,7 @@ private:
 public:
 	~BinObject();
 	// Static methods to read or create an object
-	static BinObject* Read(CoreMetaProject* &metaProject, const std::vector<char> &buffer, const Uuid &uuid);
+	static BinObject* Read(CoreMetaProject* &metaProject, char* &buffer, const Uuid &uuid);
 	static BinObject* Create(CoreMetaObject *metaObject, const Uuid &uuid);
 
 	inline const Uuid GetUuid(void) const							{ return this->_uuid; }
@@ -149,7 +149,7 @@ public:
 	inline const bool IsDirty(void) const							{ return this->_isDirty; }
 	inline void MarkDirty(void)										{ this->_isDirty = true; }
 	uint32_t Size(void) const;										//!< Size of this object
-	uint32_t Write(std::vector<char> &buffer) const;				//!< Write the object to the vector
+	uint32_t Write(char* &buffer) const;							//!< Write the object to the vector
 	BinAttribute* GetAttribute(const AttrID_t &attrID);				//!< Get a particular attribute
 };
 
@@ -157,8 +157,7 @@ public:
 // --------------------------- BinFile ---------------------------
 
 
-class BinFile : 
-	public ICoreStorage
+class BinFile : public ICoreStorage
 {
 private:
 	// Base State & Option Variables
@@ -205,6 +204,8 @@ private:
 	const Result_t Load(void);										//!< Load an MGA in from file (really just gets index ready)
 	const Result_t ReadIndex(std::fstream &stream, const uint64_t &indexSizeB);		//!< Read an index from an MGA file
 	const Result_t WriteIndex(std::fstream &stream, const IndexHash &index, uint64_t &indexSizeB) const;//!< Write an index into an MGA file
+	const Result_t ReadJournal(std::fstream &stream, const uint64_t &journalSizeB);	//!< Read a journal index from an MGA file
+	const Result_t WriteJournal(std::fstream &stream, uint64_t &journalSizeB) const;//!< Write a journal index into an MGA file
 	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSize);	//!< Read the options
 	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSize) const;		//!< Write the options
 	IndexHashIterator FetchObject(const Uuid &uuid);				//!< Bring an object into the cache
@@ -212,6 +213,7 @@ private:
 	void ObjectToFile(std::fstream &stream, IndexEntry &entry);		//!< Move object to scratch file
 	void CheckCacheSize(void);										//!< Make sure the cache is not getting too big
 	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
+	void FlushUndoRedo(const uint32_t &undoCount);					//!<
 	const Result_t PickleTransaction(const Uuid &tag);				//!<
 	const Result_t UnpickleTransaction(const JournalEntry &entry);	//!<
 	const Result_t PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, const Uuid &oldVal, const Uuid &newVal);	//!< Update a pointer & backpointers
