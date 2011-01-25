@@ -920,7 +920,7 @@ TEST_F(ICoreStorageTest,Undo)
 	// Get base-line undo/redo counts
 	uint32_t undoCount = 0, redoCount = 99;
 	EXPECT_EQ( S_OK, result = storage->UndoCount(undoCount) ) << GetErrorInfo(result);
-	EXPECT_EQ( 0, undoCount );
+	EXPECT_EQ( 14, undoCount );
 	EXPECT_EQ( S_OK, result = storage->RedoCount(redoCount) ) << GetErrorInfo(result);
 	EXPECT_EQ( 0, redoCount );
 
@@ -930,20 +930,20 @@ TEST_F(ICoreStorageTest,Undo)
 	// Make sure the value got undone
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(atomUuid) ) << GetErrorInfo(result);
-	std::string atomName = "";
+	std::string atomName = "This is a test.";
 	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_NAME, atomName) ) << GetErrorInfo(result);
-	EXPECT_EQ( std::string("I am a happy atom."), atomName );
+	EXPECT_STREQ( "", atomName.c_str() );
 	EXPECT_EQ( S_OK, result = storage->OpenObject(attributeUuid) ) << GetErrorInfo(result);
 	double floatValue = 0.0;
 	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_FLOATATTR, floatValue) ) << GetErrorInfo(result);
-	EXPECT_EQ( 4783823.45934, floatValue );
+	EXPECT_EQ( 8475734.3784, floatValue );
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 	
 	// Make sure the undo/redo counts are accurate
 	EXPECT_EQ( S_OK, result = storage->UndoCount(undoCount) ) << GetErrorInfo(result);
-	EXPECT_EQ( 0, undoCount );
+	EXPECT_EQ( 13, undoCount );
 	EXPECT_EQ( S_OK, result = storage->RedoCount(redoCount) ) << GetErrorInfo(result);
-	EXPECT_EQ( 0, redoCount );
+	EXPECT_EQ( 1, redoCount );
 }
 
 

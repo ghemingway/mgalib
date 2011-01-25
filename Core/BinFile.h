@@ -140,7 +140,7 @@ private:
 public:
 	~BinObject();
 	// Static methods to read or create an object
-	static BinObject* Read(CoreMetaProject* &metaProject, char* &buffer, const Uuid &uuid);
+	static BinObject* Read(CoreMetaProject* &metaProject, char* &buffer, const Uuid &uuid, uint32_t &sizeB);
 	static BinObject* Create(CoreMetaObject *metaObject, const Uuid &uuid);
 
 	inline const Uuid GetUuid(void) const							{ return this->_uuid; }
@@ -206,8 +206,10 @@ private:
 	const Result_t WriteIndex(std::fstream &stream, const IndexHash &index, uint64_t &indexSizeB) const;//!< Write an index into an MGA file
 	const Result_t ReadJournal(std::fstream &stream, const uint64_t &journalSizeB);	//!< Read a journal index from an MGA file
 	const Result_t WriteJournal(std::fstream &stream, uint64_t &journalSizeB) const;//!< Write a journal index into an MGA file
-	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSize);	//!< Read the options
-	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSize) const;		//!< Write the options
+	const Result_t ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSize,	//!< Read the options
+							   std::streampos &startOfJournal, uint64_t &journalSizeB);
+	const uint32_t WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSizeB,			//!< Write the options
+								const std::streampos &startOfJournal, const uint64_t &journalSizeB) const;
 	IndexHashIterator FetchObject(const Uuid &uuid);				//!< Bring an object into the cache
 	void ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const Uuid &uuid);//!< Move object from file to cache
 	void ObjectToFile(std::fstream &stream, IndexEntry &entry);		//!< Move object to scratch file
@@ -215,7 +217,7 @@ private:
 	void FlushCache(void);											//!< Clear the cache of all objects (no writing to any file)
 	void FlushUndoRedo(const uint32_t &undoCount);					//!<
 	const Result_t PickleTransaction(const Uuid &tag);				//!<
-	const Result_t UnpickleTransaction(const JournalEntry &entry);	//!<
+	const Result_t UnpickleTransaction(JournalEntry &entry);		//!<
 	const Result_t PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, const Uuid &oldVal, const Uuid &newVal);	//!< Update a pointer & backpointers
 
 	template<class T, class P, ValueTypeEnum VT>
