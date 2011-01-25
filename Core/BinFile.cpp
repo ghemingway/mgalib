@@ -124,11 +124,11 @@ template <> void _Write<DictionaryMap>(char* &stream, const DictionaryMap &dicti
 
 
 template <class T> static inline uint32_t _Size(const T &value)	{ return sizeof(T); }
-template <> static inline uint32_t _Size<std::string>(const std::string &value)
+template <> inline uint32_t _Size<std::string>(const std::string &value)
 	{ return (sizeof(uint32_t) + value.size()); }
-template <> static inline uint32_t _Size<std::list<Uuid> >(const std::list<Uuid> &value)
+template <> inline uint32_t _Size<std::list<Uuid> >(const std::list<Uuid> &value)
 	{ return (sizeof(uint32_t) + (value.size() * sizeof(Uuid))); }
-template <> static inline uint32_t _Size<DictionaryMap>(const DictionaryMap &value)
+template <> inline uint32_t _Size<DictionaryMap>(const DictionaryMap &value)
 	{
 		// Size it at least the number of elements in the dictionary
 		uint32_t size = sizeof(uint32_t);
