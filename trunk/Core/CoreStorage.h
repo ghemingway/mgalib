@@ -108,10 +108,22 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const std::list<Uuid> &value) throw()=0;	//!< Set collection
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()=0;		//!< Set pointer (long or regular)
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw()=0;		//!< Set key value
+
+	// --- Undo/Redo
+
+	virtual const Result_t Undo(Uuid &tag) throw()=0;										//!<
+	virtual const Result_t Redo(Uuid &tag) throw()=0;										//!<
+	virtual const Result_t UndoCount(uint32_t &count) const throw()=0;						//!<
+	virtual const Result_t RedoCount(uint32_t &count) const throw()=0;						//!<
+	virtual const Result_t IsJournaled(bool &flag) const throw()=0;							//!<
+	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
+									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()=0;
+	virtual const Result_t BeginJournal(void) throw()=0;									//!<
+	virtual const Result_t EndJournal(void) throw()=0;										//!<
 };
-
-
-/*** End of MGA Namespace ***/
+	
+	
+	/*** End of MGA Namespace ***/
 }
 
 
