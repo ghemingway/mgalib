@@ -32,7 +32,7 @@
 #include "Arch/osx/platform.h"
 #endif
 #ifdef __linux__
-#include "Arch/linux64/platform.h"
+#include "Arch/linux/platform.h"
 #endif
 
 
