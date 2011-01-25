@@ -1043,6 +1043,7 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	}
 	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid);
 	ASSERT( indexEntry.object != NULL );
+	delete buffer;
 	// Set the object and mark it as in cache
 	indexEntry.location = EntryLocation::Cache();
 	// Move the object to the cache and to the front of the cacheQueue
@@ -1096,6 +1097,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 	// Write the final data into the stream (make sure to seek first - windows issue)
 	stream.seekp(indexEntry.position);
 	stream.write(buffer, indexEntry.sizeB);
+	delete buffer;
 	ASSERT( !stream.bad() );
 }
 
