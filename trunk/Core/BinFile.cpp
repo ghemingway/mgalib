@@ -421,7 +421,7 @@ BinObject::~BinObject()
 }
 
 
-BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &buffer, const Uuid &uuid)
+BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &buffer, const Uuid &uuid, uint32_t &sizeB)
 {
 	char* stream = buffer;
 	// First, read in the metaID
@@ -446,6 +446,8 @@ BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &buffer, const U
 		// Add the attribute to the object
 		if (binAttribute != NULL) binObject->_attributes.push_front(binAttribute);
 	} while (binAttribute != NULL);
+	// How much did we read
+	sizeB = (stream - buffer);
 	// Return the new BinObject
 	return binObject;
 };
@@ -674,10 +676,9 @@ const Result_t BinFile::Load(void)
 	// Read the preamble (metaProject Uuid, options position and options size)
 	Uuid uuid;
 	uint32_t preambleSizeB = sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t);
-	std::vector<char> buffer;
-	buffer.resize(preambleSizeB);
-	char* bufferPointer = &buffer[0];
-	this->_inputFile.read(&buffer[0], preambleSizeB);
+	char* buffer = new char[preambleSizeB];
+	char* bufferPointer = buffer;
+	this->_inputFile.read(buffer, preambleSizeB);
 	_Read(bufferPointer, uuid);
 	// Make sure the Uuid matches that of the metaProject
 	if( !(uuid == this->_metaProjectUuid) )
@@ -689,13 +690,16 @@ const Result_t BinFile::Load(void)
 	}
 
 	// Read the options information
-	std::streampos startOfOptions, startOfIndex;
-	uint64_t indexSize;
+	std::streampos startOfOptions, startOfIndex, startOfJournal;
+	uint64_t indexSizeB, journalSizeB;
 	uint32_t optionsSizeB;
 	_Read(bufferPointer, startOfOptions);
 	_Read(bufferPointer, optionsSizeB);
+	// Make sure to clean up the buffer
+	delete buffer;
+	// Get the options
 	this->_inputFile.seekg(startOfOptions);
-	if ( this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, indexSize) != S_OK )
+	if ( this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, indexSizeB, startOfJournal, journalSizeB) != S_OK )
 	{
 		// Error in reading options
 		ASSERT(false);
@@ -703,7 +707,18 @@ const Result_t BinFile::Load(void)
 
 	// Read the object index
 	this->_inputFile.seekg(startOfIndex);
-	Result_t result = this->ReadIndex(this->_inputFile, indexSize);
+	Result_t result = this->ReadIndex(this->_inputFile, indexSizeB);
+	// Do we have a good index
+	if (result != S_OK)
+	{
+		// Close the files
+		this->_inputFile.close();
+		this->_scratchFile.close();
+		return result;
+	}
+	// Read the journal index
+	this->_inputFile.seekg(startOfJournal);
+	result = this->ReadJournal(this->_inputFile, journalSizeB);
 	// Do we have a good index
 	if (result != S_OK)
 	{
@@ -806,7 +821,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	{
 		// Clear and load up the compressor
 		CryptoPP::ZlibCompressor compressor;
-		compressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
+		compressor.Put((const byte*)buffer, (size_t)indexSizeB);
 		compressor.MessageEnd();
 		// Get the new size
 		indexSizeB = compressor.MaxRetrievable();
@@ -841,10 +856,74 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 }
 
 
-
-const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &journalSizeB)
+const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &originalJournalSizeB)
 {
-	// TODO: Implement ReadJournal index
+	ASSERT( stream.is_open() );
+	// Size the buffer
+	uint64_t journalSizeB = originalJournalSizeB;
+	char* buffer = new char[journalSizeB];
+	// Read the index from the file itself
+	stream.read(buffer, journalSizeB);
+	// Is there encryption
+	if (this->_isEncrypted)
+	{
+		// Create the decryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
+		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
+		// Load up our data
+		filter.Put( (const byte*)buffer, (size_t)journalSizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( journalSizeB == filter.MaxRetrievable() );
+		// Decrypt and get data
+		filter.Get( (byte*)buffer, (size_t)journalSizeB );
+	}
+	// Is there compression
+	if (this->_isCompressed)
+	{
+		// Clear the decompressor and load it up
+		CryptoPP::ZlibDecompressor decompressor;
+		decompressor.Put((const byte*)buffer, (size_t)journalSizeB);
+		decompressor.MessageEnd();
+		// Get the decompressed size
+		journalSizeB = decompressor.MaxRetrievable();
+		ASSERT( journalSizeB != 0 );
+		// Resize the buffer
+		delete buffer;
+		buffer = new char[journalSizeB];
+		// Get the data and clean up
+		decompressor.Get((byte*)buffer, (size_t)journalSizeB);
+	}
+	// How many journal entries are there
+	uint64_t entryCount = journalSizeB / (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) + 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
+	// Read in each item for the index
+	char *bufferPointer = buffer;
+	JournalEntry entry = { NULL, EntryLocation::Input(), 0, 0, Uuid::Null(), 0, 0, 0, false, false };
+	for (uint64_t i=0; i < entryCount; ++i)
+	{
+		// Copy the position into a temp value and then into the entry
+		_Read(bufferPointer, entry.position);
+		// Copy the size into the entry
+		_Read(bufferPointer, entry.sizeB);
+		// Copy the Uuid of the tag into the variable
+		_Read(bufferPointer, entry.tag);
+		// Copy in the numCreated, numChanged, numDeleted
+		_Read(bufferPointer, entry.numCreated);
+		_Read(bufferPointer, entry.numChanged);
+		_Read(bufferPointer, entry.numDeleted);
+		// Copy in the compression and encryption status
+		uint8_t flag;
+		_Read(bufferPointer, flag);
+		entry.isCompressed = flag;
+		_Read(bufferPointer, flag);
+		entry.isEncrypted = flag;
+		// Place these into the undoList
+		this->_undoList.push_back(entry);
+	}
+	// All is good
+	delete buffer;
 	return S_OK;
 }
 
@@ -852,36 +931,45 @@ const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &journa
 const Result_t BinFile::WriteJournal(std::fstream &stream, uint64_t &journalSizeB) const
 {
 	ASSERT( stream.is_open() );
-	// Create a correctly sized output buffer
-	journalSizeB = this->_undoList.size();// * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
+	// Create a correctly sized output buffer (position, size, tag, numCreated, numChanged, numDeleted, isCompressed, isEncrypted)
+	journalSizeB = this->_undoList.size() * (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) +
+											 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
 	char* buffer = new char[journalSizeB];
 	// Write each item from the index into the buffer
-//	char *bufferPointer = buffer;
-/*	IndexHash::const_iterator hashIter = index.begin();
-	while( hashIter != this->_indexHash.end() )
+	char *bufferPointer = buffer;
+	JournalList::const_iterator journalIter = this->_undoList.begin();
+	while( journalIter != this->_undoList.end() )
 	{
-		// Copy in the Uuid
-		_Write(bufferPointer, hashIter->first);
 		// Copy in the File Position
-		_Write(bufferPointer, hashIter->second.position);
-		// Copy in the Object Size
-		_Write(bufferPointer, hashIter->second.sizeB);
-		// Move on to the next hash element
-		++hashIter;
+		_Write(bufferPointer, journalIter->position);
+		// Copy in the Journal Entry Size
+		_Write(bufferPointer, journalIter->sizeB);
+		// Copy in the tag Uuid
+		_Write(bufferPointer, journalIter->tag);
+		// Copy in the numCreated, numChanged, numDeleted
+		_Write(bufferPointer, journalIter->numCreated);
+		_Write(bufferPointer, journalIter->numChanged);
+		_Write(bufferPointer, journalIter->numDeleted);
+		// Copy in the compression and encryption status
+		_Write<uint8_t>(bufferPointer, journalIter->isCompressed);
+		_Write<uint8_t>(bufferPointer, journalIter->isEncrypted);
+		// Move on to the next journal entry
+		++journalIter;
 	}
 	// Is there compression
 	if (this->_isCompressed)
 	{
 		// Clear and load up the compressor
 		CryptoPP::ZlibCompressor compressor;
-		compressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
+		compressor.Put((const byte*)buffer, (size_t)journalSizeB);
 		compressor.MessageEnd();
 		// Get the new size
-		indexSizeB = compressor.MaxRetrievable();
-		ASSERT( indexSizeB != 0 );
-		buffer.resize(indexSizeB);
+		journalSizeB = compressor.MaxRetrievable();
+		ASSERT( journalSizeB != 0 );
+		delete buffer;
+		buffer = new char[journalSizeB];
 		// Get the data and clean up
-		compressor.Get((byte*)&buffer[0], (size_t)indexSizeB);
+		compressor.Get((byte*)buffer, (size_t)journalSizeB);
 	}
 	// Is there encryption
 	if (this->_isEncrypted)
@@ -892,30 +980,29 @@ const Result_t BinFile::WriteJournal(std::fstream &stream, uint64_t &journalSize
 							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
 		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
 		// Load up our data
-		filter.Put( (const byte*)&buffer[0], (size_t)indexSizeB );
+		filter.Put((const byte*)buffer, (size_t)journalSizeB);
 		filter.MessageEnd();
 		// Make sure we get out the same number of bytes we put in
-		ASSERT( indexSizeB == filter.MaxRetrievable() );
+		ASSERT( journalSizeB == filter.MaxRetrievable() );
 		// Encrypt and get data
-		filter.Get( (byte*)&buffer[0], (size_t)indexSizeB );
+		filter.Get((byte*)buffer, (size_t)journalSizeB);
 	}
 	// Now write out the data to the file
-	stream.write(&buffer[0], indexSizeB);
+	stream.write(buffer, journalSizeB);
 	ASSERT( !stream.bad() );
-*/
 	delete buffer;
 	return S_OK;
 }
 
-const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSizeB)
+const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB, std::streampos &startOfIndex, uint64_t &indexSizeB,
+									std::streampos &startOfJournal, uint64_t &journalSizeB)
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized input buffer
-	std::vector<char> buffer;
-	buffer.resize(sizeB);
-	char* bufferPointer = &buffer[0];
+	char* buffer = new char[sizeB];
+	char* bufferPointer = buffer;
 	// Read data from the stream
-	stream.read(&buffer[0], sizeB);
+	stream.read(buffer, sizeB);
 	// Parse the options
 	uint8_t tmpVal;
 	_Read<uint8_t>(bufferPointer, tmpVal);
@@ -930,22 +1017,28 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	_Read<uint8_t>(bufferPointer, tmpVal);
 	this->_isCompressed = (tmpVal != false);
 	_Read(bufferPointer, this->_rootUuid);
+	// Read the index info
 	_Read(bufferPointer, startOfIndex);
 	_Read(bufferPointer, indexSizeB);
+	// Read the journal info
+	_Read(bufferPointer, startOfJournal);
+	_Read(bufferPointer, journalSizeB);
+	// Clean up and be done
+	delete buffer;
 	return S_OK;
 }
 
 
-const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSizeB) const
+const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos &startOfIndex, const uint64_t &indexSizeB,
+									 const std::streampos &startOfJournal, const uint64_t &journalSizeB) const
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
-	uint32_t sizeB = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint64_t);
+	uint32_t sizeB = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(Uuid) + 4 *sizeof(uint64_t);
 	// Size is larger if we have encryption (IV takes space)
 	if (this->_isEncrypted) sizeB += BINFILE_ENCRYPTIONIVSIZE;
-	std::vector<char> buffer;
-	buffer.resize(sizeB);
-	char* bufferPointer = &buffer[0];
+	char* buffer = new char[sizeB];
+	char* bufferPointer = buffer;
 	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
 	if (this->_isEncrypted)
 	{
@@ -957,11 +1050,17 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 	}
 	_Write<uint8_t>(bufferPointer, this->_isCompressed);
 	_Write<Uuid>(bufferPointer, this->_rootUuid);
+	// Write index info
 	_Write<uint64_t>(bufferPointer, startOfIndex);
 	_Write<uint64_t>(bufferPointer, indexSizeB);
+	// Write index info
+	_Write<uint64_t>(bufferPointer, startOfJournal);
+	_Write<uint64_t>(bufferPointer, journalSizeB);
 	// Write it out to the stream
-	stream.write(&buffer[0], sizeB);
+	stream.write(buffer, sizeB);
 	ASSERT( !stream.bad() );
+	// Clean up and be done
+	delete buffer;
 	return sizeB;
 }
 
@@ -1041,7 +1140,8 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 		// Get the data
 		decompressor.Get((byte*)buffer, (size_t)sizeB);
 	}
-	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid);
+	uint32_t tmpSize;
+	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid, tmpSize);
 	ASSERT( indexEntry.object != NULL );
 	delete buffer;
 	// Set the object and mark it as in cache
@@ -1311,7 +1411,7 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 	// Make sure we have written as much as we are supposed to
 	ASSERT( bufferPointer-entry.buffer == entry.sizeB );
 	// Is there compression
-	if (this->_isCompressed)
+	if (entry.isCompressed)
 	{
 		CryptoPP::ZlibCompressor compressor;
 		// Clear and load up the compressor
@@ -1326,7 +1426,7 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 		compressor.Get((byte*)entry.buffer, (size_t)entry.sizeB);
 	}
 	// Is there encryption
-	if (this->_isEncrypted)
+	if (entry.isEncrypted)
 	{
 		// Create the encryptor and filter
 		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
@@ -1347,17 +1447,137 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 }
 
 
-const Result_t BinFile::UnpickleTransaction(const JournalEntry &entry)
+const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 {
-	ASSERT(false);
-	// Is the entry in the scratch file or input file
-	// TODO: Locate entry
+	ASSERT( this->_createdObjects.empty() );
+	ASSERT( this->_changedAttributes.empty() );
+	ASSERT( this->_deletedObjects.empty() );
+	// Make sure entry is in the cache
+	if (entry.location == EntryLocation::Input())
+	{
+		// If in input or scratch file, copy the journal entry buffer into memory
+		entry.buffer = new char[entry.sizeB];
+		this->_inputFile.seekg(entry.position);
+		this->_inputFile.read(entry.buffer, entry.sizeB);
+		entry.location = EntryLocation::Cache();
+	}
+	else if (entry.location == EntryLocation::Scratch())
+	{
+		// Copy the journal entry buffer into memory
+		entry.buffer = new char[entry.sizeB];
+		this->_scratchFile.seekg(entry.position);
+		this->_scratchFile.read(entry.buffer, entry.sizeB);
+		entry.location = EntryLocation::Cache();
+	}
 	// Is there encryption
-	// TODO: Support encryption
+	if (entry.isEncrypted)
+	{
+		// Create the decryptor and filter
+		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
+							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
+		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
+		// Load up our data
+		filter.Put( (const byte*)entry.buffer, entry.sizeB );
+		filter.MessageEnd();
+		// Make sure we get out the same number of bytes we put in
+		ASSERT( entry.sizeB == filter.MaxRetrievable() );
+		// Decrypt and get data
+		filter.Get( (byte*)entry.buffer, entry.sizeB );		
+	}
 	// Is there compression
-	// TODO: Support compression
+	if (entry.isCompressed)
+	{
+		// Create the decompressor and load it up
+		CryptoPP::ZlibDecompressor decompressor;
+		decompressor.Put((const byte*)entry.buffer, entry.sizeB);
+		decompressor.MessageEnd();
+		// Get the decompressed size
+		entry.sizeB = decompressor.MaxRetrievable();
+		ASSERT( entry.sizeB != 0 );
+		// Resize the buffer
+		delete entry.buffer;
+		entry.buffer = new char[entry.sizeB];
+		// Get the data
+		decompressor.Get((byte*)entry.buffer, (size_t)entry.sizeB);
+	}
 	// Deserialize the three transaction lists (created, changed, deleted) to memory
-	// TODO: Deserialize the journal entry
+	char* bufferPointer = entry.buffer;
+	for (uint32_t numCreated=0; numCreated < entry.numCreated; numCreated++)
+	{
+		MetaID_t metaID;
+		Uuid uuid;
+		// Read a MetaID and the resulting Uuid
+		_Read(bufferPointer, metaID);
+		_Read(bufferPointer, uuid);
+		// Put them into the createdObjects list
+		this->_createdObjects.push_back(std::make_pair(uuid, metaID));
+	}
+	// Then on to changed attributes
+	for (uint32_t numChanged=0; numChanged < entry.numChanged; numChanged++)
+	{
+		AttributeID attributeID;
+		ValueType valueType;
+		AttributeChangeBase* changeBase = NULL;
+		// Read in the change record (Uuid, attrID, attribute type)
+		_Read(bufferPointer, attributeID.uuid);
+		_Read(bufferPointer, attributeID.attrID);
+		_Read(bufferPointer, valueType);
+		// Read in the changed attribute record info
+		if (valueType == ValueType::Long())
+		{
+			AttributeChange<int32_t>* changeRecord = new AttributeChange<int32_t>();
+			_Read(bufferPointer, changeRecord->oldValue);
+			_Read(bufferPointer, changeRecord->newValue);
+			changeBase = changeRecord;
+		}
+		else if (valueType == ValueType::Real())
+		{
+			AttributeChange<double>* changeRecord = new AttributeChange<double>();
+			_Read(bufferPointer, changeRecord->oldValue);
+			_Read(bufferPointer, changeRecord->newValue);
+			changeBase = changeRecord;
+		}
+		else if (valueType == ValueType::String())
+		{
+			AttributeChange<std::string>* changeRecord = new AttributeChange<std::string>();
+			_Read(bufferPointer, changeRecord->oldValue);
+			_Read(bufferPointer, changeRecord->newValue);
+			changeBase = changeRecord;
+		}
+		else if (valueType == ValueType::Pointer() || valueType == ValueType::LongPointer())
+		{
+			AttributeChange<Uuid>* changeRecord = new AttributeChange<Uuid>();
+			_Read(bufferPointer, changeRecord->oldValue);
+			_Read(bufferPointer, changeRecord->newValue);
+			changeBase = changeRecord;
+		}
+		else if (valueType == ValueType::Dictionary())
+		{
+			AttributeChange<DictionaryMap>* changeRecord = new AttributeChange<DictionaryMap>();
+			_Read(bufferPointer, changeRecord->oldValue);
+			_Read(bufferPointer, changeRecord->newValue);
+			changeBase = changeRecord;
+		}
+		else ASSERT(false);
+		// Put the changeRecord into the changedObjects list
+		changeBase->type = valueType;
+		this->_changedAttributes.insert(std::make_pair(attributeID,changeBase));
+	}
+	// Finally, the deleted objects
+	for (uint32_t numDeleted=0; numDeleted < entry.numDeleted; numDeleted++)
+	{
+		// Read in the deleted object's Uuid
+		Uuid uuid;
+		_Read(bufferPointer, uuid);
+		// Read in the deleted object itself
+		uint32_t sizeB;
+		BinObject* object = BinObject::Read(this->_metaProject, bufferPointer, uuid, sizeB);
+		ASSERT( object != NULL );
+		// Advance the read pointer
+		bufferPointer += sizeB;
+		ASSERT(false);
+	}
 	return S_OK;
 }
 
@@ -1529,16 +1749,27 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	IndexHashIterator hashIter = this->_indexHash.begin();
 	while (hashIter != this->_indexHash.end())
 	{
+		ASSERT( hashIter->second.location != EntryLocation::Output() );
 		// See if object is in input and correctly compressed and encrypted
-		if (hashIter->second.location == EntryLocation::Input() &&
+		if (hashIter->second.location != EntryLocation::Cache() &&
 			hashIter->second.isCompressed == this->_isCompressed &&
 			hashIter->second.isEncrypted == this->_isEncrypted)
 		{
 			// Create appropriate buffer for read
 			char* buffer = new char[hashIter->second.sizeB];
-			// Read data from input into buffer
-			this->_inputFile.seekg(hashIter->second.position);
-			this->_inputFile.read(buffer, hashIter->second.sizeB);
+			// Where are we reading from?
+			if (hashIter->second.location == EntryLocation::Input())
+			{
+				// Read data into buffer from the file
+				this->_inputFile.seekg(hashIter->second.position);
+				this->_inputFile.read(buffer, hashIter->second.sizeB);
+			}
+			else
+			{
+				// Read data into buffer from the file
+				this->_scratchFile.seekg(hashIter->second.position);
+				this->_scratchFile.read(buffer, hashIter->second.sizeB);
+			}
 			// Write data out to output file
 			hashIter->second.position = outputFile.tellp();
 			hashIter->second.location = EntryLocation::Output();
@@ -1565,6 +1796,24 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	JournalList::iterator journalIter = this->_undoList.begin();
 	while (journalIter != this->_undoList.end())
 	{
+		ASSERT( journalIter->location != EntryLocation::Output() );
+		// Find the journal entry
+		if (journalIter->location == EntryLocation::Input())
+		{
+			// If in input or scratch file, copy the journal entry buffer into memory
+			journalIter->buffer = new char[journalIter->sizeB];
+			this->_inputFile.seekg(journalIter->position);
+			this->_inputFile.read(journalIter->buffer, journalIter->sizeB);
+		}
+		else if (journalIter->location == EntryLocation::Scratch())
+		{
+			// Copy the journal entry buffer into memory
+			journalIter->buffer = new char[journalIter->sizeB];
+			this->_scratchFile.seekg(journalIter->position);
+			this->_scratchFile.read(journalIter->buffer, journalIter->sizeB);
+		}
+		// Buffer must be present now
+		ASSERT( journalIter->buffer != NULL );
 		// Get some info about the new journal buffer location
 		journalIter->location = EntryLocation::Output();
 		journalIter->position = outputFile.tellp();
@@ -1573,8 +1822,6 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 		// Move to next journal entry
 		++journalIter;
 	}
-	// Clear the undo and redo lists
-	this->FlushUndoRedo(this->_undoList.size());
 
 	// Write out the object index
 	std::streampos startOfIndex = outputFile.tellp();
@@ -1588,22 +1835,24 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	std::streampos startOfJournal = outputFile.tellp();
 	uint64_t journalSizeB;
 	this->WriteJournal(outputFile, journalSizeB);
-	
+	// Clear the undo and redo lists
+	this->FlushUndoRedo(this->_undoList.size());
+
 	// Write out the options
 	std::streampos startOfOptions = outputFile.tellp();
-	uint32_t optionsSize = this->WriteOptions(outputFile, startOfIndex, indexSizeB);
+	uint32_t optionsSize = this->WriteOptions(outputFile, startOfIndex, indexSizeB, startOfJournal, journalSizeB);
 
 	// Write out the preamble (metaProject Uuid + options location and options size)
-	std::vector<char> buffer;
-	buffer.resize(preambleSize);
-	char* bufferPointer = &buffer[0];
+	char* buffer = new char[preambleSize];
+	char* bufferPointer = buffer;
 	_Write(bufferPointer, this->_metaProjectUuid);
 	_Write(bufferPointer, startOfOptions);
 	_Write(bufferPointer, optionsSize);
 	// Make sure to start writing at the beginning of the file d'uh
 	outputFile.seekp(0);
-	outputFile.write(&buffer[0], preambleSize);
+	outputFile.write(buffer, preambleSize);
 	ASSERT( !outputFile.bad() );
+	delete buffer;
 
 	// Clean up the original input file
 	this->_inputFile.close();
@@ -2151,9 +2400,76 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
 	while (changeIter != this->_changedAttributes.end())
 	{
-		// Revert the attribute value change
-		// TODO: Revert the attribute value change
-		ASSERT(false);
+		// Get the attribute change record
+		IndexHashIterator binIter = this->FetchObject(changeIter->first.uuid);
+		ASSERT( binIter != this->_indexHash.end() );
+		BinObject* binObject = binIter->second.object;
+		ASSERT( binObject != NULL );
+		BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
+		ASSERT( binAttribute != NULL );
+		// Is the changed attribute a LONG
+		if (binAttribute->GetValueType() == ValueType::Long())
+		{
+			BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			attribute->Set(changeRecord->oldValue);
+			delete changeRecord;
+		}
+		// Is the changed attribute a REAL
+		else if (binAttribute->GetValueType() == ValueType::Real())
+		{
+			BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<double>* changeRecord = (AttributeChange<double>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			attribute->Set(changeRecord->oldValue);
+			delete changeRecord;
+		}
+		// Is the changed attribute a STRING
+		else if (binAttribute->GetValueType() == ValueType::String())
+		{
+			BinAttributeString *attribute = (BinAttributeString*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			attribute->Set(changeRecord->oldValue);
+			delete changeRecord;
+		}
+		// Is the changed attribute a LONGPOINTER
+		else if (binAttribute->GetValueType() == ValueType::LongPointer())
+		{
+			BinAttributeLongPointer *attribute = (BinAttributeLongPointer*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			attribute->Set(changeRecord->oldValue);
+			delete changeRecord;
+		}
+		// Is the changed attribute a POINTER
+		else if (binAttribute->GetValueType() == ValueType::Pointer())
+		{
+			BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			this->PointerUpdate(binAttribute->GetAttributeID(), changeIter->first.uuid, attribute->Get(), changeRecord->oldValue);
+			attribute->Set(changeRecord->oldValue);
+			delete changeRecord;
+		}
+		// Is the changed attribute a DICTIONARY
+		else if (binAttribute->GetValueType() == ValueType::Dictionary())
+		{
+			BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<DictionaryMap>* changeRecord = (AttributeChange<DictionaryMap>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			attribute->Set(changeRecord->oldValue);
+			delete changeRecord;
+		}
+		// Never should be here!
+		else ASSERT(false);
 		// Move on to the next change
 		++changeIter;
 	}
@@ -2161,9 +2477,16 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while (createdIter != this->_createdObjects.end())
 	{
-		// Delete the object
-		// TODO: Delete the object
-		ASSERT(false);
+		// Fetch the created object
+		IndexHashIterator indexIter = this->FetchObject(createdIter->first);
+		ASSERT( indexIter != this->_indexHash.end() );
+		// Delete the object itself
+		BinObject* binObject = indexIter->second.object;
+		ASSERT( binObject != NULL );
+		delete binObject;
+		// Remove object info from cacheHash and cacheQueue
+		this->_indexHash.erase(indexIter);
+		this->_cacheQueue.remove(createdIter->first);
 		// Move on to the next created object
 		++createdIter;
 	}
@@ -2330,6 +2653,7 @@ const Result_t BinFile::DisableEncryption(void) throw()
  *	3) Work on generic search API
  *	4) Clean up and optimize the dirty flag
  *	5) Delete Object backpointer clean up
+ *	6) Finish journal caching scheme
 ***/
 
 
