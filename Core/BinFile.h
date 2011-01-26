@@ -225,6 +225,9 @@ private:
 	template<class T, class P, ValueTypeEnum VT>
 	const Result_t SetAttributeValue(const AttrID_t &attrID, const T &value) throw();
 
+	void TryAbortTransaction(void);
+	IndexHashIterator TryCreateObject(const MetaID_t &metaID, const Uuid &uuid);
+
 public:
 	virtual ~BinFile();
 	virtual inline const Result_t GetCacheSize(uint64_t &size) const throw()			{ size = this->_cacheQueue.size(); return S_OK; }
@@ -271,9 +274,9 @@ public:
 	virtual const Result_t BeginJournal(void) throw();										//!<
 	virtual const Result_t EndJournal(void) throw();										//!<
 
-	virtual const Result_t IsCompressed(bool &flag) const throw()							{ flag = this->_isCompressed; return S_OK; }
-	virtual const Result_t EnableCompression(void) throw();									//!<
-	virtual const Result_t DisableCompression(void) throw();								//!<
+	virtual inline const Result_t IsCompressed(bool &flag) const throw(){ flag = this->_isCompressed; return S_OK; }
+	virtual inline const Result_t EnableCompression(void) throw()		{ if(this->_inTransaction) return E_TRANSACTION; this->_isCompressed = true; return S_OK; }
+	virtual inline const Result_t DisableCompression(void) throw()		{ if(this->_inTransaction) return E_TRANSACTION; this->_isCompressed = false; return S_OK; }
 
 	virtual const Result_t IsEncrypted(bool &flag) const throw()							{ flag = this->_isEncrypted; return S_OK; }
 	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw();				//!<
