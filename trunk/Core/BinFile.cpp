@@ -163,7 +163,79 @@ static inline const Result_t _CheckUTF8(const std::string &value)
 		result = E_BADUTF8STRING;
 	}
 	return result;
-}	
+}
+
+
+// --------------------------- Compression and Encryption Support --------------------------- //
+
+
+static inline uint32_t _Compress(CryptoPP::Filter *compressor, char* &buffer, const uint32_t &inputSizeB)
+{
+	CryptoPP::ZlibCompressor tmpCompressor;
+	// Clear and load up the compressor
+	tmpCompressor.Put((const byte*)buffer, (size_t)inputSizeB);
+	tmpCompressor.MessageEnd();
+	// Get the new size
+	uint32_t outputSizeB = (uint32_t)tmpCompressor.MaxRetrievable();
+	ASSERT( outputSizeB != 0 );
+	delete buffer;
+	buffer = new char[outputSizeB];
+	// Get the data and clean up
+	tmpCompressor.Get((byte*)buffer, (size_t)outputSizeB);
+	return outputSizeB;
+}
+
+
+static inline uint32_t _Decompress(CryptoPP::Filter *decompressor, char* &buffer, const uint32_t &inputSizeB)
+{
+	// Clear the decompressor and load it up
+	CryptoPP::ZlibDecompressor tmpDecompressor;
+	tmpDecompressor.Put((const byte*)buffer, (size_t)inputSizeB);
+	tmpDecompressor.MessageEnd();
+	// Get the decompressed size
+	uint32_t outputSizeB = tmpDecompressor.MaxRetrievable();
+	ASSERT( outputSizeB != 0 );
+	// Resize the buffer
+	delete buffer;
+	buffer = new char[outputSizeB];
+	// Get the data and clean up
+	tmpDecompressor.Get((byte*)buffer, (size_t)outputSizeB);
+	return outputSizeB;
+}
+
+
+static inline void _Encrypt(CryptoPP::Filter *filter, const char* key, const char* iv, char* &buffer, const uint32_t &sizeB)
+{
+	// Create the encryptor and filter
+	CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+	encryptor.SetKeyWithIV((const byte*)key, BINFILE_ENCRYPTIONKEYSIZE,
+						   (const byte*)iv, BINFILE_ENCRYPTIONIVSIZE);
+	CryptoPP::AuthenticatedEncryptionFilter tmpFilter( encryptor );
+	// Load up our data
+	tmpFilter.Put( (const byte*)buffer, sizeB );
+	tmpFilter.MessageEnd();
+	// Make sure we get out the same number of bytes we put in
+	ASSERT( sizeB == tmpFilter.MaxRetrievable() );
+	// Encrypt and get data
+	tmpFilter.Get( (byte*)buffer, sizeB );
+}
+
+
+static inline void _Decrypt(CryptoPP::Filter *filter, const char* key, const char* iv, char* &buffer, const uint32_t &sizeB)
+{
+	// Create the decryptor and filter
+	CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+	decryptor.SetKeyWithIV((const byte*)key, BINFILE_ENCRYPTIONKEYSIZE,
+						   (const byte*)iv, BINFILE_ENCRYPTIONIVSIZE);
+	CryptoPP::AuthenticatedDecryptionFilter tmpFilter( decryptor );
+	// Load up our data
+	tmpFilter.Put( (const byte*)buffer, (size_t)sizeB );
+	tmpFilter.MessageEnd();
+	// Make sure we get out the same number of bytes we put in
+	ASSERT( sizeB == tmpFilter.MaxRetrievable() );
+	// Decrypt and get data
+	tmpFilter.Get( (byte*)buffer, (size_t)sizeB );
+}
 
 
 // --------------------------- BinAttributeBase --------------------------- //
@@ -295,9 +367,7 @@ BinAttribute *BinAttribute::Read(BinObject *parent, char* &stream)
 	// Get the attribute ID
 	AttrID_t attrID;
 	_Read(stream, attrID);
-	ASSERT( attrID != ATTRID_NONE );
-//	std::cout << "\tAttribute (" << valueType << ", " << attrID << ")\n";	
-	ASSERT( valueType != ValueType::None() );
+	ASSERT( attrID != ATTRID_NONE );	
 	BinAttribute *binAttribute = NULL;
 
 	if(valueType == ValueType::Long())
@@ -479,9 +549,7 @@ uint32_t BinObject::Size(void) const
 	while( attrIter != this->_attributes.end() )
 	{
 		// Sum the size (don't forget the ValueType and AttrID for each attribute)
-		size += (*attrIter)->Size();
-		size += sizeof(uint8_t);
-		size += sizeof(AttrID_t);
+		size += (*attrIter)->Size() + sizeof(uint8_t) + sizeof(AttrID_t);
 		// Move on to the next attribute
 		++attrIter;
 	}
@@ -550,6 +618,11 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 	ASSERT( this->_compressor != NULL );
 	this->_decompressor = new CryptoPP::ZlibDecompressor();
 	ASSERT( this->_decompressor != NULL );
+//	this->_encryptor = new CryptoPP::AuthenticatedEncryptionFilter();
+//	ASSERT( this->_encryptor != NULL );
+//	this->_decryptor = new CryptoPP::AuthenticatedDecryptionFilter();
+//	ASSERT( this->_decryptor != NULL );
+	
 }
 
 
@@ -567,7 +640,6 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	ASSERT( result == S_OK );
 
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
-	binFile->_inputFile.clear();
 	binFile->_inputFile.open(binFile->_filename.c_str(), std::ios::in | std::ios::out | std::ios::binary | std::ios_base::trunc );
 	if( binFile->_inputFile.fail() || !binFile->_inputFile.is_open() ) {
 		delete binFile;
@@ -586,21 +658,17 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 		return E_FILEOPEN;
 	}
 
-	// Is encryption enabled
-	if (encrypted)
-	{
-		// Turn on encryption for the binFile
-		binFile->_isEncrypted = true;
-		// Generate a key
-		CryptoPP::AutoSeededRandomPool randomPool;
-		binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
-		randomPool.GenerateBlock( (byte*)binFile->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE );
-		// Generate the iv
-		binFile->_encryptionIV = new char[BINFILE_ENCRYPTIONIVSIZE];
-		randomPool.GenerateBlock( (byte*)binFile->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE );  
-	}
+	// Ready on encryption for the binFile (may not be turned on though)
+	binFile->_isEncrypted = encrypted;
+	// Generate a key
+//	CryptoPP::AutoSeededRandomPool randomPool;
+//	binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
+//	randomPool.GenerateBlock( (byte*)binFile->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE );
+//	// Generate the iv
+//	binFile->_encryptionIV = new char[BINFILE_ENCRYPTIONIVSIZE];
+//	randomPool.GenerateBlock( (byte*)binFile->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE );  
 
-	// Now just create the actual METAID_ROOT object (using a nice transaction of course)
+	// Now just create the actual METAID_ROOT object (using a new Uuid and a nice transaction of course)
 	Uuid rootUuid;
 	result = binFile->BeginTransaction();
 	ASSERT( result == S_OK );
@@ -707,36 +775,19 @@ const Result_t BinFile::Load(void)
 	_Read(bufferPointer, optionsSizeB);
 	// Make sure to clean up the buffer
 	delete buffer;
+
 	// Get the options
 	this->_inputFile.seekg(startOfOptions);
-	if ( this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, indexSizeB, startOfJournal, journalSizeB) != S_OK )
-	{
-		// Error in reading options
-		ASSERT(false);
-	}
+	this->ReadOptions(this->_inputFile, optionsSizeB, startOfIndex, indexSizeB, startOfJournal, journalSizeB);
 
 	// Read the object index
 	this->_inputFile.seekg(startOfIndex);
-	Result_t result = this->ReadIndex(this->_inputFile, indexSizeB);
-	// Do we have a good index
-	if (result != S_OK)
-	{
-		// Close the files
-		this->_inputFile.close();
-		this->_scratchFile.close();
-		return result;
-	}
+	this->ReadIndex(this->_inputFile, indexSizeB);
+
 	// Read the journal index
 	this->_inputFile.seekg(startOfJournal);
-	result = this->ReadJournal(this->_inputFile, journalSizeB);
-	// Do we have a good index
-	if (result != S_OK)
-	{
-		// Close the files
-		this->_inputFile.close();
-		this->_scratchFile.close();
-		return result;
-	}
+	this->ReadJournal(this->_inputFile, journalSizeB);
+
 	// Open went well (make sure to clear the openedObject)
 	this->_openedObject = this->_indexHash.end();
 	return S_OK;
@@ -752,37 +803,9 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	// Read the index from the file itself
 	stream.read(buffer, indexSizeB);
 	// Is there encryption
-	if (this->_isEncrypted)
-	{
-		// Create the decryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
-		// Load up our data
-		filter.Put( (const byte*)buffer, (size_t)indexSizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( indexSizeB == filter.MaxRetrievable() );
-		// Decrypt and get data
-		filter.Get( (byte*)buffer, (size_t)indexSizeB );
-	}
+	if (this->_isEncrypted) _Decrypt(this->_decryptor, buffer, this->_encryptionKey, this->_encryptionIV, indexSizeB);
 	// Is there compression
-	if (this->_isCompressed)
-	{
-		// Clear the decompressor and load it up
-		CryptoPP::ZlibDecompressor decompressor;
-		decompressor.Put((const byte*)buffer, (size_t)indexSizeB);
-		decompressor.MessageEnd();
-		// Get the decompressed size
-		indexSizeB = decompressor.MaxRetrievable();
-		ASSERT( indexSizeB != 0 );
-		// Resize the buffer
-		delete buffer;
-		buffer = new char[indexSizeB];
-		// Get the data and clean up
-		decompressor.Get((byte*)buffer, (size_t)indexSizeB);
-	}
+	if (this->_isCompressed) indexSizeB = _Decompress(this->_compressor, buffer, indexSizeB );
 	// How many objects are there
 	uint64_t objCount = indexSizeB / (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
 	// Read in each item for the index
@@ -827,37 +850,9 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 		++hashIter;
 	}
 	// Is there compression
-	if (this->_isCompressed)
-	{
-		// Clear and load up the compressor
-		CryptoPP::ZlibCompressor compressor;
-		compressor.Put((const byte*)buffer, (size_t)indexSizeB);
-		compressor.MessageEnd();
-		// Get the new size
-		indexSizeB = compressor.MaxRetrievable();
-		ASSERT( indexSizeB != 0 );
-		// Resize the buffer
-		delete buffer;
-		buffer = new char[indexSizeB];
-		// Get the data and clean up
-		compressor.Get((byte*)buffer, (size_t)indexSizeB);
-	}
+	if (this->_isCompressed) indexSizeB = _Compress(this->_compressor, buffer, indexSizeB );
 	// Is there encryption
-	if (this->_isEncrypted)
-	{
-		// Create the encryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
-		// Load up our data
-		filter.Put( (const byte*)buffer, (size_t)indexSizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( indexSizeB == filter.MaxRetrievable() );
-		// Encrypt and get data
-		filter.Get( (byte*)buffer, (size_t)indexSizeB );
-	}
+	if (this->_isEncrypted) _Encrypt(this->_encryptor, this->_encryptionKey, this->_encryptionIV, buffer, indexSizeB);
 	// Now write out the data to the file
 	stream.write(buffer, indexSizeB);
 	ASSERT( !stream.bad() );
@@ -875,37 +870,9 @@ const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &origin
 	// Read the index from the file itself
 	stream.read(buffer, journalSizeB);
 	// Is there encryption
-	if (this->_isEncrypted)
-	{
-		// Create the decryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
-		// Load up our data
-		filter.Put( (const byte*)buffer, (size_t)journalSizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( journalSizeB == filter.MaxRetrievable() );
-		// Decrypt and get data
-		filter.Get( (byte*)buffer, (size_t)journalSizeB );
-	}
+	if (this->_isEncrypted) _Decrypt(this->_decryptor, buffer, this->_encryptionKey, this->_encryptionIV, journalSizeB);
 	// Is there compression
-	if (this->_isCompressed)
-	{
-		// Clear the decompressor and load it up
-		CryptoPP::ZlibDecompressor decompressor;
-		decompressor.Put((const byte*)buffer, (size_t)journalSizeB);
-		decompressor.MessageEnd();
-		// Get the decompressed size
-		journalSizeB = decompressor.MaxRetrievable();
-		ASSERT( journalSizeB != 0 );
-		// Resize the buffer
-		delete buffer;
-		buffer = new char[journalSizeB];
-		// Get the data and clean up
-		decompressor.Get((byte*)buffer, (size_t)journalSizeB);
-	}
+	if (this->_isCompressed) journalSizeB = _Decompress(this->_compressor, buffer, journalSizeB );
 	// How many journal entries are there
 	uint64_t entryCount = journalSizeB / (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) + 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
 	// Read in each item for the index
@@ -942,8 +909,7 @@ const Result_t BinFile::WriteJournal(std::fstream &stream, uint64_t &journalSize
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer (position, size, tag, numCreated, numChanged, numDeleted, isCompressed, isEncrypted)
-	journalSizeB = this->_undoList.size() * (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) +
-											 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
+	journalSizeB = this->_undoList.size() * (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) + 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
 	char* buffer = new char[journalSizeB];
 	// Write each item from the index into the buffer
 	char *bufferPointer = buffer;
@@ -967,36 +933,9 @@ const Result_t BinFile::WriteJournal(std::fstream &stream, uint64_t &journalSize
 		++journalIter;
 	}
 	// Is there compression
-	if (this->_isCompressed)
-	{
-		// Clear and load up the compressor
-		CryptoPP::ZlibCompressor compressor;
-		compressor.Put((const byte*)buffer, (size_t)journalSizeB);
-		compressor.MessageEnd();
-		// Get the new size
-		journalSizeB = compressor.MaxRetrievable();
-		ASSERT( journalSizeB != 0 );
-		delete buffer;
-		buffer = new char[journalSizeB];
-		// Get the data and clean up
-		compressor.Get((byte*)buffer, (size_t)journalSizeB);
-	}
+	if (this->_isCompressed) journalSizeB = _Compress(this->_compressor, buffer, journalSizeB );
 	// Is there encryption
-	if (this->_isEncrypted)
-	{
-		// Create the encryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
-		// Load up our data
-		filter.Put((const byte*)buffer, (size_t)journalSizeB);
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( journalSizeB == filter.MaxRetrievable() );
-		// Encrypt and get data
-		filter.Get((byte*)buffer, (size_t)journalSizeB);
-	}
+	if (this->_isEncrypted) _Encrypt(this->_encryptor, this->_encryptionKey, this->_encryptionIV, buffer, journalSizeB);
 	// Now write out the data to the file
 	stream.write(buffer, journalSizeB);
 	ASSERT( !stream.bad() );
@@ -1119,37 +1058,9 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	stream.read(buffer, indexEntry.sizeB);
 	ASSERT( !stream.bad() );
 	// Is there encryption
-	if (indexEntry.isEncrypted)
-	{
-		// Create the decryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
-		// Load up our data
-		filter.Put( (const byte*)buffer, indexEntry.sizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( indexEntry.sizeB == filter.MaxRetrievable() );
-		// Decrypt and get data
-		filter.Get( (byte*)buffer, indexEntry.sizeB );		
-	}
+	if (indexEntry.isEncrypted) _Decrypt(this->_decryptor, this->_encryptionKey, this->_encryptionIV, buffer, indexEntry.sizeB);
 	// Is there compression
-	if (indexEntry.isCompressed)
-	{
-		// Create the decompressor and load it up
-		CryptoPP::ZlibDecompressor decompressor;
-		decompressor.Put((const byte*)buffer, indexEntry.sizeB);
-		decompressor.MessageEnd();
-		// Get the decompressed size (don't overwrite size because a non-dirty object just goes back to input)
-		uint32_t sizeB = (uint32_t)decompressor.MaxRetrievable();
-		ASSERT( sizeB != 0 );
-		// Resize the buffer
-		delete buffer;
-		buffer = new char[sizeB];
-		// Get the data
-		decompressor.Get((byte*)buffer, (size_t)sizeB);
-	}
+	if (indexEntry.isCompressed) _Decompress(this->_decompressor, buffer, indexEntry.sizeB);
 	uint32_t tmpSize;
 	indexEntry.object = BinObject::Read(this->_metaProject, buffer, uuid, tmpSize);
 	ASSERT( indexEntry.object != NULL );
@@ -1174,41 +1085,14 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 	char* buffer = new char[indexEntry.sizeB];
 	indexEntry.object->Write(buffer);
 	// Is there compression
- 	if (indexEntry.isCompressed)
-	{
-		// Create the compressor and load it up
-		CryptoPP::ZlibCompressor compressor;
-		compressor.Put((const byte*)buffer, indexEntry.sizeB);
-		compressor.MessageEnd();
-		// Get the new size
-		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
-		ASSERT( indexEntry.sizeB != 0 );
-		delete buffer;
-		buffer = new char[indexEntry.sizeB];
-		// Get the data
-		compressor.Get((byte*)buffer, indexEntry.sizeB);
-	}
+ 	if (indexEntry.isCompressed) indexEntry.sizeB = _Compress(this->_compressor, buffer, indexEntry.sizeB);
 	// Is there encryption
-	if (indexEntry.isEncrypted)
-	{
-		// Create the encryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
-		// Load up our data
-		filter.Put( (const byte*)buffer, indexEntry.sizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( indexEntry.sizeB == filter.MaxRetrievable() );
-		// Encrypt and get data
-		filter.Get( (byte*)buffer, indexEntry.sizeB );
-	}
+	if (indexEntry.isEncrypted) _Encrypt(this->_encryptor, this->_encryptionKey, this->_encryptionIV, buffer, indexEntry.sizeB);
 	// Write the final data into the stream (make sure to seek first - windows issue)
 	stream.seekp(indexEntry.position);
 	stream.write(buffer, indexEntry.sizeB);
-	delete buffer;
 	ASSERT( !stream.bad() );
+	delete buffer;
 }
 
 
@@ -1225,7 +1109,7 @@ void BinFile::CheckCacheSize(void)
 		// If the object is not dirty
 		if (!hashIter->second.object->IsDirty())
 		{
-			// Place the object back into inputFile (no need to write anything)
+			// Place the object back into inputFile (no need to write anything - this is why ObjectFrom file does alter sizeB)
 			hashIter->second.location = EntryLocation::Input();
 		}
 		// If the object is dirty and is located in the cache, write it to the scratch file
@@ -1238,8 +1122,6 @@ void BinFile::CheckCacheSize(void)
 			// Write to file
 			this->ObjectToFile(this->_scratchFile, hashIter->second);
 		}
-		// Otherwise, object is already in outputfile, so just pitch it
-		else ASSERT(true);
 		// Delete the object now (not needed any longer)
 		ASSERT( hashIter->second.object != NULL );
 		delete hashIter->second.object;
@@ -1421,36 +1303,9 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 	// Make sure we have written as much as we are supposed to
 	ASSERT( bufferPointer-entry.buffer == entry.sizeB );
 	// Is there compression
-	if (entry.isCompressed)
-	{
-		CryptoPP::ZlibCompressor compressor;
-		// Clear and load up the compressor
-		compressor.Put((const byte*)entry.buffer, (size_t)entry.sizeB);
-		compressor.MessageEnd();
-		// Get the new size
-		entry.sizeB = (uint32_t)compressor.MaxRetrievable();
-		ASSERT( entry.sizeB != 0 );
-		delete entry.buffer;
-		entry.buffer = new char[entry.sizeB];
-		// Get the data and clean up
-		compressor.Get((byte*)entry.buffer, (size_t)entry.sizeB);
-	}
+	if (entry.isCompressed) entry.sizeB = _Compress(this->_compressor, entry.buffer, entry.sizeB);
 	// Is there encryption
-	if (entry.isEncrypted)
-	{
-		// Create the encryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
-		encryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedEncryptionFilter filter( encryptor );
-		// Load up our data
-		filter.Put( (const byte*)entry.buffer, entry.sizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( entry.sizeB == filter.MaxRetrievable() );
-		// Encrypt and get data
-		filter.Get( (byte*)entry.buffer, entry.sizeB );
-	}
+	if (entry.isEncrypted) _Encrypt(this->_encryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
 	// All is good add the entry to the back of the undo list
 	this->_undoList.push_back(entry);
 	return S_OK;
@@ -1480,37 +1335,9 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 		entry.location = EntryLocation::Cache();
 	}
 	// Is there encryption
-	if (entry.isEncrypted)
-	{
-		// Create the decryptor and filter
-		CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-		decryptor.SetKeyWithIV((const byte*)this->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE,
-							   (const byte*)this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		CryptoPP::AuthenticatedDecryptionFilter filter( decryptor );
-		// Load up our data
-		filter.Put( (const byte*)entry.buffer, entry.sizeB );
-		filter.MessageEnd();
-		// Make sure we get out the same number of bytes we put in
-		ASSERT( entry.sizeB == filter.MaxRetrievable() );
-		// Decrypt and get data
-		filter.Get( (byte*)entry.buffer, entry.sizeB );		
-	}
+	if (entry.isEncrypted) _Decrypt(this->_decryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
 	// Is there compression
-	if (entry.isCompressed)
-	{
-		// Create the decompressor and load it up
-		CryptoPP::ZlibDecompressor decompressor;
-		decompressor.Put((const byte*)entry.buffer, entry.sizeB);
-		decompressor.MessageEnd();
-		// Get the decompressed size
-		entry.sizeB = decompressor.MaxRetrievable();
-		ASSERT( entry.sizeB != 0 );
-		// Resize the buffer
-		delete entry.buffer;
-		entry.buffer = new char[entry.sizeB];
-		// Get the data
-		decompressor.Get((byte*)entry.buffer, (size_t)entry.sizeB);
-	}
+	if (entry.isCompressed) entry.sizeB = _Decompress(this->_decompressor, entry.buffer, entry.sizeB);
 	// Deserialize the three transaction lists (created, changed, deleted) to memory
 	char* bufferPointer = entry.buffer;
 	for (uint32_t numCreated=0; numCreated < entry.numCreated; numCreated++)
@@ -1625,6 +1452,140 @@ const Result_t BinFile::PointerUpdate(const AttrID_t &attrID, const Uuid &uuid, 
 }
 
 
+template <class BAT, class VT>
+static inline void _AttributeChange(BinAttribute *binAttribute, AttributeChangeBase* changeBase, const bool &useOld)
+{
+	BAT *attribute = (BAT*)binAttribute;
+	ASSERT( attribute != NULL );
+	AttributeChange<VT>* changeRecord = (AttributeChange<VT>*)(changeBase);
+	ASSERT( changeRecord != NULL );
+	if(useOld)	attribute->Set(changeRecord->oldValue);
+	else		attribute->Set(changeRecord->newValue);
+	delete changeRecord;
+}
+
+
+void BinFile::TryAbortTransaction(void)
+{
+	// Is this transaction actually going to do anything - if not, we are done
+	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedAttributes.empty() )
+	{
+		// Must move all deletedObjects back to cache
+		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
+		while (deletedIter != this->_deletedObjects.end())
+		{
+			// Insert into the cache and queue
+			std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( *deletedIter );
+			ASSERT( insertReturn.second );
+			this->_cacheQueue.push_front(deletedIter->first);
+			// Move to the next deleted object in the list
+			++deletedIter;
+		}
+		// Clear the deleted objects list
+		this->_deletedObjects.clear();
+		
+		// Changed attributes - rollback changes
+		ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
+		while (changeIter != this->_changedAttributes.end())
+		{
+			// Get the attribute change record
+			IndexHashIterator binIter = this->FetchObject(changeIter->first.uuid);
+			ASSERT( binIter != this->_indexHash.end() );
+			BinObject* binObject = binIter->second.object;
+			ASSERT( binObject != NULL );
+			BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
+			ASSERT( binAttribute != NULL );
+			// Is the changed attribute a LONG
+			if (binAttribute->GetValueType() == ValueType::Long())
+			{
+				// Change attribute value back to old value
+				_AttributeChange<BinAttributeLong,int32_t>(binAttribute, changeIter->second, true);
+			}
+			// Is the changed attribute a REAL
+			else if (binAttribute->GetValueType() == ValueType::Real())
+			{
+				// Change attribute value back to old value
+				_AttributeChange<BinAttributeReal,double>(binAttribute, changeIter->second, true);
+			}
+			// Is the changed attribute a STRING
+			else if (binAttribute->GetValueType() == ValueType::String())
+			{
+				// Change attribute value back to old value
+				_AttributeChange<BinAttributeString,std::string>(binAttribute, changeIter->second, true);
+			}
+			// Is the changed attribute a LONGPOINTER
+			else if (binAttribute->GetValueType() == ValueType::LongPointer())
+			{
+				// Change attribute value back to old value
+				_AttributeChange<BinAttributeLongPointer,Uuid>(binAttribute, changeIter->second, true);
+			}
+			// Is the changed attribute a POINTER
+			else if (binAttribute->GetValueType() == ValueType::Pointer())
+			{
+				BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
+				ASSERT( attribute != NULL );
+				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
+				ASSERT( changeRecord != NULL );
+				this->PointerUpdate(binAttribute->GetAttributeID(), changeIter->first.uuid, attribute->Get(), changeRecord->oldValue);
+				attribute->Set(changeRecord->oldValue);
+				delete changeRecord;
+			}
+			// Is the changed attribute a DICTIONARY
+			else if (binAttribute->GetValueType() == ValueType::Dictionary())
+			{
+				// Change attribute value back to old value
+				_AttributeChange<BinAttributeDictionary,DictionaryMap>(binAttribute, changeIter->second, true);
+			}
+			// Never should be here!
+			else ASSERT(false);
+			// Move on to the next change
+			++changeIter;
+		}
+		// Clear the changes list
+		this->_changedAttributes.clear();
+		
+		// Delete all Created objects
+		std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
+		while( createdIter != this->_createdObjects.end() )
+		{
+			// Fetch the created object
+			IndexHashIterator indexIter = this->FetchObject(createdIter->first);
+			ASSERT( indexIter != this->_indexHash.end() );
+			// Delete the object itself
+			BinObject* binObject = indexIter->second.object;
+			ASSERT( binObject != NULL );
+			delete binObject;
+			// Remove object info from cacheHash and cacheQueue
+			this->_indexHash.erase(indexIter);
+			this->_cacheQueue.remove(createdIter->first);
+			// Move on to the next created object
+			++createdIter;
+		}
+		// Clear the created objects list
+		this->_createdObjects.clear();
+	}
+}
+
+
+IndexHashIterator BinFile::TryCreateObject(const MetaID_t &metaID, const Uuid &uuid)
+{
+	// Lookup the metaID in the metaProject to make sure it is valid
+	CoreMetaObject* metaObject = NULL;
+	Result_t result = this->_metaProject->GetObject(metaID, metaObject);
+	ASSERT ( result == S_OK && metaObject != NULL );
+	// Create the binObject and use the passed in Uuid
+	BinObject* binObject = BinObject::Create(metaObject, uuid);
+	ASSERT( binObject != NULL );
+	// Put the object into the index and queue
+	IndexEntry indexEntry = { binObject, EntryLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
+	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
+	ASSERT( insertReturn.second );
+	this->_cacheQueue.push_front(uuid);
+	// Return the hashIterator
+	return insertReturn.first;
+}
+
+
 // --------------------------- Public BinFile Methods ---------------------------
 
 
@@ -1633,8 +1594,7 @@ BinFile::~BinFile()
 	// If in a transaction, abort
 	if( this->_inTransaction ) this->AbortTransaction();
 	// Clean up any open files
-	if( this->_inputFile.is_open() )
-		this->_inputFile.close();
+	if( this->_inputFile.is_open() ) this->_inputFile.close();
 	if( this->_scratchFile.is_open() )
 	{
 		// First, close the scratch file
@@ -1650,8 +1610,14 @@ BinFile::~BinFile()
 	// Clean up compression
 	delete this->_compressor;
 	delete this->_decompressor;
+//	delete this->_encryptor;
+//	delete this->_decryptor;
+//	delete this->_encryptionKey;
+//	delete this->_encryptionIV;
 	// Clear the cache (and its objects)
 	this->FlushCache();
+	// Clear the journal (and its objects)
+//	this->FlushUndoRedo(this->_undoList.size());
 }
 
 
@@ -1666,17 +1632,11 @@ const Result_t BinFile::SetCacheSize(const uint64_t &size) throw()
 }
 
 
-// ------- CoreStorage Interface -------
-
-
 const Result_t BinFile::MetaObject(CoreMetaObject* &coreMetaObject) const throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	// Stupid messing with CONST workaround
-	IndexHash::const_iterator iter = this->_indexHash.end();
-	IndexHash::const_iterator iter2 = this->_openedObject;
 	// If no currently opened object, return NULL
-	if (iter == iter2) return E_INVALID_USAGE;
+	if (this->_indexHash.end() == this->_openedObject) return E_INVALID_USAGE;
 	// Get the metaObject from the associated metaProject
 	BinObject* binObject = this->_openedObject->second.object;
 	ASSERT( binObject != NULL );
@@ -1689,11 +1649,8 @@ const Result_t BinFile::MetaObject(CoreMetaObject* &coreMetaObject) const throw(
 const Result_t BinFile::MetaID(MetaID_t &metaID) const throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
-	// Stupid messing with CONST workaround
-	IndexHash::const_iterator iter = this->_indexHash.end();
-	IndexHash::const_iterator iter2 = this->_openedObject;
 	// If no currently opened object, return METAID_NONE
-	if (iter == iter2) return E_INVALID_USAGE;
+	if (this->_indexHash.end() == this->_openedObject) return METAID_NONE;
 	metaID = this->_openedObject->second.object->GetMetaID();
 	ASSERT( metaID != METAID_NONE );
 	return S_OK;
@@ -1704,7 +1661,6 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 {
 	// Clear the incoming vector and size it
 	objectVector.clear();
-	objectVector.reserve(this->_indexHash.size());
 	// Load it with the indexHash
 	IndexHash::const_iterator indexIter = this->_indexHash.begin();
 	while(indexIter != this->_indexHash.end())
@@ -1974,122 +1930,9 @@ const Result_t BinFile::AbortTransaction(void) throw()
 	this->CloseObject();
 
 	// Is this transaction actually going to do anything - if not, we are done
-	if ( !this->_createdObjects.empty() || !this->_deletedObjects.empty() || !this->_changedAttributes.empty() )
-	{
-		// Must move all deletedObjects back to cache
-		std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
-		while (deletedIter != this->_deletedObjects.end())
-		{
-			// Insert into the cache and queue
-			std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( *deletedIter );
-			ASSERT( insertReturn.second );
-			this->_cacheQueue.push_front(deletedIter->first);
-			// Move to the next deleted object in the list
-			++deletedIter;
-		}
-		// Clear the deleted objects list
-		this->_deletedObjects.clear();
-		
-		// Changed attributes - rollback changes
-		ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
-		while (changeIter != this->_changedAttributes.end())
-		{
-			// Get the attribute change record
-			IndexHashIterator binIter = this->FetchObject(changeIter->first.uuid);
-			ASSERT( binIter != this->_indexHash.end() );
-			BinObject* binObject = binIter->second.object;
-			ASSERT( binObject != NULL );
-			BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
-			ASSERT( binAttribute != NULL );
-			// Is the changed attribute a LONG
-			if (binAttribute->GetValueType() == ValueType::Long())
-			{
-				BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)(changeIter->second);
-				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->oldValue);
-				delete changeRecord;
-			}
-			// Is the changed attribute a REAL
-			else if (binAttribute->GetValueType() == ValueType::Real())
-			{
-				BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange<double>* changeRecord = (AttributeChange<double>*)(changeIter->second);
-				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->oldValue);
-				delete changeRecord;
-			}
-			// Is the changed attribute a STRING
-			else if (binAttribute->GetValueType() == ValueType::String())
-			{
-				BinAttributeString *attribute = (BinAttributeString*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)(changeIter->second);
-				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->oldValue);
-				delete changeRecord;
-			}
-			// Is the changed attribute a LONGPOINTER
-			else if (binAttribute->GetValueType() == ValueType::LongPointer())
-			{
-				BinAttributeLongPointer *attribute = (BinAttributeLongPointer*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
-				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->oldValue);
-				delete changeRecord;
-			}
-			// Is the changed attribute a POINTER
-			else if (binAttribute->GetValueType() == ValueType::Pointer())
-			{
-				BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
-				ASSERT( changeRecord != NULL );
-				this->PointerUpdate(binAttribute->GetAttributeID(), changeIter->first.uuid, attribute->Get(), changeRecord->oldValue);
-				attribute->Set(changeRecord->oldValue);
-				delete changeRecord;
-			}
-			// Is the changed attribute a DICTIONARY
-			else if (binAttribute->GetValueType() == ValueType::Dictionary())
-			{
-				BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
-				ASSERT( attribute != NULL );
-				AttributeChange<DictionaryMap>* changeRecord = (AttributeChange<DictionaryMap>*)(changeIter->second);
-				ASSERT( changeRecord != NULL );
-				attribute->Set(changeRecord->oldValue);
-				delete changeRecord;
-			}
-			// Never should be here!
-			else ASSERT(false);
-			// Move on to the next change
-			++changeIter;
-		}
-		// Clear the changes list
-		this->_changedAttributes.clear();
-		
-		// Delete all Created objects
-		std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
-		while( createdIter != this->_createdObjects.end() )
-		{
-			// Fetch the created object
-			IndexHashIterator indexIter = this->FetchObject(createdIter->first);
-			ASSERT( indexIter != this->_indexHash.end() );
-			// Delete the object itself
-			BinObject* binObject = indexIter->second.object;
-			ASSERT( binObject != NULL );
-			delete binObject;
-			// Remove object info from cacheHash and cacheQueue
-			this->_indexHash.erase(indexIter);
-			this->_cacheQueue.remove(createdIter->first);
-			// Move on to the next created object
-			++createdIter;
-		}
-		// Clear the created objects list
-		this->_createdObjects.clear();
-	}
+	if (!this->_createdObjects.empty() ||
+		!this->_deletedObjects.empty() ||
+		!this->_changedAttributes.empty() ) this->TryAbortTransaction();
 	// We were successful
 	this->_openedObject = this->_indexHash.end();
 	this->_inTransaction = false;
@@ -2128,19 +1971,10 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	if ( result != S_OK || metaObject == NULL ) return E_METAID;
 	// Use a new Uuid to make sure it is unique
 	Uuid uuid;
-	BinObject* binObject = BinObject::Create(metaObject, uuid);
-	ASSERT( binObject != NULL );
-
-	// Put the object into the index and queue
-	IndexEntry indexEntry = { binObject, EntryLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
-	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
-	ASSERT( insertReturn.second );
-	this->_cacheQueue.push_front(uuid);
-	// Make sure there is space in the queue
-	this->CheckCacheSize();
+	IndexHashIterator hashIter = this->TryCreateObject(metaID, uuid);
 	// Put the object into the createdObjects list
 	this->_createdObjects.push_front(std::make_pair(uuid, metaID));
-	this->_openedObject = insertReturn.first;
+	this->_openedObject = hashIter;
 	// Return the new UUID
 	newUuid = uuid;
 	return S_OK;
@@ -2415,118 +2249,8 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 
 	// Ok, so we are doing something, mark the binFile as dirty
 	this->MarkDirty();
-	// Must restore all objects in deletedObjects list
-	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
-	while ( deletedIter != this->_deletedObjects.end() )
-	{
-		// Restore the object itself (just move from deletedObjects into indexHash)
-		std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( *deletedIter );
-		ASSERT( insertReturn.second );
-		this->_cacheQueue.push_front(deletedIter->first);
-		// Make sure there is space in the queue
-		this->CheckCacheSize();
-		// Move to the next deleted object in the list
-		++deletedIter;
-	}
-	// Must unchange all changed attributes
-	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
-	while (changeIter != this->_changedAttributes.end())
-	{
-		// Get the attribute change record
-		IndexHashIterator binIter = this->FetchObject(changeIter->first.uuid);
-		ASSERT( binIter != this->_indexHash.end() );
-		BinObject* binObject = binIter->second.object;
-		ASSERT( binObject != NULL );
-		BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
-		ASSERT( binAttribute != NULL );
-		// Is the changed attribute a LONG
-		if (binAttribute->GetValueType() == ValueType::Long())
-		{
-			BinAttributeLong *attribute = (BinAttributeLong*)binAttribute;
-			ASSERT( attribute != NULL );
-			AttributeChange<int32_t>* changeRecord = (AttributeChange<int32_t>*)(changeIter->second);
-			ASSERT( changeRecord != NULL );
-			attribute->Set(changeRecord->oldValue);
-			delete changeRecord;
-		}
-		// Is the changed attribute a REAL
-		else if (binAttribute->GetValueType() == ValueType::Real())
-		{
-			BinAttributeReal *attribute = (BinAttributeReal*)binAttribute;
-			ASSERT( attribute != NULL );
-			AttributeChange<double>* changeRecord = (AttributeChange<double>*)(changeIter->second);
-			ASSERT( changeRecord != NULL );
-			attribute->Set(changeRecord->oldValue);
-			delete changeRecord;
-		}
-		// Is the changed attribute a STRING
-		else if (binAttribute->GetValueType() == ValueType::String())
-		{
-			BinAttributeString *attribute = (BinAttributeString*)binAttribute;
-			ASSERT( attribute != NULL );
-			AttributeChange<std::string>* changeRecord = (AttributeChange<std::string>*)(changeIter->second);
-			ASSERT( changeRecord != NULL );
-			attribute->Set(changeRecord->oldValue);
-			delete changeRecord;
-		}
-		// Is the changed attribute a LONGPOINTER
-		else if (binAttribute->GetValueType() == ValueType::LongPointer())
-		{
-			BinAttributeLongPointer *attribute = (BinAttributeLongPointer*)binAttribute;
-			ASSERT( attribute != NULL );
-			AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
-			ASSERT( changeRecord != NULL );
-			attribute->Set(changeRecord->oldValue);
-			delete changeRecord;
-		}
-		// Is the changed attribute a POINTER
-		else if (binAttribute->GetValueType() == ValueType::Pointer())
-		{
-			BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
-			ASSERT( attribute != NULL );
-			AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
-			ASSERT( changeRecord != NULL );
-			this->PointerUpdate(binAttribute->GetAttributeID(), changeIter->first.uuid, attribute->Get(), changeRecord->oldValue);
-			attribute->Set(changeRecord->oldValue);
-			delete changeRecord;
-		}
-		// Is the changed attribute a DICTIONARY
-		else if (binAttribute->GetValueType() == ValueType::Dictionary())
-		{
-			BinAttributeDictionary *attribute = (BinAttributeDictionary*)binAttribute;
-			ASSERT( attribute != NULL );
-			AttributeChange<DictionaryMap>* changeRecord = (AttributeChange<DictionaryMap>*)(changeIter->second);
-			ASSERT( changeRecord != NULL );
-			attribute->Set(changeRecord->oldValue);
-			delete changeRecord;
-		}
-		// Never should be here!
-		else ASSERT(false);
-		// Move on to the next change
-		++changeIter;
-	}
-	// Delete the created objects
-	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
-	while (createdIter != this->_createdObjects.end())
-	{
-		// Fetch the created object
-		IndexHashIterator indexIter = this->FetchObject(createdIter->first);
-		ASSERT( indexIter != this->_indexHash.end() );
-		// Delete the object itself
-		BinObject* binObject = indexIter->second.object;
-		ASSERT( binObject != NULL );
-		delete binObject;
-		// Remove object info from cacheHash and cacheQueue
-		this->_indexHash.erase(indexIter);
-		this->_cacheQueue.remove(createdIter->first);
-		// Move on to the next created object
-		++createdIter;
-	}
-	// Clear the transaction lists
-	this->_createdObjects.clear();
-	this->_changedAttributes.clear();
-	this->_deletedObjects.clear();
-
+	// Undo all of the changes (save as calling an AbortTransaction really)
+	this->TryAbortTransaction();
 	// Return a tag (if any)
 	tag = entryIter->tag;
 	// Move journal entry to redo list
@@ -2556,20 +2280,8 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while (createdIter != this->_createdObjects.end())
 	{
-		// Lookup the metaID in the metaProject to make sure it is valid
-		CoreMetaObject* metaObject = NULL;
-		Result_t result = this->_metaProject->GetObject(createdIter->second, metaObject);
-		ASSERT ( result == S_OK && metaObject != NULL );
-		// Create the binObject and use the old Uuid
-		BinObject* binObject = BinObject::Create(metaObject, createdIter->first);
-		ASSERT( binObject != NULL );
-		// Put the object into the index and queue
-		IndexEntry indexEntry = { binObject, EntryLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
-		std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(createdIter->first, indexEntry) );
-		ASSERT( insertReturn.second );
-		this->_cacheQueue.push_front(createdIter->first);
-		// Make sure there is space in the queue
-		this->CheckCacheSize();
+		// Just call to TryCreateObject (don't care about the return IndexHashIterator)
+		this->TryCreateObject(createdIter->second, createdIter->first);
 		// Move on to the next created object
 		++createdIter;
 	}
@@ -2577,17 +2289,72 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();
 	while (changeIter != this->_changedAttributes.end())
 	{
-		// Make the attribute value change
-		// TODO: Make the attribute value change
-		// Move on to the next change
+		// Get the attribute change record
+		IndexHashIterator binIter = this->FetchObject(changeIter->first.uuid);
+		ASSERT( binIter != this->_indexHash.end() );
+		BinObject* binObject = binIter->second.object;
+		ASSERT( binObject != NULL );
+		BinAttribute* binAttribute = binObject->GetAttribute(changeIter->first.attrID);
+		ASSERT( binAttribute != NULL );
+		// Is the changed attribute a LONG
+		if (binAttribute->GetValueType() == ValueType::Long())
+		{
+			// Change attribute value back to old value
+			_AttributeChange<BinAttributeLong,int32_t>(binAttribute, changeIter->second, false);
+		}
+		// Is the changed attribute a REAL
+		else if (binAttribute->GetValueType() == ValueType::Real())
+		{
+			// Change attribute value back to old value
+			_AttributeChange<BinAttributeReal,double>(binAttribute, changeIter->second, false);
+		}
+		// Is the changed attribute a STRING
+		else if (binAttribute->GetValueType() == ValueType::String())
+		{
+			// Change attribute value back to old value
+			_AttributeChange<BinAttributeString,std::string>(binAttribute, changeIter->second, false);
+		}
+		// Is the changed attribute a LONGPOINTER
+		else if (binAttribute->GetValueType() == ValueType::LongPointer())
+		{
+			// Change attribute value back to old value
+			_AttributeChange<BinAttributeLongPointer,Uuid>(binAttribute, changeIter->second, false);
+		}
+		// Is the changed attribute a POINTER
+		else if (binAttribute->GetValueType() == ValueType::Pointer())
+		{
+			BinAttributePointer *attribute = (BinAttributePointer*)binAttribute;
+			ASSERT( attribute != NULL );
+			AttributeChange<Uuid>* changeRecord = (AttributeChange<Uuid>*)(changeIter->second);
+			ASSERT( changeRecord != NULL );
+			this->PointerUpdate(binAttribute->GetAttributeID(), changeIter->first.uuid, attribute->Get(), changeRecord->oldValue);
+			attribute->Set(changeRecord->newValue);
+			delete changeRecord;
+		}
+		// Is the changed attribute a DICTIONARY
+		else if (binAttribute->GetValueType() == ValueType::Dictionary())
+		{
+			// Change attribute value back to old value
+			_AttributeChange<BinAttributeDictionary,DictionaryMap>(binAttribute, changeIter->second, false);
+		}
+		// Never should be here!
+		else ASSERT(false);
+		// Move on to the next attributeChange
 		++changeIter;
 	}
 	// Must delete all objects in deletedObjects list
 	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 	while ( deletedIter != this->_deletedObjects.end() )
 	{
+		// First, fetch the object to the cache
+		this->FetchObject(deletedIter->first);
+		// Now, remove object from cacheQueue and indexHash
+		this->_cacheQueue.remove(deletedIter->first);
+		this->_indexHash.erase(deletedIter->first);
 		// Delete the object itself
-		// TODO: Delete the object itself
+		BinObject* binObject = deletedIter->second.object;
+		ASSERT( binObject != NULL );
+		delete binObject;
 		// Move to the next deleted object in the list
 		++deletedIter;
 	}
@@ -2636,26 +2403,6 @@ const Result_t BinFile::EndJournal(void) throw()
 }
 
 
-const Result_t BinFile::EnableCompression(void) throw()
-{
-	// Must not be in a transaction
-	if( this->_inTransaction ) return E_TRANSACTION;
-	// Mark compression as on
-	this->_isCompressed = true;
-	return S_OK;
-}
-
-
-const Result_t BinFile::DisableCompression(void) throw()
-{
-	// Must not be in a transaction
-	if( this->_inTransaction ) return E_TRANSACTION;
-	// Mark compression as off
-	this->_isCompressed = false;
-	return S_OK;
-}
-
-
 const Result_t BinFile::EncryptionKey(std::vector<char> &key) const throw()
 {
 	// Is encryption not enabled?
@@ -2700,6 +2447,9 @@ const Result_t BinFile::DisableEncryption(void) throw()
  *	5) Delete Object backpointer clean up
  *	6) Finish journal caching scheme
  *	7) Clean up ASSERT usage so that ASSERT can equal "" in Release
+ *	8) Consider removal of IsConnected
+ *	9) Do some serious leak checking
+ *	10) Have you thought about performance profiling
 ***/
 
 
