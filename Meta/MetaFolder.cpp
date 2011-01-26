@@ -167,19 +167,26 @@ const Result_t MetaFolder::CreateAtom(MetaAtom* &metaAtom) throw()
 {
 	// Get the associated coreProject
 	CoreProject* coreProject = NULL;
-	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	Result_t result = this->_coreObject->Project(coreProject);
+	ASSERT( result == S_OK );
 	ASSERT( coreProject != NULL );
 	// Start a transaction
-	ASSERT( coreProject->BeginTransaction(false) == S_OK );
+	result = coreProject->BeginTransaction(false);
+	ASSERT( result == S_OK );
 	// Create a METAID_METAATOM object
 	CoreObject coreObject;
-	ASSERT( coreProject->CreateObject(METAID_METAATOM, coreObject) == S_OK );
+	result = coreProject->CreateObject(METAID_METAATOM, coreObject);
+	ASSERT( result == S_OK );
 	// Link the new child to this object as parent
-	Uuid uuid;
-	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
-	ASSERT( coreObject->SetAttributeValue(ATTRID_DEFFCO_PTR, uuid) == S_OK );
+	Uuid uuid = Uuid::Null();
+	result = this->_coreObject->GetUuid(uuid);
+	ASSERT( result == S_OK );
+	ASSERT( uuid != Uuid::Null() );
+	result = coreObject->SetAttributeValue(ATTRID_DEFFCO_PTR, uuid);
+	ASSERT( result == S_OK );
 	// Commit transaction at the CoreProject level
-	coreProject->CommitTransaction();
+	result = coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
 	// Now use the core object to create a MetaAtom
 	metaAtom = new MetaAtom(coreObject, this->_metaProject);
 	ASSERT( metaAtom != NULL );
@@ -191,19 +198,26 @@ const Result_t MetaFolder::CreateAttribute(MetaAttribute* &metaAttribute) throw(
 {
 	// Get the associated coreProject
 	CoreProject* coreProject = NULL;
-	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	Result_t result = this->_coreObject->Project(coreProject);
+	ASSERT( result == S_OK );
 	ASSERT( coreProject != NULL );
 	// Start a transaction
-	ASSERT( coreProject->BeginTransaction(false) == S_OK );
+	result = coreProject->BeginTransaction(false);
+	ASSERT( result == S_OK );
 	// Create a METAID_METAATTRIBUTE object
 	CoreObject coreObject;
-	ASSERT( coreProject->CreateObject(METAID_METAATTRIBUTE, coreObject) == S_OK );
+	result = coreProject->CreateObject(METAID_METAATTRIBUTE, coreObject);
+	ASSERT( result == S_OK );
 	// Link the new child to this object as parent
-	Uuid uuid;
-	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
-	ASSERT( coreObject->SetAttributeValue(ATTRID_DEFATTR_PTR, uuid) == S_OK );
+	Uuid uuid = Uuid::Null();
+	result = this->_coreObject->GetUuid(uuid);
+	ASSERT( result == S_OK );
+	ASSERT( uuid != Uuid::Null() );
+	result = coreObject->SetAttributeValue(ATTRID_DEFATTR_PTR, uuid);
+	ASSERT( result == S_OK );
 	// Commit transaction at the CoreProject level
-	coreProject->CommitTransaction();
+	result = coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
 	// Now use the core object to create a MetaAttribute
 	metaAttribute = new MetaAttribute(coreObject, this->_metaProject);
 	ASSERT( metaAttribute != NULL );

@@ -102,16 +102,17 @@ CoreProject::~CoreProject()
 			objBase->MetaObject(metaObj);
 			
 			std::string name, metaName;
-			Result_t result;
 			metaObj->GetName(metaName);
-			ASSERT( result = this->BeginTransaction(true) == S_OK );
+			Result_t result = this->BeginTransaction(true);
+			ASSERT( result == S_OK );
 			result = objBase->GetAttributeValue(ATTRID_NAME, name);
 			if ( result != S_OK )
 			{
 				std::cout << metaObj;
 				name = "";
 			}
-			ASSERT( result = this->CommitTransaction() == S_OK );
+			result = this->CommitTransaction();
+			ASSERT( result == S_OK );
 			std::cout << "\tForgotten Object: (" << metaName << ") named " << name << ".\n";
 			++hashIter;
 		}
@@ -243,8 +244,10 @@ const Result_t CoreProject::CommitTransaction(void) throw()
 		while( deletedIter != transaction.deletedObjects.end() )
 		{
 			// Set storage to this object and delete it
-			ASSERT( this->_storage->OpenObject(*deletedIter) == S_OK );
-			ASSERT( this->_storage->DeleteObject() == S_OK );
+			Result_t result = this->_storage->OpenObject(*deletedIter);
+			ASSERT( result == S_OK );
+			result = this->_storage->DeleteObject();
+			ASSERT( result == S_OK );
 			// Move on to the next deleted object
 			++deletedIter;
 		}
@@ -281,8 +284,10 @@ const Result_t CoreProject::AbortTransaction(void) throw()
 	while( createdIter != transaction.createdObjects.end() )
 	{
 		// Set storage to this object and delete it
-		ASSERT( this->_storage->OpenObject(*createdIter) == S_OK );
-		ASSERT( this->_storage->DeleteObject() == S_OK );
+		Result_t result = this->_storage->OpenObject(*createdIter);
+		ASSERT( result == S_OK );
+		result = this->_storage->DeleteObject();
+		ASSERT( result == S_OK );
 		// Move on to the next created object
 		++createdIter;
 	}
@@ -333,7 +338,8 @@ const Result_t CoreProject::CreateObject(const MetaID_t &metaID, CoreObject &obj
 	if( result != S_OK )
 	{
 		// Delete that object from storage
-		ASSERT( this->_storage->DeleteObject() == S_OK );
+		Result_t tmpResult = this->_storage->DeleteObject();
+		ASSERT( tmpResult == S_OK );
 		return result;
 	}
 	ASSERT( object != NULL );
@@ -347,7 +353,8 @@ const Result_t CoreProject::RootObject(CoreObject &coreObject) throw()
 {
 	// Get the root object from the storage
 	Uuid uuid = Uuid::Null();
-	ASSERT( this->_storage->RootUuid(uuid) == S_OK );
+	Result_t result = this->_storage->RootUuid(uuid);
+	ASSERT( result == S_OK );
 	ASSERT( uuid != Uuid::Null() );
 	return this->Object(uuid, coreObject);
 }

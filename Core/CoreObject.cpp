@@ -19,7 +19,8 @@ CoreObjectBase::CoreObjectBase(CoreProject *project, CoreMetaObject *metaObject,
 
 	// Create all of the attributes
 	std::list<CoreMetaAttribute*> metaAttributes;
-	ASSERT( this->_metaObject->GetAttributes(metaAttributes)== S_OK );
+	Result_t result = this->_metaObject->GetAttributes(metaAttributes);
+	ASSERT( result == S_OK );
 	std::list<CoreMetaAttribute*>::iterator metaAttrIter = metaAttributes.begin();
 	while( metaAttrIter != metaAttributes.end() )
 	{
@@ -38,13 +39,16 @@ const Result_t CoreObjectBase::Create(CoreProject *project, const Uuid &uuid, Co
 	if( uuid == Uuid::Null() ) return E_INVALID_USAGE;
 	
 	CoreMetaProject *metaProject = NULL;
-	ASSERT( project->MetaProject(metaProject) == S_OK );
+	Result_t result = project->MetaProject(metaProject);
+	ASSERT( result == S_OK );
+	ASSERT( metaProject != NULL );
 	// Set storage to point at this object and get the coreMetaObject
 	ICoreStorage* storage;
 	storage = project->SetStorageObject(uuid);
 	ASSERT( storage != NULL );
 	CoreMetaObject *metaObject = NULL;
-	ASSERT( storage->MetaObject(metaObject) == S_OK );
+	result = storage->MetaObject(metaObject);
+	ASSERT( result == S_OK );
 	ASSERT( metaObject != NULL );
 	// Create the actual coreObjectBase (new a shiny new & unique Uuid)
 	CoreObjectBase* coreObjectBase = new CoreObjectBase(project, metaObject, uuid);
@@ -77,7 +81,8 @@ void CoreObjectBase::RegisterAttribute(const AttrID_t &attrID, CoreAttributeBase
 	ASSERT( attrID != ATTRID_NONE );
 	ASSERT( attribute != NULL );
 	// TODO: We should really make sure this attribute belongs and is not already in the list
-	ASSERT( this->_attributeMap.insert( std::make_pair(attrID, attribute) ).second );
+	bool retVal = this->_attributeMap.insert( std::make_pair(attrID, attribute) ).second;
+	ASSERT( retVal );
 }
 
 

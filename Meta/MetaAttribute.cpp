@@ -87,9 +87,11 @@ const Result_t MetaAttribute::GetDefaultValue(bool &value) const throw()
 
 const Result_t MetaAttribute::SetDefaultValue(const std::string &name) throw()
 {
-	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t tmpResult = this->_metaProject->BeginTransaction();
+	ASSERT( tmpResult == S_OK );
 	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
-	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	tmpResult = this->_metaProject->CommitTransaction();
+	ASSERT( tmpResult == S_OK );
 	return result;
 }
 

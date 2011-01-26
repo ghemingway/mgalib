@@ -31,7 +31,9 @@ const Result_t CoreMetaProject::GetObject(const MetaID_t &metaID, CoreMetaObject
 		ASSERT( *objectIter != NULL );
 		// Did we find the right object
 		MetaID_t tmpMetaID = METAID_NONE;
-		ASSERT( (*objectIter)->GetMetaID(tmpMetaID) == S_OK );
+		Result_t result = (*objectIter)->GetMetaID(tmpMetaID);
+		ASSERT( result == S_OK );
+		ASSERT( tmpMetaID != METAID_NONE );
 		if( tmpMetaID == metaID )
 		{
 			// If so, return its pointer

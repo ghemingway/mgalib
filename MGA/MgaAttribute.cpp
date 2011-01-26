@@ -13,11 +13,13 @@ MgaAttribute::MgaAttribute(MetaRef_t &metaRef, MgaFCOBase* &fcoBase, MgaProject*
 		  _prevPtr(NULL), _next(NULL), _loadStatus(/*ATTSTATUS_INVALID*/) 
 {
 //	this->_metaAttribute = this->_mgaProject->FindMetaRef(metaRef);
-	ASSERT( this->_metaAttribute->GetValueType(this->_attribType) == S_OK );
+	Result_t result = this->_metaAttribute->GetValueType(this->_attribType);
+	ASSERT( result == S_OK );
 	this->_inputType = this->_attribType;
 	if(this->_attribType == ATTVAL_ENUM) this->_attribType = ATTVAL_STRING;
 	std::string metaName;
-	ASSERT( this->_metaAttribute->GetName(metaName) == S_OK );
+	result = this->_metaAttribute->GetName(metaName);
+	ASSERT( result == S_OK );
 	this->_regPrefix.append(metaName);
 }
 

@@ -121,7 +121,7 @@
 /* Begin PBXFileReference section */
 		5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaEnumItem.cpp; path = ../../Meta/MetaEnumItem.cpp; sourceTree = SOURCE_ROOT; };
 		5820C6D412DCB25200D4C50E /* MetaRole.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaRole.cpp; path = ../../Meta/MetaRole.cpp; sourceTree = SOURCE_ROOT; };
-		5843398F125B8AFC00DD904D /* MGALibTestHarness */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MGALibTestHarness; sourceTree = BUILT_PRODUCTS_DIR; };
+		5843398F125B8AFC00DD904D /* TestHarness */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TestHarness; sourceTree = BUILT_PRODUCTS_DIR; };
 		5843905912B96FEB00F4AB58 /* highres_timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = highres_timing.h; path = ../../Arch/highres_timing.h; sourceTree = SOURCE_ROOT; };
 		5843905B12B96FF800F4AB58 /* highres_timing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = highres_timing.cpp; path = ../../Arch/osx/highres_timing.cpp; sourceTree = SOURCE_ROOT; };
 		5843905C12B96FF800F4AB58 /* platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = platform.cpp; path = ../../Arch/osx/platform.cpp; sourceTree = SOURCE_ROOT; };
@@ -255,7 +255,7 @@
 			isa = PBXGroup;
 			children = (
 				58E90A1F124CEFFF00B8E3CF /* MGALib.framework */,
-				5843398F125B8AFC00DD904D /* MGALibTestHarness */,
+				5843398F125B8AFC00DD904D /* TestHarness */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -663,9 +663,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		5843398E125B8AFC00DD904D /* MGALibTestHarness */ = {
+		5843398E125B8AFC00DD904D /* TestHarness */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58433995125B8B2200DD904D /* Build configuration list for PBXNativeTarget "MGALibTestHarness" */;
+			buildConfigurationList = 58433995125B8B2200DD904D /* Build configuration list for PBXNativeTarget "TestHarness" */;
 			buildPhases = (
 				5843398C125B8AFC00DD904D /* Sources */,
 				5843398D125B8AFC00DD904D /* Frameworks */,
@@ -675,9 +675,9 @@
 			dependencies = (
 				5843399B125B8B4E00DD904D /* PBXTargetDependency */,
 			);
-			name = MGALibTestHarness;
+			name = TestHarness;
 			productName = GMEHarness;
-			productReference = 5843398F125B8AFC00DD904D /* MGALibTestHarness */;
+			productReference = 5843398F125B8AFC00DD904D /* TestHarness */;
 			productType = "com.apple.product-type.tool";
 		};
 		58E90A1E124CEFFF00B8E3CF /* MGALib */ = {
@@ -715,7 +715,7 @@
 			projectRoot = "";
 			targets = (
 				58E90A1E124CEFFF00B8E3CF /* MGALib */,
-				5843398E125B8AFC00DD904D /* MGALibTestHarness */,
+				5843398E125B8AFC00DD904D /* TestHarness */,
 				58542C1512919C9600947FA9 /* Swig Generation */,
 			);
 		};
@@ -874,9 +874,10 @@
 				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../Lib\"";
 				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
-				PRODUCT_NAME = MGALibTestHarness;
+				PRODUCT_NAME = TestHarness;
 				RUN_CLANG_STATIC_ANALYZER = NO;
 				USER_HEADER_SEARCH_PATHS = .;
+				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
 		};
@@ -886,22 +887,24 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../googletest/xcode/build/Release\"",
-					"\"$(SRCROOT)/../../../../Desktop/gtest-1.5.0/xcode/build/Release\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../googletest/make\"",
-					"\"$(SRCROOT)/Lib\"",
-					"\"$(SRCROOT)/../../Lib\"",
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				HEADER_SEARCH_PATHS = (
+					../..,
+					../../Include,
+					../../Include/googletest,
+					../../Include/googletest/include,
 				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../Lib\"";
+				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				PRODUCT_NAME = GMEHarness;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				PRODUCT_NAME = TestHarness;
+				VALID_ARCHS = "i386 x86_64";
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -961,38 +964,43 @@
 				PRODUCT_NAME = MGALib;
 				RUN_CLANG_STATIC_ANALYZER = NO;
 				USER_HEADER_SEARCH_PATHS = .;
+				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
 		};
 		58E90A22124CEFFF00B8E3CF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;
+				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				HEADER_SEARCH_PATHS = (
+					../..,
+					../../Include,
+					../../Include/utf8/source,
+				);
 				INFOPLIST_FILE = "MGALib-Info.plist";
-				INSTALL_PATH = "$(HOME)/Library/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/Lib\"",
-					"\"$(SRCROOT)/../../Lib\"",
-					"\"$(SRCROOT)/../../Include/cryptopp\"",
-				);
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-					"-framework",
-					AppKit,
-				);
+				INSTALL_PATH = /Library/Frameworks;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../Lib\"";
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
-				PRODUCT_NAME = GMECore;
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				PRODUCT_NAME = MGALib;
+				SHARED_PRECOMPS_DIR = "";
+				VALID_ARCHS = "i386 x86_64";
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -1009,7 +1017,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58433995125B8B2200DD904D /* Build configuration list for PBXNativeTarget "MGALibTestHarness" */ = {
+		58433995125B8B2200DD904D /* Build configuration list for PBXNativeTarget "TestHarness" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58433991125B8AFD00DD904D /* Debug */,

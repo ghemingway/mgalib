@@ -15,7 +15,8 @@ const Result_t CoreAttributeBase::Create(CoreObjectBase *parent, CoreMetaAttribu
 	// Create the attribute, base it on the correct type
 	CoreAttributeBase* attribute = NULL;
 	ValueType valueType;
-	ASSERT( metaAttribute->GetValueType(valueType) == S_OK );
+	Result_t result = metaAttribute->GetValueType(valueType);
+	ASSERT( result == S_OK );
 	// Now actually create the attribute
 	if(valueType == ValueType::Long())
 		attribute = new CoreAttributeLong(parent, metaAttribute);
@@ -48,8 +49,10 @@ ICoreStorage* CoreAttributeBase::SetStorageObject(void) const
 void CoreAttributeBase::RegisterTransactionItem(void)
 {
 	// Get to the parent CoreProject
-	CoreProject* coreProject;
-	ASSERT( this->_parent->Project(coreProject) == S_OK );
+	CoreProject* coreProject = NULL;
+	Result_t result = this->_parent->Project(coreProject);
+	ASSERT( result == S_OK );
+	ASSERT( coreProject != NULL );
 	// And, register this attribute as changing
 	coreProject->RegisterTransactionItem(this);
 }
@@ -81,7 +84,9 @@ const Result_t CoreAttributeBase::InWriteTransaction(bool &flag) const throw()
 const Result_t CoreAttributeBase::ResolveBackpointer(const AttrID_t &attrID, const Uuid &newValue, const Uuid &oldValue) throw()
 {
 	CoreProject* coreProject = NULL;
-	ASSERT( this->_parent->Project(coreProject) == S_OK );
+	Result_t result = this->_parent->Project(coreProject);
+	ASSERT( result == S_OK );
+	ASSERT( coreProject != NULL );
 	// Make sure value is valid (either a valid object or NULL - and pointed to has good backpointer collection)
 	CoreAttributeTemplateBase< std::list<Uuid> >* attribute = NULL;
 	if (newValue != Uuid::Null())
@@ -114,7 +119,8 @@ const Result_t CoreAttributeBase::ResolveBackpointer(const AttrID_t &attrID, con
 		CoreAttributeTemplateBase< std::list<Uuid> >* oldAttr = (CoreAttributeTemplateBase< std::list<Uuid> >*)basePointer;
 		// Make sure attribute's values have been loaded
 		std::list<Uuid> tmpList;
-		ASSERT( oldAttr->GetValue(tmpList) == S_OK );
+		result = oldAttr->GetValue(tmpList);
+		ASSERT( result == S_OK );
 		// Remove oldValue from backpointerCollection and set attribute in oldObject (all by reference)
 		std::list<Uuid> &oldList = oldAttr->_values.back();
 		oldList.remove(oldValue);
@@ -124,7 +130,8 @@ const Result_t CoreAttributeBase::ResolveBackpointer(const AttrID_t &attrID, con
 	{
 		// Make sure attribute's values have been loaded
 		std::list<Uuid> tmpList;
-		ASSERT( attribute->GetValue(tmpList) == S_OK );
+		result = attribute->GetValue(tmpList);
+		ASSERT( result == S_OK );
 		// Get the attributes list of backpointers (notice it is by reference)
 		std::list<Uuid> &bpList = attribute->_values.back();
 		// Add newValue to backpointer list (still by reference here)
@@ -141,8 +148,10 @@ _parent(parent), _metaAttribute(metaAttribute), _isDirty(false), _refCount(0)
 	ASSERT( parent != NULL );
 	ASSERT( metaAttribute != NULL );
 	// Register the attribute
-	AttrID_t attrID;
-	ASSERT( metaAttribute->GetAttributeID(attrID) == S_OK );
+	AttrID_t attrID = ATTRID_NONE;
+	Result_t result = metaAttribute->GetAttributeID(attrID);
+	ASSERT( result == S_OK );
+	ASSERT( attrID != ATTRID_NONE );
 	parent->RegisterAttribute(attrID, this);
 }
 
@@ -155,8 +164,10 @@ CoreAttributeBase::~CoreAttributeBase()
 	ASSERT( this->_metaAttribute != NULL );
 	ASSERT( this->_parent != NULL );
 	// Unregister the attribute from the parent
-	AttrID_t attrID;
-	ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );	
+	AttrID_t attrID = ATTRID_NONE;
+	Result_t result = this->_metaAttribute->GetAttributeID(attrID);
+	ASSERT( result == S_OK );
+	ASSERT( attrID != ATTRID_NONE );	
 	this->_parent->UnregisterAttribute(attrID);
 }
 

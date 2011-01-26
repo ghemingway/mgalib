@@ -38,11 +38,13 @@ protected:
 		Result_t result = this->_coreObject->GetAttributeValue(attrID, uuid);
 		if ( result != S_OK ) return result;
 		// Get a coreObject for the uuid
-		CoreProject* coreProject;
-		ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+		CoreProject* coreProject = NULL;
+		result = this->_coreObject->Project(coreProject);
+		ASSERT( result == S_OK );
 		ASSERT( coreProject != NULL );
 		CoreObject coreObject;
-		ASSERT( coreProject->Object(uuid, coreObject) == S_OK );
+		result = coreProject->Object(uuid, coreObject);
+		ASSERT( result == S_OK );
 		ASSERT( coreObject != NULL );
 		// Create a new MetaBase object and cast to the correct type
 		obj = (T*)new MetaBase(coreObject, this->_metaProject);
