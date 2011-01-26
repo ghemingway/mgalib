@@ -169,14 +169,14 @@ static inline const Result_t _CheckUTF8(const std::string &value)
 // --------------------------- Compression and Encryption Support --------------------------- //
 
 
-static inline uint32_t _Compress(CryptoPP::Filter *compressor, char* &buffer, const uint32_t &inputSizeB)
+static inline uint64_t _Compress(CryptoPP::Filter *compressor, char* &buffer, const uint64_t &inputSizeB)
 {
 	CryptoPP::ZlibCompressor tmpCompressor;
 	// Clear and load up the compressor
 	tmpCompressor.Put((const byte*)buffer, (size_t)inputSizeB);
 	tmpCompressor.MessageEnd();
 	// Get the new size
-	uint32_t outputSizeB = (uint32_t)tmpCompressor.MaxRetrievable();
+	uint64_t outputSizeB = (uint64_t)tmpCompressor.MaxRetrievable();
 	ASSERT( outputSizeB != 0 );
 	delete buffer;
 	buffer = new char[outputSizeB];
@@ -186,14 +186,14 @@ static inline uint32_t _Compress(CryptoPP::Filter *compressor, char* &buffer, co
 }
 
 
-static inline uint32_t _Decompress(CryptoPP::Filter *decompressor, char* &buffer, const uint32_t &inputSizeB)
+static inline uint64_t _Decompress(CryptoPP::Filter *decompressor, char* &buffer, const uint64_t &inputSizeB)
 {
 	// Clear the decompressor and load it up
 	CryptoPP::ZlibDecompressor tmpDecompressor;
 	tmpDecompressor.Put((const byte*)buffer, (size_t)inputSizeB);
 	tmpDecompressor.MessageEnd();
 	// Get the decompressed size
-	uint32_t outputSizeB = tmpDecompressor.MaxRetrievable();
+	uint64_t outputSizeB = (uint64_t)tmpDecompressor.MaxRetrievable();
 	ASSERT( outputSizeB != 0 );
 	// Resize the buffer
 	delete buffer;
@@ -204,7 +204,7 @@ static inline uint32_t _Decompress(CryptoPP::Filter *decompressor, char* &buffer
 }
 
 
-static inline void _Encrypt(CryptoPP::Filter *filter, const char* key, const char* iv, char* &buffer, const uint32_t &sizeB)
+static inline void _Encrypt(CryptoPP::Filter *filter, const char* key, const char* iv, char* &buffer, const uint64_t &sizeB)
 {
 	// Create the encryptor and filter
 	CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
@@ -212,16 +212,16 @@ static inline void _Encrypt(CryptoPP::Filter *filter, const char* key, const cha
 						   (const byte*)iv, BINFILE_ENCRYPTIONIVSIZE);
 	CryptoPP::AuthenticatedEncryptionFilter tmpFilter( encryptor );
 	// Load up our data
-	tmpFilter.Put( (const byte*)buffer, sizeB );
+	tmpFilter.Put( (const byte*)buffer, (size_t)sizeB );
 	tmpFilter.MessageEnd();
 	// Make sure we get out the same number of bytes we put in
-	ASSERT( sizeB == tmpFilter.MaxRetrievable() );
+	ASSERT( sizeB == (uint64_t)tmpFilter.MaxRetrievable() );
 	// Encrypt and get data
-	tmpFilter.Get( (byte*)buffer, sizeB );
+	tmpFilter.Get( (byte*)buffer, (size_t)sizeB );
 }
 
 
-static inline void _Decrypt(CryptoPP::Filter *filter, const char* key, const char* iv, char* &buffer, const uint32_t &sizeB)
+static inline void _Decrypt(CryptoPP::Filter *filter, const char* key, const char* iv, char* &buffer, const uint64_t &sizeB)
 {
 	// Create the decryptor and filter
 	CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
@@ -232,7 +232,7 @@ static inline void _Decrypt(CryptoPP::Filter *filter, const char* key, const cha
 	tmpFilter.Put( (const byte*)buffer, (size_t)sizeB );
 	tmpFilter.MessageEnd();
 	// Make sure we get out the same number of bytes we put in
-	ASSERT( sizeB == tmpFilter.MaxRetrievable() );
+	ASSERT( sizeB == (uint64_t)tmpFilter.MaxRetrievable() );
 	// Decrypt and get data
 	tmpFilter.Get( (byte*)buffer, (size_t)sizeB );
 }
@@ -799,7 +799,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	ASSERT( stream.is_open() );
 	// Size the buffer
 	uint64_t indexSizeB = originalIndexSizeB;
-	char* buffer = new char[indexSizeB];
+	char* buffer = new char[(size_t)indexSizeB];
 	// Read the index from the file itself
 	stream.read(buffer, indexSizeB);
 	// Is there encryption
