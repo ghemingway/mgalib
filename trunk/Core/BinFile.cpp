@@ -179,7 +179,7 @@ static inline uint64_t _Compress(CryptoPP::Filter *compressor, char* &buffer, co
 	uint64_t outputSizeB = (uint64_t)tmpCompressor.MaxRetrievable();
 	ASSERT( outputSizeB != 0 );
 	delete buffer;
-	buffer = new char[outputSizeB];
+	buffer = new char[(size_t)outputSizeB];
 	// Get the data and clean up
 	tmpCompressor.Get((byte*)buffer, (size_t)outputSizeB);
 	return outputSizeB;
@@ -197,7 +197,7 @@ static inline uint64_t _Decompress(CryptoPP::Filter *decompressor, char* &buffer
 	ASSERT( outputSizeB != 0 );
 	// Resize the buffer
 	delete buffer;
-	buffer = new char[outputSizeB];
+	buffer = new char[(size_t)outputSizeB];
 	// Get the data and clean up
 	tmpDecompressor.Get((byte*)buffer, (size_t)outputSizeB);
 	return outputSizeB;
@@ -834,7 +834,7 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
 	indexSizeB = index.size() * (sizeof(Uuid) + sizeof(uint64_t) + sizeof(uint32_t));
-	char* buffer = new char[indexSizeB];
+	char* buffer = new char[(size_t)indexSizeB];
 	// Write each item from the index into the buffer
 	char *bufferPointer = buffer;
 	IndexHash::const_iterator hashIter = index.begin();
@@ -866,7 +866,7 @@ const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &origin
 	ASSERT( stream.is_open() );
 	// Size the buffer
 	uint64_t journalSizeB = originalJournalSizeB;
-	char* buffer = new char[journalSizeB];
+	char* buffer = new char[(size_t)journalSizeB];
 	// Read the index from the file itself
 	stream.read(buffer, journalSizeB);
 	// Is there encryption
@@ -893,9 +893,9 @@ const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &origin
 		// Copy in the compression and encryption status
 		uint8_t flag;
 		_Read(bufferPointer, flag);
-		entry.isCompressed = flag;
+		entry.isCompressed = (flag != false);
 		_Read(bufferPointer, flag);
-		entry.isEncrypted = flag;
+		entry.isEncrypted = (flag != false);
 		// Place these into the undoList
 		this->_undoList.push_back(entry);
 	}
@@ -910,7 +910,7 @@ const Result_t BinFile::WriteJournal(std::fstream &stream, uint64_t &journalSize
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer (position, size, tag, numCreated, numChanged, numDeleted, isCompressed, isEncrypted)
 	journalSizeB = this->_undoList.size() * (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) + 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
-	char* buffer = new char[journalSizeB];
+	char* buffer = new char[(size_t)journalSizeB];
 	// Write each item from the index into the buffer
 	char *bufferPointer = buffer;
 	JournalList::const_iterator journalIter = this->_undoList.begin();
@@ -1085,7 +1085,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 	char* buffer = new char[indexEntry.sizeB];
 	indexEntry.object->Write(buffer);
 	// Is there compression
- 	if (indexEntry.isCompressed) indexEntry.sizeB = _Compress(this->_compressor, buffer, indexEntry.sizeB);
+ 	if (indexEntry.isCompressed) indexEntry.sizeB = (uint32_t)_Compress(this->_compressor, buffer, indexEntry.sizeB);
 	// Is there encryption
 	if (indexEntry.isEncrypted) _Encrypt(this->_encryptor, this->_encryptionKey, this->_encryptionIV, buffer, indexEntry.sizeB);
 	// Write the final data into the stream (make sure to seek first - windows issue)
@@ -1303,7 +1303,7 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 	// Make sure we have written as much as we are supposed to
 	ASSERT( bufferPointer-entry.buffer == entry.sizeB );
 	// Is there compression
-	if (entry.isCompressed) entry.sizeB = _Compress(this->_compressor, entry.buffer, entry.sizeB);
+	if (entry.isCompressed) entry.sizeB = (uint32_t)_Compress(this->_compressor, entry.buffer, entry.sizeB);
 	// Is there encryption
 	if (entry.isEncrypted) _Encrypt(this->_encryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
 	// All is good add the entry to the back of the undo list
@@ -1337,7 +1337,7 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 	// Is there encryption
 	if (entry.isEncrypted) _Decrypt(this->_decryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
 	// Is there compression
-	if (entry.isCompressed) entry.sizeB = _Decompress(this->_decompressor, entry.buffer, entry.sizeB);
+	if (entry.isCompressed) entry.sizeB = (uint32_t)_Decompress(this->_decompressor, entry.buffer, entry.sizeB);
 	// Deserialize the three transaction lists (created, changed, deleted) to memory
 	char* bufferPointer = entry.buffer;
 	for (uint32_t numCreated=0; numCreated < entry.numCreated; numCreated++)
