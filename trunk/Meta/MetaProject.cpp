@@ -26,9 +26,12 @@ MetaProject::MetaProject(CoreProject* &coreProject) : _coreProject(coreProject),
 {
 	ASSERT( this->_coreProject != NULL );
 	// Setup the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
-	ASSERT( this->_coreProject->RootObject(this->_rootObject) == S_OK );
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );	
+	Result_t result = this->_coreProject->BeginTransaction(true);
+	ASSERT( result == S_OK );
+	result = this->_coreProject->RootObject(this->_rootObject);
+	ASSERT( result == S_OK );
+	result = this->_coreProject->CommitTransaction();
+	ASSERT( result == S_OK );	
 }
 
 
@@ -50,10 +53,12 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 {
 	if (connection == "") return E_INVALID_USAGE;
 	// Try to open the project
-	CoreMetaProject* coreMetaProject;
-	ASSERT( CreateMetaCoreMetaProject(coreMetaProject) == S_OK );
+	CoreMetaProject* coreMetaProject = NULL;
+	Result_t result = CreateMetaCoreMetaProject(coreMetaProject);
+	ASSERT( result == S_OK );
+	ASSERT( coreMetaProject != NULL );
 	CoreProject *coreProject;
-	Result_t result = CoreProject::Open(connection, coreMetaProject, coreProject);
+	result = CoreProject::Open(connection, coreMetaProject, coreProject);
 	if (result != S_OK)
 	{
 		// Clean up and exit
@@ -65,9 +70,11 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 	MetaProject* metaProject = new MetaProject(coreProject);
 	ASSERT( metaProject != NULL );
 	// Traverse and register the entire project (must be inside a transaction
-	ASSERT( coreProject->BeginTransaction(true) == S_OK );
+	result = coreProject->BeginTransaction(true);
+	ASSERT( result == S_OK );
 //	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
-	ASSERT( coreProject->CommitTransaction() == S_OK );
+	result = coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
 	project = metaProject;
 	return S_OK;
 }
@@ -77,11 +84,12 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 {
 	if (connection == "") return E_INVALID_USAGE;
 	// Try to create a CoreProject
-	CoreMetaProject* coreMetaProject;
-	ASSERT( CreateMetaCoreMetaProject(coreMetaProject) == S_OK );
+	CoreMetaProject* coreMetaProject = NULL;
+	Result_t result = CreateMetaCoreMetaProject(coreMetaProject);
+	ASSERT( result == S_OK );
 	ASSERT( coreMetaProject != NULL );
 	CoreProject *coreProject;
-	Result_t result = CoreProject::Create(connection, coreMetaProject, coreProject);
+	result = CoreProject::Create(connection, coreMetaProject, coreProject);
 	if (result != S_OK)
 	{
 		std::cout << GetErrorInfo(result);
@@ -94,12 +102,14 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	MetaProject* metaProject = new MetaProject(coreProject);
 	ASSERT( metaProject != NULL );
 	// Create the root object
-	ASSERT( metaProject->_coreProject->BeginTransaction(false) == S_OK );
+	result = metaProject->_coreProject->BeginTransaction(false);
+	ASSERT( result == S_OK );
 	metaProject->_rootObject->SetAttributeValue(ATTRID_CDATE, _CurrentTime());
 	metaProject->_rootObject->SetAttributeValue(ATTRID_MDATE, _CurrentTime());
 	metaProject->_rootObject->SetAttributeValue(ATTRID_NAME, std::string(""));
 //	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
-	ASSERT( metaProject->_coreProject->CommitTransaction() == S_OK );
+	result = metaProject->_coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
 	// MetaProject is ready
 	project = metaProject;
 	return S_OK;
@@ -127,7 +137,8 @@ const Result_t MetaProject::CommitTransaction(void) throw()
 	ASSERT( this->_coreProject != NULL );
 	// Set the modify date on the root object if the coreProject is dirty
 	bool flag;
-	ASSERT( this->_coreProject->IsDirty(flag) == S_OK );
+	Result_t result = this->_coreProject->IsDirty(flag);
+	ASSERT( result == S_OK );
 	if (flag) this->_rootObject->SetAttributeValue(ATTRID_MDATE, _CurrentTime());
 	// Commit the transaction
 	return this->_coreProject->CommitTransaction();
@@ -146,9 +157,11 @@ const Result_t MetaProject::GetUuid(Uuid &uuid) const throw()
 {
 	Uuid value = Uuid::Null();
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_UUID, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	if (result != S_OK) return result;
 	// Convert GUID from bin value to GUID_t
 	uuid = value;
@@ -159,9 +172,11 @@ const Result_t MetaProject::GetUuid(Uuid &uuid) const throw()
 const Result_t MetaProject::SetUuid(const Uuid &uuid) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_UUID, uuid);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -169,9 +184,11 @@ const Result_t MetaProject::SetUuid(const Uuid &uuid) throw()
 const Result_t MetaProject::GetName(std::string &name) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_PARNAME, name);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -179,9 +196,11 @@ const Result_t MetaProject::GetName(std::string &name) const throw()
 const Result_t MetaProject::SetName(const std::string &name) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_PARNAME, name);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -189,9 +208,11 @@ const Result_t MetaProject::SetName(const std::string &name) throw()
 const Result_t MetaProject::GetDisplayedName(std::string &displayedName) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_DISPNAME, displayedName);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -199,9 +220,11 @@ const Result_t MetaProject::GetDisplayedName(std::string &displayedName) const t
 const Result_t MetaProject::SetDisplayedName(const std::string &value) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_PARDISPNAME, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -209,9 +232,11 @@ const Result_t MetaProject::SetDisplayedName(const std::string &value) throw()
 const Result_t MetaProject::GetVersion(std::string &version) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_VERSION, version);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -219,9 +244,11 @@ const Result_t MetaProject::GetVersion(std::string &version) const throw()
 const Result_t MetaProject::SetVersion(const std::string &value) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_VERSION, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -229,9 +256,11 @@ const Result_t MetaProject::SetVersion(const std::string &value) throw()
 const Result_t MetaProject::GetAuthor(std::string &author) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_AUTHOR, author);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -239,9 +268,11 @@ const Result_t MetaProject::GetAuthor(std::string &author) const throw()
 const Result_t MetaProject::SetAuthor(const std::string &value) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_AUTHOR, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -249,9 +280,11 @@ const Result_t MetaProject::SetAuthor(const std::string &value) throw()
 const Result_t MetaProject::GetComment(std::string &comment) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_COMMENT, comment);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -259,9 +292,11 @@ const Result_t MetaProject::GetComment(std::string &comment) const throw()
 const Result_t MetaProject::SetComment(const std::string &value) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result =  this->_rootObject->SetAttributeValue(ATTRID_COMMENT, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -269,9 +304,11 @@ const Result_t MetaProject::SetComment(const std::string &value) throw()
 const Result_t MetaProject::GetCreatedAt(std::string &createdAt) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_CDATE, createdAt);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -279,9 +316,11 @@ const Result_t MetaProject::GetCreatedAt(std::string &createdAt) const throw()
 const Result_t MetaProject::SetCreatedAt(const std::string &value) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result =  this->_rootObject->SetAttributeValue(ATTRID_CDATE, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -289,9 +328,11 @@ const Result_t MetaProject::SetCreatedAt(const std::string &value) throw()
 const Result_t MetaProject::GetModifiedAt(std::string &modifiedAt) const throw()
 {
 	// Get the value from the root object
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->GetAttributeValue(ATTRID_MDATE, modifiedAt);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -299,9 +340,11 @@ const Result_t MetaProject::GetModifiedAt(std::string &modifiedAt) const throw()
 const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 {
 	// Set the value in the root object
-	ASSERT( this->_coreProject->BeginTransaction(false) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(false);
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_rootObject->SetAttributeValue(ATTRID_MDATE, value);
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
@@ -309,7 +352,8 @@ const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 const Result_t MetaProject::RootFolder(MetaFolder* &folder) throw()
 {
 	// Traverse and register the entire project (must be inside a transaction
-	ASSERT( this->_coreProject->BeginTransaction(true) == S_OK );
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
 	// The rootObject is the rootFolder - just need to make a copy of it
 	CoreObject rootObject;
 	Uuid rootUuid;
@@ -321,7 +365,8 @@ const Result_t MetaProject::RootFolder(MetaFolder* &folder) throw()
 	folder = (MetaFolder*)metaBase;
 	ASSERT( folder != NULL );
 	// Wrap up the transaction
-	ASSERT( this->_coreProject->CommitTransaction() == S_OK );
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return S_OK;
 }
 
@@ -340,7 +385,8 @@ void MetaProject::CreateMetaBase(const MetaID_t &metaID, CoreObject &object)
 {
 	ASSERT( this->_coreProject != NULL );
 //	ASSERT( obj == NULL );
-	ASSERT( this->_coreProject->CreateObject(metaID, object) == S_OK );
+	Result_t result = this->_coreProject->CreateObject(metaID, object);
+	ASSERT( result == S_OK );
 //	COMTHROW( obj->put_AttributeValue(ATTRID_METAREF, PutInVariant(max_metaref + 1)) );
 //	MetaBase::Traverse(this, obj);
 }

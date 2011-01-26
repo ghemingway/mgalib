@@ -32,7 +32,9 @@ const Result_t CoreMetaObject::GetAttribute(const AttrID_t &attrID, CoreMetaAttr
 		ASSERT( (*iter) != NULL );
 		// Is this the attribute we are looking for
 		AttrID_t tmpAttrID = ATTRID_NONE;
-		ASSERT( (*iter)->GetAttributeID(tmpAttrID) == S_OK );
+		Result_t result = (*iter)->GetAttributeID(tmpAttrID);
+		ASSERT( result == S_OK );
+		ASSERT( tmpAttrID != ATTRID_NONE );
 		if( tmpAttrID == attrID )
 		{
 			// Yes it is...

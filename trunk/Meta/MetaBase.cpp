@@ -145,45 +145,54 @@ const Result_t MetaBase::GetMetaProject(MetaProject* &project) const throw()
 
 const Result_t MetaBase::GetName(std::string &name) const throw()
 {
-	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_NAME, name);
-	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
 
 const Result_t MetaBase::SetName(const std::string &name) throw()
 {
-	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
-	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
 
 const Result_t MetaBase::GetDisplayedName(std::string &name) const throw()
 {
-	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_DISPNAME, name);
-	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
 
 const Result_t MetaBase::SetDisplayedName(const std::string &name) throw()
 {
-	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
 	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_DISPNAME, name);
-	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
 
 const Result_t MetaBase::GetObjType(ObjType_t &objType) const throw()
 {
-	MetaID_t metaID;
-	ASSERT( this->_coreObject != NULL );
-	ASSERT( this->_coreObject->GetMetaID(metaID) == S_OK );
+	MetaID_t metaID = METAID_NONE;
+	Result_t result = this->_coreObject->GetMetaID(metaID);
+	ASSERT( result == S_OK );
+	ASSERT( metaID != METAID_NONE );
 	if( metaID == METAID_METAPROJECT ) objType = (ObjType_t)OBJTYPE_FOLDER;
 	else objType = (ObjType_t)(metaID - METAID_METABASE);
 	return S_OK;
@@ -194,11 +203,13 @@ const Result_t MetaBase::GetConstraints(std::list<MetaConstraint*> &constraintLi
 {
 	// Get the associated coreProject
 	CoreProject* coreProject = NULL;
-	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	Result_t result = this->_coreObject->Project(coreProject);
+	ASSERT( result == S_OK );
 	ASSERT( coreProject != NULL );
 	// Get the collection from the attributes
 	std::list<Uuid> idList;
-	ASSERT( this->_coreObject->GetAttributeValue(ATTRID_CONSTRAINT_PTR + ATTRID_COLLECTION, idList) == S_OK );
+	result = this->_coreObject->GetAttributeValue(ATTRID_CONSTRAINT_PTR + ATTRID_COLLECTION, idList);
+	ASSERT( result == S_OK );
 	std::list<Uuid>::iterator idIter = idList.begin();
 	// Iterate over the list to gather the objects
 	constraintList.clear();
@@ -206,7 +217,8 @@ const Result_t MetaBase::GetConstraints(std::list<MetaConstraint*> &constraintLi
 	{
 		// Get the coreObject from this uuid
 		CoreObject object;
-		ASSERT( coreProject->Object(*idIter, object) == S_OK );
+		result = coreProject->Object(*idIter, object);
+		ASSERT( result == S_OK );
 		ASSERT( object != NULL );
 		// Create the MetaConstraint with the coreObject and metaProject
 		MetaConstraint* metaConstraint = new MetaConstraint(object, this->_metaProject);
@@ -222,19 +234,26 @@ const Result_t MetaBase::CreateConstraint(MetaConstraint* &constraint) throw()
 {
 	// Get the associated coreProject
 	CoreProject* coreProject = NULL;
-	ASSERT( this->_coreObject->Project(coreProject) == S_OK );
+	Result_t result = this->_coreObject->Project(coreProject);
+	ASSERT( result == S_OK );
 	ASSERT( coreProject != NULL );
 	// Start a transaction
-	ASSERT( coreProject->BeginTransaction(false) == S_OK );
+	result = coreProject->BeginTransaction(false);
+	ASSERT( result == S_OK );
 	// Create a METAID_METACONSTRAINT core object
 	CoreObject coreObject;
-	ASSERT( coreProject->CreateObject(METAID_METACONSTRAINT, coreObject) == S_OK );
+	result = coreProject->CreateObject(METAID_METACONSTRAINT, coreObject);
+	ASSERT( result == S_OK );
 	// Link the new child to this object as parent
-	Uuid uuid;
-	ASSERT( this->_coreObject->GetUuid(uuid) == S_OK );
-	ASSERT( coreObject->SetAttributeValue(ATTRID_CONSTRAINT_PTR, uuid) == S_OK );
+	Uuid uuid = Uuid::Null();
+	result = this->_coreObject->GetUuid(uuid);
+	ASSERT( result == S_OK );
+	ASSERT( uuid != Uuid::Null() );
+	result = coreObject->SetAttributeValue(ATTRID_CONSTRAINT_PTR, uuid);
+	ASSERT( result == S_OK );
 	// Commit transaction at the CoreProject level
-	coreProject->CommitTransaction();
+	result = coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
 	// Now use the core object to create a MetaConstraint
 	constraint = new MetaConstraint(coreObject, this->_metaProject);
 	ASSERT( constraint != NULL );

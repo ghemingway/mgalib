@@ -73,13 +73,15 @@ public:
 	{
 		// Make sure we are in a write transaction
 		bool flag;
-		ASSERT( this->InWriteTransaction(flag) == S_OK ); 
+		Result_t result = this->InWriteTransaction(flag);
+		ASSERT( result == S_OK ); 
 		if (!flag) return E_READONLY;
 		// First, make sure the storage value has been loaded
 		if (this->_values.empty())
 		{
 			T tmpValue;
-			ASSERT( this->GetValue(tmpValue) == S_OK );
+			result = this->GetValue(tmpValue); 
+			ASSERT( result == S_OK );
 		}
 		// Is the value actually changing?
 		if (value == this->_values.back()) return S_OK;
@@ -96,7 +98,8 @@ public:
 	{
 		// Make sure we are in a transaction
 		bool flag;
-		ASSERT( this->InTransaction(flag) == S_OK ); 
+		Result_t result = this->InWriteTransaction(flag);
+		ASSERT( result == S_OK ); 
 		if (!flag) return E_TRANSACTION;
 		// Have we not read this attribute previously
 		if (this->_values.empty())
@@ -105,7 +108,8 @@ public:
 			ICoreStorage* storage = this->SetStorageObject();
 			// Read the value from storage
 			AttrID_t attrID = ATTRID_NONE;
-			ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+			result = this->_metaAttribute->GetAttributeID(attrID);
+			ASSERT( result == S_OK );
 			Result_t result = storage->GetAttributeValue(attrID, value);
 			if (result != S_OK) return result;
 			// Save the value
@@ -139,9 +143,10 @@ public:
 		ASSERT( storage != NULL );
 		// Write the value into storage
 		AttrID_t attrID = ATTRID_NONE;
-		ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+		Result_t result = this->_metaAttribute->GetAttributeID(attrID);
+		ASSERT( result == S_OK );
 		T value = this->_values.back();
-		Result_t result = storage->SetAttributeValue(attrID, value);
+		result = storage->SetAttributeValue(attrID, value);
 		if (result != S_OK) return result;
 		// Collapse the value list to one
 		this->_values.clear();
@@ -167,29 +172,33 @@ inline const Result_t CoreAttributeTemplateBase<Uuid>::SetValue(const Uuid &valu
 {
 	// Make sure we are in a write transaction
 	bool flag;
-	ASSERT( this->InWriteTransaction(flag) == S_OK ); 
+	Result_t result = this->InWriteTransaction(flag);
+	ASSERT( result == S_OK ); 
 	if (!flag) return E_READONLY;
 	// First, make sure the storage value has been loaded
 	if (this->_values.empty())
 	{
 		Uuid tmpValue = Uuid::Null();
-		ASSERT( this->GetValue(tmpValue) == S_OK );
+		result = this->GetValue(tmpValue);
+		ASSERT( result == S_OK );
 	}
 	// Is the value actually changing?
 	if (value == this->_values.back()) return S_OK;
 	// Now, are we dealing with a pointer or longPointer
 	ValueType valueType = ValueType::None();
-	ASSERT( this->_metaAttribute->GetValueType(valueType) == S_OK );
+	result = this->_metaAttribute->GetValueType(valueType);
+	ASSERT( result == S_OK );
 	if (valueType != ValueType::LongPointer() && valueType != ValueType::Pointer()) return E_ATTVALTYPE;
 	// Pointers, those are special because we also have to change the backpointer collection
 	if (valueType == ValueType::Pointer())
 	{
 		AttrID_t attrID = ATTRID_NONE;
-		ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
+		result = this->_metaAttribute->GetAttributeID(attrID);
+		ASSERT( result == S_OK );
 		// Get the current value
 		Uuid oldValue = this->_values.back();
 		// Resolve all backpointer issues
-		Result_t result = this->ResolveBackpointer(attrID, value, oldValue);
+		result = this->ResolveBackpointer(attrID, value, oldValue);
 		if (result != S_OK) return result;
 	}
 	// Set the value
@@ -234,8 +243,10 @@ protected:
 			ICoreStorage* storage = this->SetStorageObject();
 			// Read the value from storage
 			AttrID_t attrID = ATTRID_NONE;
-			ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
-			Result_t result = storage->GetAttributeValue(attrID, this->_dictionary);
+			Result_t result = this->_metaAttribute->GetAttributeID(attrID);
+			ASSERT( result == S_OK );
+			ASSERT( attrID == ATTRID_NONE );
+			result = storage->GetAttributeValue(attrID, this->_dictionary);
 			if (result != S_OK) return result;
 			// Mark as loaded
 			this->_isLoaded = true;
@@ -251,10 +262,12 @@ public:
 	{
 		// Make sure we are in a write transaction
 		bool flag;
-		ASSERT( this->InWriteTransaction(flag) == S_OK ); 
+		Result_t result = this->InWriteTransaction(flag);
+		ASSERT( result == S_OK ); 
 		if (!flag) return E_READONLY;
 		// Make sure we are loaded
-		ASSERT( this->LoadValue() == S_OK );
+		result = this->LoadValue();
+		ASSERT( result == S_OK );
 
 		// Does this key alread exist
 		std::string currentValue = "";
@@ -287,7 +300,8 @@ public:
 	{
 		// Make sure we are in a transaction
 		bool flag;
-		ASSERT( this->InTransaction(flag) == S_OK ); 
+		Result_t result = this->InWriteTransaction(flag);
+		ASSERT( result == S_OK ); 
 		if (!flag) return E_TRANSACTION;
 		// Make sure we are loaded
 		ASSERT( this->LoadValue() == S_OK );
@@ -320,8 +334,9 @@ public:
 		ASSERT( storage != NULL );
 		// Write the value into storage
 		AttrID_t attrID = ATTRID_NONE;
-		ASSERT( this->_metaAttribute->GetAttributeID(attrID) == S_OK );
-		Result_t result = storage->SetAttributeValue(attrID, this->_dictionary);
+		Result_t result = this->_metaAttribute->GetAttributeID(attrID);
+		ASSERT( result == S_OK );
+		result = storage->SetAttributeValue(attrID, this->_dictionary);
 		if (result != S_OK) return result;
 		// Clear the intermediate values list
 		this->_values.clear();

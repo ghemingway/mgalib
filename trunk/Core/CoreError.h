@@ -16,7 +16,8 @@ namespace MGA {
 
 /*** Type Definitions ***/
 typedef long Result_t;
-#define ASSERT	assert
+//#define ASSERT(condition)	{ }
+#define ASSERT(condition)	assert(condition)
 
 
 // --------------------------- Common Error Codes

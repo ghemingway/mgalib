@@ -360,12 +360,14 @@ void BinObject::CreateAttributes(CoreMetaObject *metaObject)
 	ASSERT( this->_attributes.empty() );
 	// Get the meta attributes for the meta object
 	std::list<CoreMetaAttribute*> metaAttributeList;
-	ASSERT( metaObject->GetAttributes(metaAttributeList) == S_OK );
+	Result_t result = metaObject->GetAttributes(metaAttributeList);
+	ASSERT( result == S_OK );
 	std::list<CoreMetaAttribute*>::const_iterator attribIter = metaAttributeList.begin();
 	while( attribIter != metaAttributeList.end() )
 	{
 		ValueType valueType;
-		ASSERT( (*attribIter)->GetValueType(valueType) == S_OK );
+		result = (*attribIter)->GetValueType(valueType);
+		ASSERT( result == S_OK );
 		AttrID_t attrID = ATTRID_NONE;
 		ASSERT( (*attribIter)->GetAttributeID(attrID) == S_OK );
 		BinAttribute *binAttribute = BinAttribute::Create(this, valueType, attrID);
@@ -382,7 +384,8 @@ bool BinObject::IsConnected(void) const
 {
 	// Special case - Root object (METAID_ROOT) is always connected
 	MetaID_t metaID;
-	ASSERT( this->_metaObject->GetMetaID(metaID) == S_OK );
+	Result_t result = this->_metaObject->GetMetaID(metaID);
+	ASSERT( result == S_OK );
 	if( metaID == METAID_ROOT ) return true;
 	// Go through all attributes
 	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
@@ -431,7 +434,8 @@ BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &buffer, const U
 	if( metaID == METAID_NONE ) return NULL;
 	// Get the metaObject using this metaID
 	CoreMetaObject* metaObject = NULL;
-	ASSERT( metaProject->GetObject(metaID, metaObject) == S_OK );
+	Result_t result = metaProject->GetObject(metaID, metaObject);
+	ASSERT( result == S_OK );
 	
 	// Create the binObject
 	BinObject* binObject = new BinObject(metaObject, uuid);
@@ -494,7 +498,8 @@ uint32_t BinObject::Write(char* &buffer) const
 	char* stream = buffer;
 	// Write the metaID
 	MetaID_t metaID;
-	ASSERT( this->_metaObject->GetMetaID(metaID) == S_OK );
+	Result_t result = this->_metaObject->GetMetaID(metaID);
+	ASSERT( result == S_OK );
 	_Write(stream, metaID);
 	// Write all of the attributes
 	std::list<BinAttribute*>::const_iterator attrIter = this->_attributes.begin();
@@ -558,7 +563,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	BinFile *binFile = new BinFile(filename, coreMetaProject);
 	ASSERT( binFile != NULL );
 	// Open the metaProject and get the Uuid
-	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
+	Result_t result = binFile->_metaProject->GetUuid(binFile->_metaProjectUuid);
+	ASSERT( result == S_OK );
 
 	// Try to open the file -- previously ios::nocreate had been used but no file is created if opened for read only
 	binFile->_inputFile.clear();
@@ -596,9 +602,12 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 
 	// Now just create the actual METAID_ROOT object (using a nice transaction of course)
 	Uuid rootUuid;
-	ASSERT( binFile->BeginTransaction() == S_OK );
-	ASSERT( binFile->CreateObject(METAID_ROOT, rootUuid) == S_OK );
-	ASSERT( binFile->CommitTransaction() == S_OK );
+	result = binFile->BeginTransaction();
+	ASSERT( result == S_OK );
+	result = binFile->CreateObject(METAID_ROOT, rootUuid);
+	ASSERT( result == S_OK );
+	result = binFile->CommitTransaction();
+	ASSERT( result == S_OK );
 	// Make sure to capture the rootUuid
 	binFile->_rootUuid = rootUuid;
 	// Return the new BinFile
@@ -622,7 +631,8 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	BinFile *binFile = new BinFile(tmpName, coreMetaProject);
 	ASSERT( binFile != NULL );
 	// Open the metaProject and get the Uuid
-	ASSERT( binFile->_metaProject->GetUuid(binFile->_metaProjectUuid) == S_OK );
+	Result_t result = binFile->_metaProject->GetUuid(binFile->_metaProjectUuid);
+	ASSERT( result == S_OK );
 
 	// Is encryption enabled
 	if (encryptionKey.size() != 0)
@@ -635,7 +645,7 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 	}
 
 	// Load the project (check for errors)
-	Result_t result = binFile->Load();
+	result = binFile->Load();
 	if (result != S_OK)
 	{
 		// Failure to open file properly
@@ -762,7 +772,7 @@ const Result_t BinFile::ReadIndex(std::fstream &stream, const uint64_t &original
 	{
 		// Clear the decompressor and load it up
 		CryptoPP::ZlibDecompressor decompressor;
-		decompressor.Put((const byte*)&buffer[0], (size_t)indexSizeB);
+		decompressor.Put((const byte*)buffer, (size_t)indexSizeB);
 		decompressor.MessageEnd();
 		// Get the decompressed size
 		indexSizeB = decompressor.MaxRetrievable();
@@ -1131,8 +1141,8 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 		CryptoPP::ZlibDecompressor decompressor;
 		decompressor.Put((const byte*)buffer, indexEntry.sizeB);
 		decompressor.MessageEnd();
-		// Get the decompressed size
-		uint64_t sizeB = decompressor.MaxRetrievable();
+		// Get the decompressed size (don't overwrite size because a non-dirty object just goes back to input)
+		uint32_t sizeB = (uint32_t)decompressor.MaxRetrievable();
 		ASSERT( sizeB != 0 );
 		// Resize the buffer
 		delete buffer;
@@ -1168,7 +1178,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 	{
 		// Create the compressor and load it up
 		CryptoPP::ZlibCompressor compressor;
-		compressor.Put((const byte*)&buffer[0], indexEntry.sizeB);
+		compressor.Put((const byte*)buffer, indexEntry.sizeB);
 		compressor.MessageEnd();
 		// Get the new size
 		indexEntry.sizeB = (uint32_t)compressor.MaxRetrievable();
@@ -1176,7 +1186,7 @@ void BinFile::ObjectToFile(std::fstream &stream, IndexEntry &indexEntry)
 		delete buffer;
 		buffer = new char[indexEntry.sizeB];
 		// Get the data
-		compressor.Get((byte*)&buffer[0], indexEntry.sizeB);
+		compressor.Get((byte*)buffer, indexEntry.sizeB);
 	}
 	// Is there encryption
 	if (indexEntry.isEncrypted)
@@ -1576,7 +1586,9 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 		ASSERT( object != NULL );
 		// Advance the read pointer
 		bufferPointer += sizeB;
-		ASSERT(false);
+		// Create the entry and insert into deletedObject
+		IndexEntry entry = { object, EntryLocation::Cache(), 0, sizeB, this->_isCompressed, this->_isEncrypted };
+		this->_deletedObjects.push_back(std::make_pair(uuid,entry));
 	}
 	return S_OK;
 }
@@ -1632,7 +1644,8 @@ BinFile::~BinFile()
 		_SplitPath(this->_filename, directory, filename);
 		scratchFileName = directory + std::string("~") + filename;
 		// Remove the scratchfile
-		ASSERT( remove(scratchFileName.c_str()) == 0 );
+		int retVal = remove(scratchFileName.c_str());
+		ASSERT( retVal == 0 );
 	}
 	// Clean up compression
 	delete this->_compressor;
@@ -1730,7 +1743,8 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 			// File exists, but we are not allowed to overwrite
 			if (!forceOverwrite) return E_FILEOPEN;
 			// Otherwise, remove the offending file
-			ASSERT( remove(saveAs.c_str()) == 0 );
+			int retVal = remove(saveAs.c_str());
+			ASSERT( retVal == 0 );
 		}
 	}
 	// Open the file for writing
@@ -1858,7 +1872,11 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	this->_inputFile.close();
 	// Are we overwriting the original inputfile, then delete it
 	ASSERT( !this->_inputFile.fail() );
-	if (overwrite) ASSERT( remove(this->_filename.c_str()) == 0 );
+	if (overwrite)
+	{
+		int retVal = remove(this->_filename.c_str());
+		ASSERT( retVal == 0 );
+	}
 
 	// Close the file and we are done with it
 	outputFile.close();
@@ -1866,14 +1884,16 @@ const Result_t BinFile::Save(const std::string &filename, const bool &forceOverw
 	// Rename tmp file to desired name (make sure to grab the filename before it is changed)
 	std::string scratchFileName = this->_filename;
 	this->_filename = directory + saveAs;
-	ASSERT( rename(tmpFilename.c_str(), this->_filename.c_str()) == 0 );
+	int retVal = rename(tmpFilename.c_str(), this->_filename.c_str());
+	ASSERT( retVal == 0 );
 	
 	// Close and delete scratch file
 	this->_scratchFile.close();
 	ASSERT( !this->_scratchFile.fail() );
 	_SplitPath(scratchFileName, directory, scratchFileName);
 	scratchFileName = directory + std::string("~") + scratchFileName;
-	ASSERT( remove(scratchFileName.c_str()) == 0 );
+	retVal = remove(scratchFileName.c_str());
+	ASSERT( retVal == 0 );
 	// Now load the newly saved file and keep on truckin'
 	return this->Load();
 }
@@ -1911,7 +1931,8 @@ const Result_t BinFile::CommitTransaction(const Uuid tag) throw()
 			// Or just the redo list
 			else this->FlushUndoRedo(0);
 			// Pickle the transaction and add it to the undo list
-			ASSERT( this->PickleTransaction(tag) == S_OK );
+			Result_t result = this->PickleTransaction(tag);
+			ASSERT( result == S_OK );
 		}
 		// Don't need to do anything for created objects...
 		this->_createdObjects.clear();
@@ -2100,7 +2121,7 @@ const Result_t BinFile::CreateObject(const MetaID_t &metaID, Uuid &newUuid) thro
 	if( metaID == METAID_NONE ) return E_INVALID_USAGE;
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	// Close any open object
-	ASSERT( this->CloseObject() == S_OK );
+	this->CloseObject();
 	// Lookup the metaID in the metaProject to make sure it is valid
 	CoreMetaObject* metaObject = NULL;
 	Result_t result = this->_metaProject->GetObject(metaID, metaObject);
@@ -2143,28 +2164,34 @@ const Result_t BinFile::DeleteObject(void) throw()
 	BinObject *object = this->_openedObject->second.object;
 	ASSERT( object != NULL );
 	CoreMetaObject *metaObject = NULL;
-	ASSERT( this->_metaProject->GetObject(object->GetMetaID(), metaObject) == S_OK );
+	Result_t result = this->_metaProject->GetObject(object->GetMetaID(), metaObject);
+	ASSERT( result == S_OK );
 	ASSERT( metaObject != NULL );
 	std::list<CoreMetaAttribute*> metaAttributes;
-	ASSERT( metaObject->GetAttributes(metaAttributes) == S_OK );
+	result = metaObject->GetAttributes(metaAttributes);
+	ASSERT( result == S_OK );
 	std::list<CoreMetaAttribute*>::const_iterator attributeIter = metaAttributes.begin();
 	while (attributeIter != metaAttributes.end())
 	{
 		// Is this attribute a pointer?
 		ValueType valueType;
-		ASSERT( (*attributeIter)->GetValueType(valueType) == S_OK );
+		result = (*attributeIter)->GetValueType(valueType);
+		ASSERT( result == S_OK );
 		if (valueType == ValueType::Pointer())
 		{
 			// Just set this attribute to Uuid::Null()
 			Uuid newUuid = Uuid::Null();
 			AttrID_t attrID;
-			ASSERT( (*attributeIter)->GetAttributeID(attrID) == S_OK );
-			ASSERT( this->SetAttributeValue(attrID, newUuid) == S_OK );
+			result = (*attributeIter)->GetAttributeID(attrID);
+			ASSERT( result == S_OK );
+			result = this->SetAttributeValue(attrID, newUuid);
+			ASSERT( result == S_OK );
 		}
 		// Or a backpointer collection
 		else if (valueType == ValueType::Collection())
 		{
 			// TODO: Also clean up all back pointers
+//			ASSERT(false);
 		}
 		// Move on to the next attribute
 		++attributeIter;
@@ -2336,8 +2363,9 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	if ( valueType == ValueType::Pointer() )
 	{
 		// Try to update the attribute value for a pointer type
-		ASSERT( binAttribute->GetAttributeID() == attrID );
-		Result_t result = this->PointerUpdate(binAttribute->GetAttributeID(), this->_openedObject->first, currentValue, value);
+		Result_t result = binAttribute->GetAttributeID();
+		ASSERT( result == attrID );
+		result = this->PointerUpdate(binAttribute->GetAttributeID(), this->_openedObject->first, currentValue, value);
 		if (result != S_OK) return result;
 	}
 
@@ -2382,7 +2410,8 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	if( this->_undoList.empty() ) return S_OK;
 	// Unpickle journaled transaction
 	JournalList::reverse_iterator entryIter = this->_undoList.rbegin();
-	ASSERT( this->UnpickleTransaction(*entryIter) == S_OK );
+	Result_t result = this->UnpickleTransaction(*entryIter);
+	ASSERT( result == S_OK );
 
 	// Ok, so we are doing something, mark the binFile as dirty
 	this->MarkDirty();
@@ -2390,9 +2419,12 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	std::list< std::pair<Uuid,IndexEntry> >::iterator deletedIter = this->_deletedObjects.begin();
 	while ( deletedIter != this->_deletedObjects.end() )
 	{
-		// Restore the object itself
-		// TODO: Restore the object itself
-		ASSERT(false);
+		// Restore the object itself (just move from deletedObjects into indexHash)
+		std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( *deletedIter );
+		ASSERT( insertReturn.second );
+		this->_cacheQueue.push_front(deletedIter->first);
+		// Make sure there is space in the queue
+		this->CheckCacheSize();
 		// Move to the next deleted object in the list
 		++deletedIter;
 	}
@@ -2515,7 +2547,8 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	if( this->_redoList.empty() ) return E_INVALID_USAGE;
 	// Unpickle the journal entry
 	JournalEntry entry = this->_redoList.back();
-	ASSERT( this->UnpickleTransaction(entry) == S_OK );
+	Result_t result = this->UnpickleTransaction(entry);
+	ASSERT( result == S_OK );
 
 	// Ok, so we are doing something, mark the binFile as dirty
 	this->MarkDirty();
@@ -2523,8 +2556,20 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while (createdIter != this->_createdObjects.end())
 	{
-		// Create the object
-		// TODO: Create the object
+		// Lookup the metaID in the metaProject to make sure it is valid
+		CoreMetaObject* metaObject = NULL;
+		Result_t result = this->_metaProject->GetObject(createdIter->second, metaObject);
+		ASSERT ( result == S_OK && metaObject != NULL );
+		// Create the binObject and use the old Uuid
+		BinObject* binObject = BinObject::Create(metaObject, createdIter->first);
+		ASSERT( binObject != NULL );
+		// Put the object into the index and queue
+		IndexEntry indexEntry = { binObject, EntryLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
+		std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(createdIter->first, indexEntry) );
+		ASSERT( insertReturn.second );
+		this->_cacheQueue.push_front(createdIter->first);
+		// Make sure there is space in the queue
+		this->CheckCacheSize();
 		// Move on to the next created object
 		++createdIter;
 	}
@@ -2654,6 +2699,7 @@ const Result_t BinFile::DisableEncryption(void) throw()
  *	4) Clean up and optimize the dirty flag
  *	5) Delete Object backpointer clean up
  *	6) Finish journal caching scheme
+ *	7) Clean up ASSERT usage so that ASSERT can equal "" in Release
 ***/
 
 
