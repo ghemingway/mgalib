@@ -1318,26 +1318,27 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 	ASSERT( this->_changedAttributes.empty() );
 	ASSERT( this->_deletedObjects.empty() );
 	// Make sure entry is in the cache
-	if (entry.location == EntryLocation::Input())
+	if (entry.location != EntryLocation::Cache())
 	{
 		// If in input or scratch file, copy the journal entry buffer into memory
 		entry.buffer = new char[entry.sizeB];
-		this->_inputFile.seekg(entry.position);
-		this->_inputFile.read(entry.buffer, entry.sizeB);
+		if (entry.location == EntryLocation::Input())
+		{
+			this->_inputFile.seekg(entry.position);
+			this->_inputFile.read(entry.buffer, entry.sizeB);
+		}
+		else if (entry.location == EntryLocation::Scratch())
+		{
+			this->_scratchFile.seekg(entry.position);
+			this->_scratchFile.read(entry.buffer, entry.sizeB);
+		}
+		else ASSERT(false);
 		entry.location = EntryLocation::Cache();
+		// Is there encryption
+		if (entry.isEncrypted) _Decrypt(this->_decryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
+		// Is there compression
+		if (entry.isCompressed) entry.sizeB = (uint32_t)_Decompress(this->_decompressor, entry.buffer, entry.sizeB);
 	}
-	else if (entry.location == EntryLocation::Scratch())
-	{
-		// Copy the journal entry buffer into memory
-		entry.buffer = new char[entry.sizeB];
-		this->_scratchFile.seekg(entry.position);
-		this->_scratchFile.read(entry.buffer, entry.sizeB);
-		entry.location = EntryLocation::Cache();
-	}
-	// Is there encryption
-	if (entry.isEncrypted) _Decrypt(this->_decryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
-	// Is there compression
-	if (entry.isCompressed) entry.sizeB = (uint32_t)_Decompress(this->_decompressor, entry.buffer, entry.sizeB);
 	// Deserialize the three transaction lists (created, changed, deleted) to memory
 	char* bufferPointer = entry.buffer;
 	for (uint32_t numCreated=0; numCreated < entry.numCreated; numCreated++)
@@ -2243,8 +2244,8 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	ASSERT( this->_deletedObjects.empty() );
 	if( this->_undoList.empty() ) return S_OK;
 	// Unpickle journaled transaction
-	JournalList::reverse_iterator entryIter = this->_undoList.rbegin();
-	Result_t result = this->UnpickleTransaction(*entryIter);
+	JournalEntry entry = this->_undoList.back();
+	Result_t result = this->UnpickleTransaction(entry);
 	ASSERT( result == S_OK );
 
 	// Ok, so we are doing something, mark the binFile as dirty
@@ -2252,9 +2253,9 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	// Undo all of the changes (save as calling an AbortTransaction really)
 	this->TryAbortTransaction();
 	// Return a tag (if any)
-	tag = entryIter->tag;
+	tag = entry.tag;
 	// Move journal entry to redo list
-	this->_redoList.push_back(*entryIter);
+	this->_redoList.push_back(entry);
 	this->_undoList.pop_back();
 	return S_OK;
 }
