@@ -13,9 +13,14 @@
 
 /*** Externally Defined Functions & Variables ***/
 extern std::string testFileName;
+extern std::string hammerTestCount;
 
 
-class ICoreStorageTest : public ::testing::Test {
+// --------------------------- ICoreStorageTest ---------------------------
+
+
+class ICoreStorageTest : public ::testing::Test
+{
 protected:
 	// Static class values
 	static ICoreStorage			*storage;
@@ -27,11 +32,11 @@ public:
 		Result_t result;
 		// Get everything up to storage ready
 		CoreMetaProject	*coreMetaProject = NULL;
-		EXPECT_EQ( result = CreateMGACoreMetaProject(coreMetaProject), S_OK ) << GetErrorInfo(result);
+		EXPECT_EQ( S_OK, result = CreateMGACoreMetaProject(coreMetaProject) ) << GetErrorInfo(result);
 		ASSERT_TRUE( coreMetaProject != NULL );
 		
 		// Create a new test coreProject
-		EXPECT_EQ( result = CoreProject::Create("MGA=tmpfile.mga", coreMetaProject, ICoreStorageTest::coreProject), S_OK ) << GetErrorInfo(result);
+		EXPECT_EQ( S_OK, result = CoreProject::Create("MGA=tmpfile.mga", coreMetaProject, ICoreStorageTest::coreProject) ) << GetErrorInfo(result);
 		ASSERT_TRUE( ICoreStorageTest::coreProject != NULL );
 		// Get the ICoreStorage pointer
 		ICoreStorageTest::coreProject->Storage(ICoreStorageTest::storage);
@@ -53,9 +58,12 @@ public:
 };
 
 
+// --------------------------- ICoreStorageParamTest ---------------------------
+
 
 // The fixture for testing all Uuid values in any ICoreStorage implementor.
-class ICoreStorageParamTest : public ::testing::TestWithParam<Uuid> {
+class ICoreStorageParamTest : public ::testing::TestWithParam<Uuid>
+{
 protected:
 	//	ICoreStorageParamTest() { }
 	//	virtual ~ICoreStorageParamTest() { }

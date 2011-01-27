@@ -977,6 +977,76 @@ TEST_F(ICoreStorageTest,BasicRedo)
 }
 
 
+
+// --------------------------- ICoreStorage Hammer Test --------------------------- //
+
+
+TEST(ICoreStorage,Hammer)
+{
+	// How many tests are we running?
+	uint32_t hammerSize;
+	std::istringstream ( hammerTestCount ) >> hammerSize;
+	if (hammerSize == 0) return;
+
+	// Prepare the new output file
+	Result_t result;
+	// Get everything up to storage ready
+	CoreMetaProject	*coreMetaProject = NULL;
+	EXPECT_EQ( S_OK, result = CreateMGACoreMetaProject(coreMetaProject) ) << GetErrorInfo(result);
+	ASSERT_TRUE( coreMetaProject != NULL );
+	// Create a new test coreProject
+	CoreProject* coreProject = NULL;
+	EXPECT_EQ( S_OK, result = CoreProject::Create("MGA=hammer_test.mga", coreMetaProject, coreProject) ) << GetErrorInfo(result);
+	ASSERT_TRUE( coreProject != NULL );
+	// Get the ICoreStorage pointer
+	ICoreStorage* storage = NULL;
+	EXPECT_EQ( S_OK, result = coreProject->Storage(storage) ) << GetErrorInfo(result);
+	ASSERT_TRUE( storage != NULL );
+
+	std::cout << "--- Commencing hammer test.  Size: " << hammerSize << " ---\n";
+	// Initialize random seed: */
+	srand ( time(NULL) );
+	// Loop through the test  int iSecret, iGuess;
+	for (uint32_t hammerCount=0; hammerCount < hammerSize; hammerCount++)
+	{
+		// Choose an action at random (1-12)
+		int selection = rand() % 12;
+		switch (selection)
+		{
+			case 0:
+				std::cout << "CreateObject.\n";
+				break;
+			case 1:
+				std::cout << "DeleteObject.\n";
+				break;
+			case 2:	case 3:	case 4:	case 5:	case 6:	case 7:
+				std::cout << "ChangeAttribute.\n";
+				break;
+			case 8:
+				std::cout << "Undo.\n";
+				break;
+			case 9:
+				std::cout << "Redo.\n";
+				break;
+			case 10:
+				std::cout << "Save.\n";
+				break;
+			case 11:
+				std::cout << "Open.\n";
+				break;
+			default:
+				std::cout << "Say what!\n";
+				break;
+		}
+	}
+
+	// Clean up after the hammer test
+	coreProject->Save("hammer_test.mga", true);
+	delete coreProject;
+	EXPECT_EQ( 0, remove("hammer_test.mga") );
+}
+
+
 // --------------------------- ICoreStorage Parameterized --------------------------- //
 
 /*

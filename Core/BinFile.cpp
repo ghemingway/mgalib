@@ -439,7 +439,8 @@ void BinObject::CreateAttributes(CoreMetaObject *metaObject)
 		result = (*attribIter)->GetValueType(valueType);
 		ASSERT( result == S_OK );
 		AttrID_t attrID = ATTRID_NONE;
-		ASSERT( (*attribIter)->GetAttributeID(attrID) == S_OK );
+		result = (*attribIter)->GetAttributeID(attrID);
+		ASSERT( result == S_OK );
 		BinAttribute *binAttribute = BinAttribute::Create(this, valueType, attrID);
 		ASSERT( binAttribute != NULL );
 		this->_attributes.push_front(binAttribute);
@@ -2442,15 +2443,12 @@ const Result_t BinFile::DisableEncryption(void) throw()
 
 /*** Main Todo List
  *	1) Finish Enable/Disable encryption
- *	2) Finish Undo/Redo
- *	3) Work on generic search API
- *	4) Clean up and optimize the dirty flag
- *	5) Delete Object backpointer clean up
- *	6) Finish journal caching scheme
- *	7) Clean up ASSERT usage so that ASSERT can equal "" in Release
- *	8) Consider removal of IsConnected
- *	9) Do some serious leak checking
- *	10) Have you thought about performance profiling
+ *	2) Work on generic search API
+ *	3) Clean up and optimize the dirty flag
+ *	4) Delete Object backpointer clean up
+ *	5) Finish journal caching scheme
+ *	6) Consider removal of IsConnected
+ *	7) Have you thought about performance profiling
 ***/
 
 
