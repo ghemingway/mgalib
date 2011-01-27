@@ -19,6 +19,7 @@
 
 /*** Externally Defined Functions ***/
 std::string testFileName = "";
+std::string hammerTestCount = "0";
 
 
 // ------------------------------------------------------------------------------------ //
@@ -26,7 +27,9 @@ std::string testFileName = "";
 
 int main(int argc, char **argv) {
 	// Get the name of the file we want to run against
-	testFileName = argv[argc-1];
+	if (argc > 1) hammerTestCount = argv[1];
+	if (argc > 2) testFileName = argv[2];
+
 	// Initialize the gtest framework
 	testing::InitGoogleTest(&argc, argv);
 	
