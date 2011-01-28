@@ -78,7 +78,8 @@ void _SplitPath(const std::string &path, std::string &directory, std::string &fi
 		// Do we need to handle paths that start with '~'
 		if (directory[0] == '~') {
 			// Get the user's home directory
-			std::string homePath = getenv("HOME");
+			// FIXME: this crashes if USERPROFILE is undefined
+			std::string homePath = getenv("USERPROFILE");
 			// Append this to the beginning of the directory
 			directory = homePath + directory.substr(1);
 		}
