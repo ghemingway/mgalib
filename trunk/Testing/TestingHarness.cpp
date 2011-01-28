@@ -16,6 +16,17 @@
 #include <src/gtest-test-part.cc>
 #include <src/gtest-typed-test.cc>
 
+#ifdef _WIN32
+#include "crtdbg.h"
+
+int DebugReportHook(int reportType, char* message, int* returnValue) {
+	DWORD written;
+	WriteFile(GetStdHandle(STD_ERROR_HANDLE), message, strlen(message) /* *2 for WideChars*/, &written, NULL);
+	DebugBreak();
+	return FALSE;
+}
+#endif
+
 
 /*** Externally Defined Functions ***/
 std::string testFileName = "";
@@ -24,8 +35,15 @@ std::string hammerTestCount = "0";
 
 // ------------------------------------------------------------------------------------ //
 
-
 int main(int argc, char **argv) {
+#ifdef _WIN32
+	// Don't pop up message boxes when an ASSERT fails or a C runtime fault is detected
+	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+	_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+	_CrtSetReportHook(DebugReportHook);
+#endif
 	// Get the name of the file we want to run against
 	if (argc > 1) hammerTestCount = argv[1];
 	if (argc > 2) testFileName = argv[2];
