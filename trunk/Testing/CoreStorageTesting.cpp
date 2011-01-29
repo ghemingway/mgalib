@@ -1171,10 +1171,8 @@ static inline void _HammerRedo(std::ostream &out, ICoreStorage* storage, CoreMet
 
 TEST(ICoreStorage,Hammer)
 {
-	// How many tests are we running?
-	uint32_t hammerSize;
-	std::istringstream ( hammerTestCount ) >> hammerSize;
-	if (hammerSize == 0) return;
+	// Are we running any hammer tests?
+	if (hammerTestSize == 0) return;
 //	std::ostream &out = std::cout;
 	std::ofstream out("hammer_log.log");
 
@@ -1198,11 +1196,11 @@ TEST(ICoreStorage,Hammer)
 	EXPECT_EQ( S_OK, result = storage->SetCacheSize(100000) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
 
-	std::cout << "------ Commencing hammer test.  Size: " << hammerSize << " ------\n";
+	std::cout << "------ Commencing hammer test.  Size: " << hammerTestSize << " ------\n";
 	// Initialize random seed
 	srand ( (unsigned int)time(NULL) );
 	// Loop through the test  int iSecret, iGuess;
-	for (uint32_t hammerCount=0; hammerCount < hammerSize; hammerCount++)
+	for (uint32_t hammerCount=0; hammerCount < hammerTestSize; hammerCount++)
 	{
 		// Choose an action at random (0-12)
 		int selection = rand() % 13;
