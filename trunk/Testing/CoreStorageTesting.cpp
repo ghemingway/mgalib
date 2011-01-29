@@ -1052,7 +1052,7 @@ static inline void _HammerChangeAttribute(std::ostream &out, ICoreStorage* stora
 	}
 	else if (valueType == ValueType::String())
 	{
-		std::string stringValue = "random string here";
+		std::string stringValue("random string here");
 		out << "\t\tstorage->SetAttributeValue(" << attrID << ", \"" << stringValue << "\");\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, stringValue) ) << GetErrorInfo(result);
 	}
@@ -1073,7 +1073,7 @@ static inline void _HammerChangeAttribute(std::ostream &out, ICoreStorage* stora
 	{
 		DictionaryMap dictionaryValue;
 		EXPECT_EQ( S_OK, storage->GetAttributeValue(attrID, dictionaryValue) ) << GetErrorInfo(result);
-		std::string key="randomKey", value="randomValue";
+		std::string key("randomKey"), value("randomValue");
 		dictionaryValue.insert( std::make_pair(key, value) );
 		out << "\tstorage->SetAttributeValue(" << attrID << ", dictionaryValue);\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, dictionaryValue) ) << GetErrorInfo(result);
@@ -1145,7 +1145,7 @@ static inline void _HammerUndo(std::ostream &out, ICoreStorage* storage, CoreMet
 	// Engage...
 //	for (uint32_t i=0; i < undoCount; i++)
 //	{
-		out << "storage->Undo();\n";
+		out << "\tstorage->Undo();\n";
 		Uuid tag;
 		EXPECT_EQ( S_OK, result = storage->Undo(tag) ) << GetErrorInfo(result);
 //	}
@@ -1163,7 +1163,7 @@ static inline void _HammerRedo(std::ostream &out, ICoreStorage* storage, CoreMet
 	// Engage...
 	//	for (uint32_t i=0; i < undoCount; i++)
 //	{
-		out << "storage->Redo();\n";
+		out << "\tstorage->Redo();\n";
 		Uuid tag;
 		EXPECT_EQ( S_OK, result = storage->Redo(tag) ) << GetErrorInfo(result);
 //	}
@@ -1175,8 +1175,8 @@ TEST(ICoreStorage,Hammer)
 	uint32_t hammerSize;
 	std::istringstream ( hammerTestCount ) >> hammerSize;
 	if (hammerSize == 0) return;
-	std::ostream &out = std::cout;
-//	std::ofstream out("hammer_log.log");
+//	std::ostream &out = std::cout;
+	std::ofstream out("hammer_log.log");
 
 	// Prepare the new output file
 	Result_t result;
@@ -1196,6 +1196,7 @@ TEST(ICoreStorage,Hammer)
 	EXPECT_EQ( S_OK, result = storage->Save("hammer_test.mga", true) ) << GetErrorInfo(result);
 	// Set cacheSize == 100000
 	EXPECT_EQ( S_OK, result = storage->SetCacheSize(100000) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
 
 	std::cout << "------ Commencing hammer test.  Size: " << hammerSize << " ------\n";
 	// Initialize random seed
@@ -1237,11 +1238,11 @@ TEST(ICoreStorage,Hammer)
 				break;
 			case 8: case 9:
 				// Save the file
-				_HammerSave(out, storage, coreMetaProject);
+//				_HammerSave(out, storage, coreMetaProject);
 				break;
 			case 10:
 				// Close the file (without saving changes) and reopen - will loose changes since last save
-				_HammerOpen(out, storage, coreMetaProject, coreProject);
+//				_HammerOpen(out, storage, coreMetaProject, coreProject);
 				break;
 			case 12:
 				// Undo the last n changes
