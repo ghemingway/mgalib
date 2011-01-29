@@ -1200,7 +1200,7 @@ TEST(ICoreStorage,Hammer)
 
 	std::cout << "------ Commencing hammer test.  Size: " << hammerSize << " ------\n";
 	// Initialize random seed
-	srand ( time(NULL) );
+	srand ( (unsigned int)time(NULL) );
 	// Loop through the test  int iSecret, iGuess;
 	for (uint32_t hammerCount=0; hammerCount < hammerSize; hammerCount++)
 	{
@@ -1213,7 +1213,7 @@ TEST(ICoreStorage,Hammer)
 				out << "\tstorage->BeginTransaction();\n";
 				int txItems = rand() % 10 + 1;
 				EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
-				for (uint32_t txCount=0; txCount < txItems; txCount++)
+				for (int txCount=0; txCount < txItems; txCount++)
 				{
 					int subSelection = rand() % 6;
 					switch (subSelection)
