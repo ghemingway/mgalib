@@ -1,6 +1,6 @@
 /*** Included Header Files ***/
 #include "CoreStorageTesting.h"
-#include "CoreMetaObject.h"
+#include "../Core/CoreMetaObject.h"
 
 
 // Initialize the static members outside of the class
