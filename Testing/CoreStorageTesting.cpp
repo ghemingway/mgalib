@@ -865,12 +865,12 @@ TEST_F(ICoreStorageTest,Open)
 	// Open with unknown tag (Expect E_UNKNOWN_STORAGE)
 	ICoreStorage* openStorage = NULL;
 	EXPECT_EQ( E_UNKNOWN_STORAGE, result = ICoreStorage::Open("ASD", "foo.mga", NULL, openStorage) ) << GetErrorInfo(result);
-	// Open with known tag, but empty filename (Expect E_INVALID_USAGE)
-	EXPECT_EQ( E_INVALID_USAGE, result = ICoreStorage::Open("MGA", "", NULL, openStorage) ) << GetErrorInfo(result);
+	// Open with known tag, but empty filename (Expect E_NAMEMISSING)
+	EXPECT_EQ( E_NAMEMISSING, result = ICoreStorage::Open("MGA", "", NULL, openStorage) ) << GetErrorInfo(result);
 	// Open with good tag but unknown file (Expect E_FILEOPEN)
 	EXPECT_EQ( E_FILEOPEN, result = ICoreStorage::Open("MGA", "asdfg.mga", coreMetaProject, openStorage) ) << GetErrorInfo(result);
-	// Open with good tag but invalid CoreMetaProject (Expect E_INVALID_USAGE)
-	EXPECT_EQ( E_INVALID_USAGE, result = ICoreStorage::Open("MGA", "asdfg.mga", NULL, openStorage) ) << GetErrorInfo(result);
+	// Open with good tag but invalid CoreMetaProject (Expect E_META_NOTOPEN)
+	EXPECT_EQ( E_META_NOTOPEN, result = ICoreStorage::Open("MGA", "asdfg.mga", NULL, openStorage) ) << GetErrorInfo(result);
 
 	// Open with good tag, CoreMetaProject and filename (Expect S_OK)
 	ASSERT_EQ( S_OK, result = ICoreStorage::Open("MGA", "tmpfile_duplicate.mga", coreMetaProject, openStorage) ) << GetErrorInfo(result);
@@ -1192,8 +1192,6 @@ TEST(ICoreStorage,Hammer)
 	ASSERT_TRUE( storage != NULL );
 	// Save the project (just to make sure in case an Open is called before the first Save)
 	EXPECT_EQ( S_OK, result = storage->Save("hammer_test.mga", true) ) << GetErrorInfo(result);
-	// Set cacheSize == 100000
-	EXPECT_EQ( S_OK, result = storage->SetCacheSize(100000) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
 
 	std::cout << "------ Commencing hammer test.  Size: " << hammerTestSize << " ------\n";
