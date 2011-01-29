@@ -16,6 +16,7 @@
 #define BINFILE_DEFAULTMAXUNDO				10000000L
 #define BINFILE_DEFAULTJOURNALING			true
 #define BINFILE_DEFAULTCOMPRESSION			true
+#define BINFILE_JOURNALCOMPRESSIONLIMIT		0
 #define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
 #define BINFILE_ENCRYPTIONIVSIZE			CryptoPP::AES::BLOCKSIZE * 16
 
@@ -671,12 +672,14 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 
 	// Now just create the actual METAID_ROOT object (using a new Uuid and a nice transaction of course)
 	Uuid rootUuid;
+	binFile->_isJournaling = false;
 	result = binFile->BeginTransaction();
 	ASSERT( result == S_OK );
 	result = binFile->CreateObject(METAID_ROOT, rootUuid);
 	ASSERT( result == S_OK );
 	result = binFile->CommitTransaction();
 	ASSERT( result == S_OK );
+	binFile->_isJournaling = BINFILE_DEFAULTJOURNALING;
 	// Make sure to capture the rootUuid
 	binFile->_rootUuid = rootUuid;
 	// Return the new BinFile
@@ -865,6 +868,8 @@ const Result_t BinFile::WriteIndex(std::fstream &stream, const IndexHash &index,
 const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &originalJournalSizeB)
 {
 	ASSERT( stream.is_open() );
+	// Check to see if we have an empty journal
+	if (originalJournalSizeB == 0) return S_OK;
 	// Size the buffer
 	uint64_t journalSizeB = originalJournalSizeB;
 	char* buffer = new char[(size_t)journalSizeB];
@@ -909,6 +914,12 @@ const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &origin
 const Result_t BinFile::WriteJournal(std::fstream &stream, uint64_t &journalSizeB) const
 {
 	ASSERT( stream.is_open() );
+	// Check to see if we have an empty journal
+	if (this->_undoList.size() == 0)
+	{
+		journalSizeB = 0;
+		return S_OK;
+	}
 	// Create a correctly sized output buffer (position, size, tag, numCreated, numChanged, numDeleted, isCompressed, isEncrypted)
 	journalSizeB = this->_undoList.size() * (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) + 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
 	char* buffer = new char[(size_t)journalSizeB];
@@ -1165,7 +1176,7 @@ void BinFile::FlushUndoRedo(const uint32_t &undoCount)
 		// Get the front of the undo list
 		undoIter = this->_undoList.begin();
 		// Delete any allocated memory
-		if (undoIter->location == EntryLocation::Cache() && undoIter->buffer != NULL) delete undoIter->buffer;
+		if (undoIter->buffer != NULL) delete undoIter->buffer;
 		// Remove the entry from the list
 		this->_undoList.pop_front();
 		// Move on
@@ -1177,7 +1188,9 @@ void BinFile::FlushUndoRedo(const uint32_t &undoCount)
 	while (redoIter != this->_redoList.end())
 	{
 		// Delete any allocated memory
-		if (redoIter->location == EntryLocation::Cache() && redoIter->buffer != NULL) delete redoIter->buffer;
+		if (redoIter->buffer != NULL) delete redoIter->buffer;
+		// Move on to next redo entry
+		++redoIter;
 	}
 	this->_redoList.clear();
 }
@@ -1303,11 +1316,13 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 	}
 	// Make sure we have written as much as we are supposed to
 	ASSERT( bufferPointer-entry.buffer == entry.sizeB );
-	// Is there compression
-	if (entry.isCompressed) entry.sizeB = (uint32_t)_Compress(this->_compressor, entry.buffer, entry.sizeB);
+	// Is there compression (size must be above a certain bounds)
+	if (entry.isCompressed && entry.sizeB > BINFILE_JOURNALCOMPRESSIONLIMIT)
+		entry.sizeB = (uint32_t)_Compress(this->_compressor, entry.buffer, entry.sizeB);
+	else entry.isCompressed = false;
 	// Is there encryption
 	if (entry.isEncrypted) _Encrypt(this->_encryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
-	// All is good add the entry to the back of the undo list
+	// All is good, add the entry to the back of the undo list
 	this->_undoList.push_back(entry);
 	return S_OK;
 }
@@ -1335,13 +1350,22 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 		}
 		else ASSERT(false);
 		entry.location = EntryLocation::Cache();
-		// Is there encryption
-		if (entry.isEncrypted) _Decrypt(this->_decryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
-		// Is there compression
-		if (entry.isCompressed) entry.sizeB = (uint32_t)_Decompress(this->_decompressor, entry.buffer, entry.sizeB);
+	}
+	// Is there encryption
+	if (entry.isEncrypted)
+	{
+		_Decrypt(this->_decryptor, entry.buffer, this->_encryptionKey, this->_encryptionIV, entry.sizeB);
+		entry.isEncrypted = false;
+	}
+	// Is there compression
+	if (entry.isCompressed)
+	{
+		entry.sizeB = (uint32_t)_Decompress(this->_decompressor, entry.buffer, entry.sizeB);
+		entry.isCompressed = false;
 	}
 	// Deserialize the three transaction lists (created, changed, deleted) to memory
 	char* bufferPointer = entry.buffer;
+	ASSERT( bufferPointer != NULL );
 	for (uint32_t numCreated=0; numCreated < entry.numCreated; numCreated++)
 	{
 		MetaID_t metaID;
@@ -1416,8 +1440,8 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 		// Advance the read pointer
 		bufferPointer += sizeB;
 		// Create the entry and insert into deletedObject
-		IndexEntry entry = { object, EntryLocation::Cache(), 0, sizeB, this->_isCompressed, this->_isEncrypted };
-		this->_deletedObjects.push_back(std::make_pair(uuid,entry));
+		IndexEntry deletedEntry = { object, EntryLocation::Cache(), 0, sizeB, this->_isCompressed, this->_isEncrypted };
+		this->_deletedObjects.push_back(std::make_pair(uuid,deletedEntry));
 	}
 	return S_OK;
 }
@@ -1996,6 +2020,7 @@ const Result_t BinFile::DeleteObject(void) throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
 	if( this->_openedObject == this->_indexHash.end() ) return E_INVALID_USAGE;
+	if( this->_openedObject->first == this->_rootUuid ) return E_INVALID_USAGE;
 	// Clean up dangling pointers to/from binObject
 	BinObject *object = this->_openedObject->second.object;
 	ASSERT( object != NULL );
@@ -2243,8 +2268,8 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	ASSERT( this->_createdObjects.empty() );
 	ASSERT( this->_changedAttributes.empty() );
 	ASSERT( this->_deletedObjects.empty() );
-	if( this->_undoList.empty() ) return S_OK;
-	// Unpickle journaled transaction
+	if( this->_undoList.empty() ) return E_INVALID_USAGE;
+	// Unpickle the back undo journal transaction
 	JournalEntry entry = this->_undoList.back();
 	Result_t result = this->UnpickleTransaction(entry);
 	ASSERT( result == S_OK );
@@ -2253,7 +2278,6 @@ const Result_t BinFile::Undo(Uuid &tag) throw()
 	this->MarkDirty();
 	// Undo all of the changes (save as calling an AbortTransaction really)
 	this->TryAbortTransaction();
-	// Return a tag (if any)
 	tag = entry.tag;
 	// Move journal entry to redo list
 	this->_redoList.push_back(entry);
@@ -2271,7 +2295,7 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 	ASSERT( this->_deletedObjects.empty() );
 	// Make sure there is something to redo
 	if( this->_redoList.empty() ) return E_INVALID_USAGE;
-	// Unpickle the journal entry
+	// Unpickle the back redo journal entry
 	JournalEntry entry = this->_redoList.back();
 	Result_t result = this->UnpickleTransaction(entry);
 	ASSERT( result == S_OK );
