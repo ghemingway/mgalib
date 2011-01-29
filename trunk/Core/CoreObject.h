@@ -3,7 +3,6 @@
 
 
 /*** Included Header Files ***/
-#include "CoreTypes.h"
 #include "CoreAttribute.h"
 #include "CoreMetaObject.h"
 

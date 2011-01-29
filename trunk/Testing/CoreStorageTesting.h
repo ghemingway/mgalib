@@ -48,7 +48,7 @@ public:
 		if (ICoreStorageTest::coreProject != NULL)
 		{
 			delete ICoreStorageTest::coreProject;
-			remove("tmpfile.mga");
+//			remove("tmpfile.mga");
 		}
 		ICoreStorageTest::atomUuid = Uuid::Null();
 		ICoreStorageTest::attributeUuid = Uuid::Null();

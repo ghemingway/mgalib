@@ -3,7 +3,6 @@
 
 
 /*** Included Header Files ***/
-#include "CoreTypes.h"
 #include "CoreMetaAttribute.h"
 #include "CoreStorage.h"
 
@@ -26,19 +25,19 @@ private:
 	CoreAttributeBase(const CoreAttributeBase &);
 	
 protected:
-	CoreObjectBase							*_parent;			//!<
-	CoreMetaAttribute						*_metaAttribute;	//!<
-	bool									_isDirty;			//!<
-	uint32_t								_refCount;			//!<
+	CoreObjectBase							*_parent;					//!< Parent CoreObject
+	CoreMetaAttribute						*_metaAttribute;			//!< Associated CoreMetaAttribute
+	bool									_isDirty;					//!< Dirty flag
+	uint32_t								_refCount;					//!< Possibly unneeded reference counter
 
 	friend class CoreObjectBase;
 	static const Result_t Create(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute) throw();
 
-	ICoreStorage* SetStorageObject(void) const;										//!<
-	void RegisterTransactionItem(void);												//!<
-	void MarkDirty(void) throw();													//!<
-	const Result_t InTransaction(bool &flag) const throw();							//!<
-	const Result_t InWriteTransaction(bool &flag) const throw();					//!<
+	ICoreStorage* SetStorageObject(void) const;							//!< Force the storage to point at parent CoreObject
+	void RegisterTransactionItem(void);									//!< Register that this attribute has changed
+	void MarkDirty(void) throw();										//!< Mark parent as dirty
+	const Result_t InTransaction(bool &flag) const throw();				//!< Are we in a transaction
+	const Result_t InWriteTransaction(bool &flag) const throw();		//!< Are we in a write transaction
 	const Result_t ResolveBackpointer(const AttrID_t &attrID, const Uuid &newValue, const Uuid &oldValue) throw(); //!<
 	CoreAttributeBase(CoreObjectBase *parent, CoreMetaAttribute *metaAttribute);	//!<
 
@@ -50,8 +49,8 @@ public:
 	inline bool IsDirty(void) const throw()								{ return this->_isDirty; }
 	inline const Result_t GetValueType(ValueType &valueType) const throw(){ return this->_metaAttribute->GetValueType(valueType); }
 
-	virtual const Result_t CommitTransaction(void) throw()=0;
-	virtual const Result_t AbortTransaction(void) throw()=0;
+	virtual const Result_t CommitTransaction(void) throw()=0;			//!<
+	virtual const Result_t AbortTransaction(void) throw()=0;			//!<
 };
 
 
@@ -63,7 +62,7 @@ class CoreAttributeTemplateBase : public CoreAttributeBase
 {
 protected:
 	friend class CoreAttributeBase;
-	std::list<T>					_values;
+	std::list<T>					_values;							//!<
 
 public:
 	CoreAttributeTemplateBase(CoreObjectBase* parent, CoreMetaAttribute* coreMetaAttribute) :

@@ -128,8 +128,8 @@ CoreProject::~CoreProject()
 
 const Result_t CoreProject::Create(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw()
 {
-	if( connection == "" ) return E_INVALID_USAGE;
-	if( coreMetaProject == NULL ) return E_INVALID_USAGE;
+	if( connection == "" ) return E_NAMEMISSING;
+	if( coreMetaProject == NULL ) return E_META_NOTOPEN;
 	// What type of file are we trying to open
 	std::string con = CoreProject::GetFirstToken(connection);
 	ICoreStorage* coreStorage = NULL;
@@ -140,11 +140,16 @@ const Result_t CoreProject::Create(const std::string &connection, CoreMetaProjec
 		cleanFileName.erase(0, 4);
 		// Create the CoreStorage for the project
 		Result_t retVal = ICoreStorage::Create(con, cleanFileName, coreMetaProject, coreStorage);
-		if ( retVal != S_OK ) return retVal;
+		if ( retVal != S_OK )
+		{
+			delete coreMetaProject;
+			return retVal;
+		}
 	}
 	if( coreStorage == NULL )
 	{
 		// Do something to signal a failure to create CoreStorage
+		delete coreMetaProject;
 		return E_UNKNOWN_STORAGE;
 	}
 	// Create the new CoreProject
@@ -156,8 +161,8 @@ const Result_t CoreProject::Create(const std::string &connection, CoreMetaProjec
 
 const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject* coreMetaProject, CoreProject* &project) throw()
 {
-	if( connection == "" ) return E_INVALID_USAGE;
-	if( coreMetaProject == NULL ) return E_INVALID_USAGE;
+	if( connection == "" ) return E_NAMEMISSING;
+	if( coreMetaProject == NULL ) return E_META_NOTOPEN;
 	// Now figure out what CoreStorage to use
 	std::string con = CoreProject::GetFirstToken(connection);
 	ICoreStorage* coreStorage = NULL;
@@ -168,13 +173,18 @@ const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject*
 		cleanFileName.erase(0, 4);
 		// Open the CoreStorage for the project
 		Result_t retVal = ICoreStorage::Open(con, cleanFileName, coreMetaProject, coreStorage);
-		if ( retVal != S_OK ) return retVal;
+		if ( retVal != S_OK )
+		{
+			delete coreMetaProject;
+			return retVal;
+		}
 	}
-	else
-		ASSERT( false );
 	// Make sure we have a valid storage object
-	if( coreStorage == NULL ) {
-		return E_EXCEPTION;
+	if( coreStorage == NULL )
+	{
+		// Do something to signal a failure to create CoreStorage
+		delete coreMetaProject;
+		return E_UNKNOWN_STORAGE;
 	}
 	// Create the new CoreProject
 	project = new CoreProject(coreMetaProject, coreStorage);
@@ -186,7 +196,7 @@ const Result_t CoreProject::Open(const std::string &connection, CoreMetaProject*
 const Result_t CoreProject::Save(const std::string &filename, const bool &force) throw()
 {
 	if( filename == "" ) return E_NAMEMISSING;
-	if( !this->_transactionList.empty() ) return E_INVALID_USAGE;
+	if( !this->_transactionList.empty() ) return E_TRANSACTION;
 	ASSERT( this->_storage != NULL );
 	// Ask the coreStorage to save itself
 	return this->_storage->Save(filename, force);

@@ -98,7 +98,12 @@ public:
 	Uuid(const char* string);							//!< Char string constructor
 	Uuid(const std::string &string);					//!< Std::string constructor
 	// Coversions
-	Uuid& operator=(const Uuid &uuid);
+	inline Uuid& operator=(const Uuid &uuid)
+	{
+		// Copy all 16 bytes into the Uuid data structure
+		memcpy(this, &uuid, sizeof(Uuid));
+		return *this;
+	}
 	Uuid& operator=(const std::vector<unsigned char> &vector);
 	Uuid& operator=(const std::string &string);
 	operator std::vector<unsigned char>() const;
@@ -106,7 +111,11 @@ public:
 	static std::vector<unsigned char> ToVector(const std::string &string);
 	static std::string ToString(const std::vector<unsigned char> &vector);
 	// Operators
-	bool operator==(const Uuid &uuid) const;
+	inline bool operator==(const Uuid &uuid) const
+	{
+		// Just compare the memory
+		return (memcmp(this, &uuid, sizeof(Uuid)) == 0);
+	}
 	bool operator!=(const Uuid &uuid) const;
 	bool operator>(const Uuid &uuid) const;
 	bool operator<(const Uuid &uuid) const;

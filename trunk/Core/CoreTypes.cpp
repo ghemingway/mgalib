@@ -50,14 +50,6 @@ Uuid::Uuid(const std::string &string)
 }
 
 
-Uuid& Uuid::operator=(const Uuid &uuid)
-{
-	// Copy all 16 bytes into the Uuid data structure
-	memcpy(this, &uuid, sizeof(Uuid));
-	return *this;
-}
-
-
 Uuid& Uuid::operator=(const std::vector<unsigned char> &vector)
 {
 	if (vector.size() != sizeof(Uuid)) return *this;
@@ -200,13 +192,6 @@ std::string Uuid::ToString(const std::vector<unsigned char> &vector)
 	// Finally, convert the Uuid to a string
 	std::string string = uuid;
 	return string;
-}
-
-
-bool Uuid::operator==(const Uuid &uuid) const
-{
-	// Just compare the memory
-	return (memcmp(this, &uuid, sizeof(Uuid)) == 0);
 }
 
 

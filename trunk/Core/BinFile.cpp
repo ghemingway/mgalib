@@ -626,7 +626,7 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 
 const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const bool &encrypted) throw()
 {
-	if ( filename == "" ) return E_INVALID_USAGE;
+	if ( filename == "" ) return E_NAMEMISSING;
 	if ( coreMetaProject == NULL ) return E_META_NOTOPEN;
 	// Make sure filename is valid UTF-8
 	if (_CheckUTF8(filename) != S_OK) return E_BADUTF8STRING;
@@ -687,8 +687,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 
 const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreMetaProject, ICoreStorage* &storage, const std::vector<char> &encryptionKey) throw()
 {
-	if ( filename == "" ) return E_INVALID_USAGE;
-	if ( coreMetaProject == NULL ) return E_INVALID_USAGE;
+	if ( filename == "" ) return E_NAMEMISSING;
+	if ( coreMetaProject == NULL ) return E_META_NOTOPEN;
 	// Make sure filename is valid UTF-8
 	if (_CheckUTF8(filename) != S_OK) return E_BADUTF8STRING;
 	// Clean up the filename a bit (handle ~ and such)
@@ -1163,11 +1163,10 @@ void BinFile::FlushCache(void)
 
 void BinFile::FlushUndoRedo(const uint32_t &undoCount)
 {
-	ASSERT( undoCount <= this->_undoList.size() );
 	// Delete any allocated memory
 	uint32_t i = 0;
 	JournalList::iterator undoIter;
-	while (i < undoCount)
+	while (i < undoCount && !this->_undoList.empty())
 	{
 		// Get the front of the undo list
 		undoIter = this->_undoList.begin();
@@ -1684,11 +1683,13 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 {
 	// Clear the incoming vector and size it
 	objectVector.clear();
+	objectVector.resize(this->_indexHash.size());
 	// Load it with the indexHash
+	uint64_t objCount = 0;
 	IndexHash::const_iterator indexIter = this->_indexHash.begin();
 	while(indexIter != this->_indexHash.end())
 	{
-		objectVector.push_back( indexIter->first );
+		objectVector[objCount++] = indexIter->first;
 		++indexIter;
 	}
 	// All is good
