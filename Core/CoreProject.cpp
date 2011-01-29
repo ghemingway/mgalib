@@ -122,6 +122,7 @@ CoreProject::~CoreProject()
 	if (this->_storage != NULL) delete this->_storage;
 	// Delete the CoreMetaProject
 	if (this->_coreMetaProject != NULL) delete this->_coreMetaProject;
+	this->_coreMetaProject = NULL;
 }
 
 
