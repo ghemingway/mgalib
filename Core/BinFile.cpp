@@ -484,15 +484,12 @@ bool BinObject::IsConnected(void) const
 
 BinObject::~BinObject()
 {
-	std::list<BinAttribute*>::iterator attrIter = this->_attributes.begin();
 	// Delete every attribute in the list
-	while( attrIter != this->_attributes.end() )
+	while( !this->_attributes.empty() )
 	{
-		if (*attrIter != NULL ) delete *attrIter;
-		++attrIter;
+		delete this->_attributes.front();
+		this->_attributes.pop_front();
 	}
-	// Now clear the list
-	this->_attributes.clear();
 }
 
 
@@ -513,7 +510,6 @@ BinObject* BinObject::Read(CoreMetaProject* &metaProject, char* &buffer, const U
 	BinObject* binObject = new BinObject(metaObject, uuid);
 	ASSERT( binObject != NULL );
 	BinAttribute *binAttribute = NULL;
-	ValueType valueType;
 	// Continue to read in attributes until a NULL is returned
 	do
 	{
@@ -1428,20 +1424,21 @@ const Result_t BinFile::UnpickleTransaction(JournalEntry &entry)
 		this->_changedAttributes.insert(std::make_pair(attributeID,changeBase));
 	}
 	// Finally, the deleted objects
+	Uuid uuid;
+	uint32_t sizeB;
 	for (uint32_t numDeleted=0; numDeleted < entry.numDeleted; numDeleted++)
 	{
 		// Read in the deleted object's Uuid
-		Uuid uuid;
 		_Read(bufferPointer, uuid);
-		// Read in the deleted object itself
-		uint32_t sizeB;
+		// Read in the deleted object itself (and mark as dirty)
 		BinObject* object = BinObject::Read(this->_metaProject, bufferPointer, uuid, sizeB);
 		ASSERT( object != NULL );
+		object->MarkDirty();
 		// Advance the read pointer
 		bufferPointer += sizeB;
 		// Create the entry and insert into deletedObject
 		IndexEntry deletedEntry = { object, EntryLocation::Cache(), 0, sizeB, this->_isCompressed, this->_isEncrypted };
-		this->_deletedObjects.push_back(std::make_pair(uuid,deletedEntry));
+		this->_deletedObjects.push_back( std::make_pair(uuid, deletedEntry) );
 	}
 	return S_OK;
 }
@@ -1643,7 +1640,7 @@ BinFile::~BinFile()
 	// Clear the cache (and its objects)
 	this->FlushCache();
 	// Clear the journal (and its objects)
-//	this->FlushUndoRedo(this->_undoList.size());
+	this->FlushUndoRedo(this->_undoList.size());
 }
 
 
@@ -2173,6 +2170,8 @@ inline const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const T
 	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
 	attribute->Set(value);
+	// Mark the binFile as dirty and move on
+	this->MarkDirty();
 	return S_OK;
 }
 
@@ -2250,6 +2249,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	// Update the value in the record and the attribute
 	changeRecord->newValue = value;
 	attribute->Set(value);
+	// Mark the binFile as dirty and move on
+	this->MarkDirty();
 	return S_OK;
 }
 
@@ -2402,19 +2403,11 @@ const Result_t BinFile::JournalInfo(const uint32_t &undoSize, const uint32_t red
 									std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()
 {
 	// Nothing to do if not journaling
+	undoJournal.clear();
+	redoJournal.clear();
 	if (!this->_isJournaling) return S_OK;
-	ASSERT(false);
+	// Get journal info
 	// TODO: Get journal info
-	return S_OK;
-}
-
-
-const Result_t BinFile::BeginJournal(void) throw()
-{
-	// Nothing to be done if we already are journaling
-	if (this->_isJournaling) return S_OK;
-	ASSERT(false);
-	// TODO: Start journaling
 	return S_OK;
 }
 
@@ -2423,8 +2416,10 @@ const Result_t BinFile::EndJournal(void) throw()
 {
 	// Nothing to be done if we already are not journaling
 	if (!this->_isJournaling) return S_OK;
-	ASSERT(false);
-	// TODO: Stop journaling
+	// Otherwise, clear the journal (both undo and redo)
+	this->FlushUndoRedo(this->_undoList.size());
+	// And set the journaling flag to false
+	this->_isJournaling = false;
 	return S_OK;
 }
 
@@ -2469,10 +2464,10 @@ const Result_t BinFile::DisableEncryption(void) throw()
  *	1) Finish Enable/Disable encryption
  *	2) Work on generic search API
  *	3) Clean up and optimize the dirty flag
- *	4) Delete Object backpointer clean up
+ *	4) DeleteObject backpointer clean up
  *	5) Finish journal caching scheme
  *	6) Consider removal of IsConnected
- *	7) Have you thought about performance profiling
+ *	7) Scratch file free space manager
 ***/
 
 

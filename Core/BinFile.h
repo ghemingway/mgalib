@@ -271,7 +271,7 @@ public:
 	virtual inline const Result_t IsJournaled(bool &flag) const throw()						{ flag = this->_isJournaling; return S_OK; }
 	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
 									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw();
-	virtual const Result_t BeginJournal(void) throw();										//!<
+	virtual inline const Result_t BeginJournal(void) throw()								{ this->_isJournaling = true; return S_OK; }
 	virtual const Result_t EndJournal(void) throw();										//!<
 
 	virtual inline const Result_t IsCompressed(bool &flag) const throw(){ flag = this->_isCompressed; return S_OK; }
