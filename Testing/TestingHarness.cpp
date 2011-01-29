@@ -30,7 +30,7 @@ int DebugReportHook(int reportType, char* message, int* returnValue) {
 
 /*** Externally Defined Functions ***/
 std::string testFileName = "";
-std::string hammerTestCount = "0";
+uint32_t hammerTestSize = 0;
 
 
 // ------------------------------------------------------------------------------------ //
@@ -45,8 +45,21 @@ int main(int argc, char **argv) {
 	_CrtSetReportHook(DebugReportHook);
 #endif
 	// Get the name of the file we want to run against
-	if (argc > 1) hammerTestCount = argv[1];
-	if (argc > 2) testFileName = argv[2];
+	for (int i=1; i<argc; i++)
+	{
+		// See if a hammer test is being asked for
+		std::string cmdHammerTestCount = "--hammerTestCount=";
+		if ( strncmp(argv[i], cmdHammerTestCount.c_str(), cmdHammerTestCount.length()) == 0)
+		{
+			// Get how many hammer tests to run
+			std::string cmdLine(argv[i]);
+			// How many tests are we running?
+			std::istringstream ( cmdLine.substr(cmdHammerTestCount.length()) ) >> hammerTestSize;
+		}
+
+		// See if a sample test file is passed in
+//		if (argc > 2) testFileName = argv[2];
+	}
 
 	// Initialize the gtest framework
 	testing::InitGoogleTest(&argc, argv);

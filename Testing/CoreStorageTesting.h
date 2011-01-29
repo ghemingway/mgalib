@@ -13,7 +13,7 @@
 
 /*** Externally Defined Functions & Variables ***/
 extern std::string testFileName;
-extern std::string hammerTestCount;
+extern uint32_t hammerTestSize;
 
 
 // --------------------------- ICoreStorageTest ---------------------------
