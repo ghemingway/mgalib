@@ -617,11 +617,17 @@ BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) 
 	ASSERT( this->_compressor != NULL );
 	this->_decompressor = new CryptoPP::ZlibDecompressor();
 	ASSERT( this->_decompressor != NULL );
-//	this->_encryptor = new CryptoPP::AuthenticatedEncryptionFilter();
-//	ASSERT( this->_encryptor != NULL );
-//	this->_decryptor = new CryptoPP::AuthenticatedDecryptionFilter();
-//	ASSERT( this->_decryptor != NULL );
-	
+	// Set up the encryption support
+	CryptoPP::GCM<CryptoPP::AES>::Encryption encryptor;
+	this->_encryptor = new CryptoPP::AuthenticatedEncryptionFilter(encryptor);
+	ASSERT( this->_encryptor != NULL );
+	CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
+	this->_decryptor = new CryptoPP::AuthenticatedDecryptionFilter(decryptor);
+	ASSERT( this->_decryptor != NULL );
+	this->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
+	ASSERT( this->_encryptionKey != NULL );
+	this->_encryptionIV = new char[BINFILE_ENCRYPTIONIVSIZE];
+	ASSERT( this->_encryptionIV != NULL );
 }
 
 
@@ -661,10 +667,8 @@ const Result_t BinFile::Create(const std::string &filename, CoreMetaProject *cor
 	binFile->_isEncrypted = encrypted;
 	// Generate a key
 //	CryptoPP::AutoSeededRandomPool randomPool;
-//	binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
 //	randomPool.GenerateBlock( (byte*)binFile->_encryptionKey, BINFILE_ENCRYPTIONKEYSIZE );
 //	// Generate the iv
-//	binFile->_encryptionIV = new char[BINFILE_ENCRYPTIONIVSIZE];
 //	randomPool.GenerateBlock( (byte*)binFile->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE );  
 
 	// Now just create the actual METAID_ROOT object (using a new Uuid and a nice transaction of course)
@@ -709,7 +713,6 @@ const Result_t BinFile::Open(const std::string &filename, CoreMetaProject *coreM
 		// Turn on encryption for the binFile
 		binFile->_isEncrypted = true;
 		// Copy in the key
-		binFile->_encryptionKey = new char[BINFILE_ENCRYPTIONKEYSIZE];
 		memcpy(binFile->_encryptionKey, &encryptionKey[0], BINFILE_ENCRYPTIONKEYSIZE);
 	}
 
@@ -880,7 +883,7 @@ const Result_t BinFile::ReadJournal(std::fstream &stream, const uint64_t &origin
 	uint64_t entryCount = journalSizeB / (sizeof(uint64_t) + sizeof(uint32_t) + sizeof(Uuid) + 3 * sizeof(uint32_t) + 2 * sizeof(uint8_t));
 	// Read in each item for the index
 	char *bufferPointer = buffer;
-	JournalEntry entry = { NULL, EntryLocation::Input(), 0, 0, Uuid::Null(), 0, 0, 0, false, false };
+	JournalEntry entry = { NULL, EntryLocation::Input(), 0, 0, Uuid::Null(), 0, 0, 0, false, false, false };
 	for (uint64_t i=0; i < entryCount; ++i)
 	{
 		// Copy the position into a temp value and then into the entry
@@ -961,26 +964,33 @@ const Result_t BinFile::ReadOptions(std::fstream &stream, const uint32_t &sizeB,
 	char* bufferPointer = buffer;
 	// Read data from the stream
 	stream.read(buffer, sizeB);
-	// Parse the options
-	uint8_t tmpVal;
-	_Read<uint8_t>(bufferPointer, tmpVal);
-	this->_isEncrypted = (tmpVal != false);
-	if (this->_isEncrypted)
-	{
-		ASSERT(false);
-		// Read the encryption IV
-		memcpy(this->_encryptionIV, bufferPointer, BINFILE_ENCRYPTIONIVSIZE);
-		bufferPointer += BINFILE_ENCRYPTIONIVSIZE;
-	}
-	_Read<uint8_t>(bufferPointer, tmpVal);
-	this->_isCompressed = (tmpVal != false);
-	_Read(bufferPointer, this->_rootUuid);
+
 	// Read the index info
-	_Read(bufferPointer, startOfIndex);
-	_Read(bufferPointer, indexSizeB);
+	uint8_t boolVal;
+	_Read<uint8_t>(bufferPointer, boolVal);
+	this->_isCaching = (boolVal != false);
+	_Read<uint64_t>(bufferPointer, this->_maxCacheSize);
+	_Read<Uuid>(bufferPointer, this->_rootUuid);
+	_Read<std::streampos>(bufferPointer, startOfIndex);
+	_Read<uint64_t>(bufferPointer, indexSizeB);
+
 	// Read the journal info
-	_Read(bufferPointer, startOfJournal);
-	_Read(bufferPointer, journalSizeB);
+	_Read<uint8_t>(bufferPointer, boolVal);
+	this->_isJournaling = (boolVal != false);
+	_Read<uint64_t>(bufferPointer, this->_maxUndoSize);
+	_Read<std::streampos>(bufferPointer, startOfJournal);
+	_Read<uint64_t>(bufferPointer, journalSizeB);
+
+	// Read the compression info
+	_Read<uint8_t>(bufferPointer, boolVal);
+	this->_isCompressed = (boolVal != false);
+
+	// Parse the options
+	_Read<uint8_t>(bufferPointer, boolVal);
+	this->_isEncrypted = (boolVal != false);
+	memcpy(this->_encryptionIV, bufferPointer, BINFILE_ENCRYPTIONIVSIZE);
+	bufferPointer += BINFILE_ENCRYPTIONIVSIZE;
+
 	// Clean up and be done
 	delete buffer;
 	return S_OK;
@@ -992,28 +1002,36 @@ const uint32_t BinFile::WriteOptions(std::fstream &stream, const std::streampos 
 {
 	ASSERT( stream.is_open() );
 	// Create a correctly sized output buffer
-	uint32_t sizeB = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(Uuid) + 4 *sizeof(uint64_t);
-	// Size is larger if we have encryption (IV takes space)
-	if (this->_isEncrypted) sizeB += BINFILE_ENCRYPTIONIVSIZE;
+	uint32_t sizeB = 0;
+	sizeB += sizeof(uint8_t) + 3 * sizeof(uint64_t) + sizeof(Uuid);			//!< Index info
+	sizeB += sizeof(uint8_t) + 3 *sizeof(uint64_t);							//!< Journal info
+	sizeB += sizeof(uint8_t);												//!< Compression info
+	sizeB += sizeof(uint8_t) + BINFILE_ENCRYPTIONIVSIZE;					//!< Encryption info
+	// Allocate a buffer to write into
 	char* buffer = new char[sizeB];
 	char* bufferPointer = buffer;
-	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
-	if (this->_isEncrypted)
-	{
-		ASSERT(false);
-		ASSERT(this->_encryptionIV != NULL);
-		// Write the encryption IV
-		memcpy(bufferPointer, this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
-		bufferPointer += BINFILE_ENCRYPTIONIVSIZE;
-	}
-	_Write<uint8_t>(bufferPointer, this->_isCompressed);
+
+	// Write index info
+	_Write<uint8_t>(bufferPointer, this->_isCaching);
+	_Write<uint64_t>(bufferPointer, this->_maxCacheSize);
 	_Write<Uuid>(bufferPointer, this->_rootUuid);
-	// Write index info
-	_Write<uint64_t>(bufferPointer, startOfIndex);
+	_Write<std::streampos>(bufferPointer, startOfIndex);
 	_Write<uint64_t>(bufferPointer, indexSizeB);
-	// Write index info
-	_Write<uint64_t>(bufferPointer, startOfJournal);
+
+	// Write journal info
+	_Write<uint8_t>(bufferPointer, this->_isJournaling);
+	_Write<uint64_t>(bufferPointer, this->_maxUndoSize);
+	_Write<std::streampos>(bufferPointer, startOfJournal);
 	_Write<uint64_t>(bufferPointer, journalSizeB);
+
+	// Write compression info
+	_Write<uint8_t>(bufferPointer, this->_isCompressed);
+
+	// Write encryption info
+	_Write<uint8_t>(bufferPointer, this->_isEncrypted);
+	memcpy(bufferPointer, this->_encryptionIV, BINFILE_ENCRYPTIONIVSIZE);
+	bufferPointer += BINFILE_ENCRYPTIONIVSIZE;
+
 	// Write it out to the stream
 	stream.write(buffer, sizeB);
 	ASSERT( !stream.bad() );
@@ -1205,7 +1223,7 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 	// Create the journal entry
 	JournalEntry entry = { NULL, EntryLocation::Cache(), 0, 0, tag,
 		this->_createdObjects.size(), this->_changedAttributes.size(), this->_deletedObjects.size(),
-		this->_isCompressed, this->_isEncrypted };
+		this->_isCompressed, this->_isEncrypted, this->_isDirty };
 	// Get the size of the total transaction
 	std::list<std::pair<Uuid,MetaID_t> >::iterator createdIter = this->_createdObjects.begin();
 	while( createdIter != this->_createdObjects.end() )
@@ -1638,13 +1656,13 @@ BinFile::~BinFile()
 		int retVal = remove(scratchFileName.c_str());
 		ASSERT( retVal == 0 );
 	}
-	// Clean up compression
+	// Clean up compression and encryption
 	delete this->_compressor;
 	delete this->_decompressor;
-//	delete this->_encryptor;
-//	delete this->_decryptor;
-//	delete this->_encryptionKey;
-//	delete this->_encryptionIV;
+	delete this->_encryptor;
+	delete this->_decryptor;
+	delete this->_encryptionKey;
+	delete this->_encryptionIV;
 	// Clear the cache (and its objects)
 	this->FlushCache();
 	// Clear the journal (and its objects)
@@ -2437,7 +2455,7 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 }
 
 
-const Result_t BinFile::JournalInfo(const uint32_t &undoSize, const uint32_t redoSize,
+const Result_t BinFile::JournalInfo(const uint64_t &undoSize, const uint64_t &redoSize,
 									std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()
 {
 	// Nothing to do if not journaling
