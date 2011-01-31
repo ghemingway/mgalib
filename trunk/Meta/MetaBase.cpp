@@ -130,19 +130,6 @@ MetaBase::~MetaBase()
 }
 
 
-const Result_t MetaBase::GetUuid(Uuid &uuid) const throw()
-{
-	ASSERT( this->_coreObject != NULL );
-	return this->_coreObject->GetUuid(uuid);
-}
-
-
-const Result_t MetaBase::GetMetaProject(MetaProject* &project) const throw()
-{
-	project = this->_metaProject; return S_OK;
-}
-
-
 const Result_t MetaBase::GetName(std::string &name) const throw()
 {
 	Result_t txResult = this->_metaProject->BeginTransaction();
@@ -184,6 +171,20 @@ const Result_t MetaBase::SetDisplayedName(const std::string &name) throw()
 	txResult = this->_metaProject->CommitTransaction();
 	ASSERT( txResult == S_OK );
 	return result;
+}
+
+
+const Result_t MetaBase::GetRegistryValue(const std::string &key, std::string &value) const throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
+
+
+const Result_t MetaBase::SetRegistryValue(const std::string &key, const std::string &value) throw()
+{
+	ASSERT(false);
+	return S_OK;
 }
 
 
@@ -244,6 +245,7 @@ const Result_t MetaBase::CreateConstraint(MetaConstraint* &constraint) throw()
 	CoreObject coreObject;
 	result = coreProject->CreateObject(METAID_METACONSTRAINT, coreObject);
 	ASSERT( result == S_OK );
+	ASSERT( coreObject != NULL );
 	// Link the new child to this object as parent
 	Uuid uuid = Uuid::Null();
 	result = this->_coreObject->GetUuid(uuid);

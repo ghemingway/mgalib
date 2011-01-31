@@ -7,19 +7,6 @@
 
 // --------------------------- MetaModel --------------------------- //
 
-/*
-void MetaModel::Traverse(MetaProject *metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base class
-	MetaFCO::Traverse(metaProject, coreObject);
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_DEFFCO_PTR);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ROLES_COLL);
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_ASPECTS_COLL);
-}
-*/
 
 const Result_t MetaModel::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {
@@ -287,6 +274,11 @@ const Result_t MetaModel::LegalRoles(MetaFCO* &kind, std::list<MetaRole*> &roleL
 	return S_OK;
 }
 
+const Result_t MetaModel::CreateRole(const MetaFCO* &kind, MetaRole* &role) throw()
+{
+	ASSERT(false);
+	return S_OK;
+}
 /*
 STDMETHODIMP CMgaMetaModel::CreateRole(IMgaMetaFCO *kind, IMgaMetaRole **p)
 {

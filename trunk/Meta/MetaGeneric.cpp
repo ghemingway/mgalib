@@ -42,8 +42,8 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 
 #define DECLARE_FOLDER() \
 	DECLARE_BASE(); \
-	CREATE_POINTER(ATTRID_DEFFOLDER_PTR, "FolderParent", "Defined In"); \
-	CREATE_COLLECTION(ATTRID_DEFFOLDER_PTR, "DefinedFolders", "Defined Folders"); \
+	CREATE_POINTER(ATTRID_FOLDER_PTR, "FolderParent", "Defined In"); \
+	CREATE_COLLECTION(ATTRID_FOLDER_PTR, "ChildFolders", "Child Folders"); \
 	CREATE_COLLECTION(ATTRID_DEFFCO_PTR, "DefinedFCOs", "Defined FCOs"); \
 	CREATE_COLLECTION(ATTRID_DEFATTR_PTR, "DefinedAttributes", "Defined Attributes"); \
 	CREATE_COLLECTION(ATTRID_FOLDERLINK_PARENT_PTR, "LegalFolders", "Legal Child Folders"); \
@@ -82,7 +82,7 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 	CREATE_COLLECTION(ATTRID_DEFATTR_PTR, "DefinedAttributes", "Defined Attributes"); \
 	CREATE_COLLECTION(ATTRID_KIND_PTR, "UsedInRoles", "Used In Roles"); \
 	CREATE_COLLECTION(ATTRID_ROOTOBJLINK_OBJECT_PTR, "FolderLinks", "Used In Folders"); \
-	CREATE_COLLECTION(ATTRID_ATTRLINK_USEDIN_PTR, "Attributes", "Attributes");\
+	CREATE_COLLECTION(ATTRID_ATTRLINK_USEDIN_PTR, "Attributes", "Attributes");
 
 // ------- Model
 
@@ -142,6 +142,7 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 #define DECLARE_POINTERSPEC() \
 	CREATE_ATTRIBUTE(ATTRID_PTRSPECNAME, "SpecName", "Pointer Spec Name", ValueType::String()); \
 	CREATE_COLLECTION(ATTRID_PTRITEMS_COLL, "Items", "Pointer Items");
+
 	CREATE_OBJECT(METAID_METAPOINTERSPEC, "MetaPointerSpec", "Meta Pointer Specification");
 	DECLARE_POINTERSPEC();
 	CREATE_POINTER(ATTRID_PTRSPECS_COLL, "SpecParent", "Parent");
@@ -176,13 +177,6 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 	CREATE_POINTER(ATTRID_CONNJOINTS_COLL, "JointParent", "Parent");
 	CREATE_COLLECTION(ATTRID_PTRSPECS_COLL, "Specs", "Pointer Specifications");
 
-// ------- RegNode
-
-//	CREATE_OBJECT(METAID_METAREGNODE, "MetaRegNode", "Meta Registry Node");
-//	CREATE_ATTRIBUTE(ATTRID_NAME, "Name", "Name", ValueType::String());
-//	CREATE_ATTRIBUTE(ATTRID_VALUE, "Value", "Value", ValueType::String());
-//	CREATE_POINTER(ATTRID_REGNODES_COLL, "RegNodeParent", "Parent");
-//	CREATE_COLLECTION(ATTRID_REGNODES_COLL, "RegNodes", "Registry Nodes");
 
 // ------- EnumItem
 

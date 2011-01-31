@@ -18,7 +18,8 @@ class MetaPointerItem;
 // --------------------------- MetaPointerSpec --------------------------- //
 
 
-class MetaPointerSpec {
+class MetaPointerSpec
+{
 private:
 	MetaPointerSpec();											//!< Deny access to default constructor
 	MetaPointerSpec(const MetaPointerSpec &);					//!< Deny access to copy constructor

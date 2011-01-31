@@ -78,7 +78,7 @@ const Result_t CreateMetaCoreMetaProject(CoreMetaProject* &metaProject);
 #define ATTRID_DISPNAME					211
 #define ATTRID_CONSTRAINT_PTR			212
 #define ATTRID_ALIASENABLED				213
-#define ATTRID_DEFFOLDER_PTR			220
+#define ATTRID_FOLDER_PTR				220
 #define ATTRID_DEFFCO_PTR				221
 #define ATTRID_DEFATTR_PTR				222
 #define ATTRID_FOLDERLINK_PARENT_PTR	231

@@ -27,15 +27,15 @@ private:
 	CoreObject					_coreObject;				//!<
 	MetaProject					*_metaProject;				//!<
 
-	friend class MetaAttribute;
+	friend class MetaBase;
 	MetaEnumItem(CoreObject &coreObject, MetaProject* &metaProject);
 
 public:
-	const Result_t GetParent(MetaAttribute* &metaAttribute) const throw();	//!<
-	const Result_t GetDisplayedName(std::string &name) const throw();		//!<
-	const Result_t SetDisplayedName(const std::string &name) throw();		//!<
-	const Result_t GetValue(std::string &value) const throw();				//!<
-	const Result_t SetValue(const std::string &value) throw();				//!<
+	const Result_t GetParent(MetaAttribute* &metaAttribute) throw();	//!<
+	const Result_t GetDisplayedName(std::string &name) const throw();	//!<
+	const Result_t SetDisplayedName(const std::string &name) throw();	//!<
+	const Result_t GetValue(std::string &value) const throw();			//!<
+	const Result_t SetValue(const std::string &value) throw();			//!<
 };
 
 
