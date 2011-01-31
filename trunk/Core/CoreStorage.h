@@ -115,9 +115,9 @@ public:
 	virtual const Result_t IsJournaled(bool &flag) const throw()=0;							//!<
 	virtual const Result_t Undo(Uuid &tag) throw()=0;										//!<
 	virtual const Result_t Redo(Uuid &tag) throw()=0;										//!<
-	virtual const Result_t UndoCount(uint32_t &count) const throw()=0;						//!<
-	virtual const Result_t RedoCount(uint32_t &count) const throw()=0;						//!<
-	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
+	virtual const Result_t UndoCount(uint64_t &count) const throw()=0;						//!<
+	virtual const Result_t RedoCount(uint64_t &count) const throw()=0;						//!<
+	virtual const Result_t JournalInfo(const uint64_t &undoMaxSize, const uint64_t &redoMaxSize,	//!<
 									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()=0;
 
 	// --- Compression

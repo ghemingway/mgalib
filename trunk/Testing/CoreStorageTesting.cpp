@@ -920,7 +920,7 @@ TEST_F(ICoreStorageTest,BasicUndo)
 	Uuid rootUuid(Uuid::Null());
 	EXPECT_EQ( S_OK, result = storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
 	// Get base-line undo/redo counts
-	uint32_t undoCount = 0, redoCount = 99;
+	uint64_t undoCount = 0, redoCount = 99;
 	EXPECT_EQ( S_OK, result = storage->UndoCount(undoCount) ) << GetErrorInfo(result);
 	EXPECT_EQ( 13, undoCount );
 	EXPECT_EQ( S_OK, result = storage->RedoCount(redoCount) ) << GetErrorInfo(result);
@@ -957,7 +957,7 @@ TEST_F(ICoreStorageTest,BasicRedo)
 	Uuid undoTag = Uuid::Null();
 
 	// Redo the last transaction
-	uint32_t undoCount = 0, redoCount = 99;
+	uint64_t undoCount = 0, redoCount = 99;
 	EXPECT_EQ( S_OK, result = storage->Redo(undoTag) ) << GetErrorInfo(result);
 	// Make sure the value got undone
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
@@ -1137,7 +1137,7 @@ static inline void _HammerUndo(const bool &isLogging, std::ostream &out, ICoreSt
 {
 	// How many undos can we do
 	Result_t result;
-	uint32_t undoCount;
+	uint64_t undoCount;
 	EXPECT_EQ( S_OK, result = storage->UndoCount(undoCount) ) << GetErrorInfo(result);
 	if (undoCount == 0) return;
 	// And, how many will we undo
@@ -1155,7 +1155,7 @@ static inline void _HammerRedo(const bool &isLogging, std::ostream &out, ICoreSt
 {
 	// How many undos can we do
 	Result_t result;
-	uint32_t redoCount;
+	uint64_t redoCount;
 	EXPECT_EQ( S_OK, result = storage->RedoCount(redoCount) ) << GetErrorInfo(result);
 	if (redoCount == 0) return;
 	// And, how many will we redo
@@ -1260,7 +1260,18 @@ TEST(ICoreStorage,Hammer)
 
 	// Clean up after the hammer test
 	EXPECT_EQ( S_OK, result = coreProject->Save("hammer_test.mga", true) ) << GetErrorInfo(result);
-	
+
+	// Do some reporting
+	std::cout << "Hammer Test Report...\n";
+	std::vector<Uuid> objectVector;
+	storage->ObjectVector(objectVector);
+	std::cout << "\tObjects: " << objectVector.size() << std::endl;
+	uint64_t undoCount, redoCount;
+	storage->UndoCount(undoCount);
+	std::cout << "\tUndo Size: " << undoCount << std::endl;
+	storage->RedoCount(redoCount);
+	std::cout << "\tRedo Size: " << redoCount << std::endl;
+
 	delete coreProject;
 	EXPECT_EQ( 0, remove("hammer_test.mga") );
 }
