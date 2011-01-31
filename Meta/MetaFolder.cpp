@@ -4,7 +4,6 @@
 #include "MetaGeneric.h"
 #include "MetaFCO.h"
 #include "MetaAttribute.h"
-#include "../Core/CoreObject.h"
 
 
 // --------------------------- MetaFolder --------------------------- //
@@ -13,23 +12,21 @@
 const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
 {
 	// Use the MetaBase helper function to get a Folder from this pointer attribute
-	return this->ObjectFromAttribute(ATTRID_DEFFOLDER_PTR, folder);
+	return this->ObjectFromAttribute(ATTRID_FOLDER_PTR, folder);
 }
 
 
-const Result_t MetaFolder::GetDefinedFolders(std::list<MetaFolder*> &folderList) const throw()
+const Result_t MetaFolder::GetChildFolders(std::list<MetaFolder*> &folderList) const throw()
 {
-	ASSERT(false);
-//	return ComGetCollectionValue<IMgaMetaFolder>(GetUnknown(), ATTRID_DEFFOLDER_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get collection of child folders
+	return this->CollectionFromAttribute(ATTRID_FOLDER_PTR, folderList);
 }
 
 
 const Result_t MetaFolder::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {
-	ASSERT(false);
-//	return ComGetSortedCollValue<IMgaMetaFCO>(GetUnknown(), ATTRID_DEFFCO_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get collection of child FCOs
+	return this->CollectionFromAttribute(ATTRID_DEFFCO_PTR, fcoList);
 }
 
 
@@ -165,62 +162,14 @@ const Result_t MetaFolder::GetDefinedAttributeByName(const std::string &name, co
 
 const Result_t MetaFolder::CreateAtom(MetaAtom* &metaAtom) throw()
 {
-	// Get the associated coreProject
-	CoreProject* coreProject = NULL;
-	Result_t result = this->_coreObject->Project(coreProject);
-	ASSERT( result == S_OK );
-	ASSERT( coreProject != NULL );
-	// Start a transaction
-	result = coreProject->BeginTransaction(false);
-	ASSERT( result == S_OK );
-	// Create a METAID_METAATOM object
-	CoreObject coreObject;
-	result = coreProject->CreateObject(METAID_METAATOM, coreObject);
-	ASSERT( result == S_OK );
-	// Link the new child to this object as parent
-	Uuid uuid = Uuid::Null();
-	result = this->_coreObject->GetUuid(uuid);
-	ASSERT( result == S_OK );
-	ASSERT( uuid != Uuid::Null() );
-	result = coreObject->SetAttributeValue(ATTRID_DEFFCO_PTR, uuid);
-	ASSERT( result == S_OK );
-	// Commit transaction at the CoreProject level
-	result = coreProject->CommitTransaction();
-	ASSERT( result == S_OK );
-	// Now use the core object to create a MetaAtom
-	metaAtom = new MetaAtom(coreObject, this->_metaProject);
-	ASSERT( metaAtom != NULL );
-	return S_OK;
+	// Use the MetaBase helper function to create a new atom
+	return this->CreateObject(METAID_METAATOM, ATTRID_DEFFCO_PTR, metaAtom);
 }
 
 
 const Result_t MetaFolder::CreateAttribute(MetaAttribute* &metaAttribute) throw()
 {
-	// Get the associated coreProject
-	CoreProject* coreProject = NULL;
-	Result_t result = this->_coreObject->Project(coreProject);
-	ASSERT( result == S_OK );
-	ASSERT( coreProject != NULL );
-	// Start a transaction
-	result = coreProject->BeginTransaction(false);
-	ASSERT( result == S_OK );
-	// Create a METAID_METAATTRIBUTE object
-	CoreObject coreObject;
-	result = coreProject->CreateObject(METAID_METAATTRIBUTE, coreObject);
-	ASSERT( result == S_OK );
-	// Link the new child to this object as parent
-	Uuid uuid = Uuid::Null();
-	result = this->_coreObject->GetUuid(uuid);
-	ASSERT( result == S_OK );
-	ASSERT( uuid != Uuid::Null() );
-	result = coreObject->SetAttributeValue(ATTRID_DEFATTR_PTR, uuid);
-	ASSERT( result == S_OK );
-	// Commit transaction at the CoreProject level
-	result = coreProject->CommitTransaction();
-	ASSERT( result == S_OK );
-	// Now use the core object to create a MetaAttribute
-	metaAttribute = new MetaAttribute(coreObject, this->_metaProject);
-	ASSERT( metaAttribute != NULL );
-	return S_OK;
+	// Use the MetaBase helper function to create a new attribute
+	return this->CreateObject(METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, metaAttribute);
 }
 

@@ -43,7 +43,6 @@
 		582BD6CF12C8F7D500B18A19 /* MetaPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390B912B970A300F4AB58 /* MetaPart.cpp */; };
 		582BD6D012C8F7D500B18A19 /* MetaPointerSpec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */; };
 		582BD6D112C8F7D600B18A19 /* MetaReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BC12B970A300F4AB58 /* MetaReference.cpp */; };
-		582BD6D212C8F7D700B18A19 /* MetaRegNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BD12B970A300F4AB58 /* MetaRegNode.cpp */; };
 		582BD6D312C8F7D700B18A19 /* MetaSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390BE12B970A300F4AB58 /* MetaSet.cpp */; };
 		582BD6D412C8F7DB00B18A19 /* MetaAspect.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908A12B9708D00F4AB58 /* MetaAspect.h */; };
 		582BD6D512C8F7DB00B18A19 /* MetaAttribute.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843908B12B9708D00F4AB58 /* MetaAttribute.h */; };
@@ -57,7 +56,6 @@
 		582BD6DD12C8F7E000B18A19 /* MetaPointerSpec.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909512B9708D00F4AB58 /* MetaPointerSpec.h */; };
 		582BD6DE12C8F7E100B18A19 /* MetaProject.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909612B9708D00F4AB58 /* MetaProject.h */; };
 		582BD6DF12C8F7E200B18A19 /* MetaReference.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909712B9708D00F4AB58 /* MetaReference.h */; };
-		582BD6E012C8F7E200B18A19 /* MetaRegNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909812B9708D00F4AB58 /* MetaRegNode.h */; };
 		582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909912B9708D00F4AB58 /* MetaRole.h */; };
 		582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 5843909A12B9708D00F4AB58 /* MetaSet.h */; };
 		5843399C125B8B5400DD904D /* MGALib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58E90A1F124CEFFF00B8E3CF /* MGALib.framework */; };
@@ -160,7 +158,6 @@
 		5843909512B9708D00F4AB58 /* MetaPointerSpec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaPointerSpec.h; path = ../../Meta/MetaPointerSpec.h; sourceTree = SOURCE_ROOT; };
 		5843909612B9708D00F4AB58 /* MetaProject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaProject.h; path = ../../Meta/MetaProject.h; sourceTree = SOURCE_ROOT; };
 		5843909712B9708D00F4AB58 /* MetaReference.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaReference.h; path = ../../Meta/MetaReference.h; sourceTree = SOURCE_ROOT; };
-		5843909812B9708D00F4AB58 /* MetaRegNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaRegNode.h; path = ../../Meta/MetaRegNode.h; sourceTree = SOURCE_ROOT; };
 		5843909912B9708D00F4AB58 /* MetaRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaRole.h; path = ../../Meta/MetaRole.h; sourceTree = SOURCE_ROOT; };
 		5843909A12B9708D00F4AB58 /* MetaSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaSet.h; path = ../../Meta/MetaSet.h; sourceTree = SOURCE_ROOT; };
 		584390B012B970A300F4AB58 /* MetaAspect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaAspect.cpp; path = ../../Meta/MetaAspect.cpp; sourceTree = SOURCE_ROOT; };
@@ -176,7 +173,6 @@
 		584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaPointerSpec.cpp; path = ../../Meta/MetaPointerSpec.cpp; sourceTree = SOURCE_ROOT; };
 		584390BB12B970A300F4AB58 /* MetaProject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaProject.cpp; path = ../../Meta/MetaProject.cpp; sourceTree = SOURCE_ROOT; };
 		584390BC12B970A300F4AB58 /* MetaReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaReference.cpp; path = ../../Meta/MetaReference.cpp; sourceTree = SOURCE_ROOT; };
-		584390BD12B970A300F4AB58 /* MetaRegNode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaRegNode.cpp; path = ../../Meta/MetaRegNode.cpp; sourceTree = SOURCE_ROOT; };
 		584390BE12B970A300F4AB58 /* MetaSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaSet.cpp; path = ../../Meta/MetaSet.cpp; sourceTree = SOURCE_ROOT; };
 		584390CE12B970BF00F4AB58 /* MgaAttribute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MgaAttribute.h; path = ../../MGA/MgaAttribute.h; sourceTree = SOURCE_ROOT; };
 		584390CF12B970BF00F4AB58 /* MgaEventSink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MgaEventSink.h; path = ../../MGA/MgaEventSink.h; sourceTree = SOURCE_ROOT; };
@@ -468,7 +464,6 @@
 				584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */,
 				584390BB12B970A300F4AB58 /* MetaProject.cpp */,
 				584390BC12B970A300F4AB58 /* MetaReference.cpp */,
-				584390BD12B970A300F4AB58 /* MetaRegNode.cpp */,
 				5820C6D412DCB25200D4C50E /* MetaRole.cpp */,
 				584390BE12B970A300F4AB58 /* MetaSet.cpp */,
 			);
@@ -492,7 +487,6 @@
 				5843909512B9708D00F4AB58 /* MetaPointerSpec.h */,
 				5843909612B9708D00F4AB58 /* MetaProject.h */,
 				5843909712B9708D00F4AB58 /* MetaReference.h */,
-				5843909812B9708D00F4AB58 /* MetaRegNode.h */,
 				5843909912B9708D00F4AB58 /* MetaRole.h */,
 				5843909A12B9708D00F4AB58 /* MetaSet.h */,
 			);
@@ -653,7 +647,6 @@
 				582BD6DD12C8F7E000B18A19 /* MetaPointerSpec.h in Headers */,
 				582BD6DE12C8F7E100B18A19 /* MetaProject.h in Headers */,
 				582BD6DF12C8F7E200B18A19 /* MetaReference.h in Headers */,
-				582BD6E012C8F7E200B18A19 /* MetaRegNode.h in Headers */,
 				582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */,
 				582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */,
 				5880222512CA857800935308 /* XmpParser.h in Headers */,
@@ -794,7 +787,6 @@
 				582BD6CF12C8F7D500B18A19 /* MetaPart.cpp in Sources */,
 				582BD6D012C8F7D500B18A19 /* MetaPointerSpec.cpp in Sources */,
 				582BD6D112C8F7D600B18A19 /* MetaReference.cpp in Sources */,
-				582BD6D212C8F7D700B18A19 /* MetaRegNode.cpp in Sources */,
 				582BD6D312C8F7D700B18A19 /* MetaSet.cpp in Sources */,
 				5880222612CA857800935308 /* XmpParser.cpp in Sources */,
 				5820C6CD12DCB0FB00D4C50E /* MetaEnumItem.cpp in Sources */,

@@ -3,7 +3,6 @@
 
 
 /*** Included Header Files ***/
-#include "MetaRegNode.h"
 #include "MetaProject.h"
 #include "../Core/CoreProject.h"
 #include "../Core/CoreObject.h"
@@ -20,7 +19,7 @@ class MetaConstraint;
 // --------------------------- MetaBase --------------------------- //
 
 
-class MetaBase : public MetaRegNodes
+class MetaBase
 {
 private:
 	MetaBase();													//!< Deny access to default constructor
@@ -88,18 +87,52 @@ protected:
 		return S_OK;
 	}
 
+	template<class T>
+	const Result_t CreateObject(const MetaID_t &metaID, const AttrID_t &attrID, T* &metaObject) throw()
+	{
+		// Get the associated coreProject
+		CoreProject* coreProject = NULL;
+		Result_t result = this->_coreObject->Project(coreProject);
+		ASSERT( result == S_OK );
+		ASSERT( coreProject != NULL );
+		// Start a transaction
+		result = coreProject->BeginTransaction(false);
+		ASSERT( result == S_OK );
+		// Create a new coreObject
+		CoreObject newCoreObject;
+		result = coreProject->CreateObject(metaID, newCoreObject);
+		ASSERT( result == S_OK );
+		ASSERT( newCoreObject != NULL );
+		// Link the new child to this object as parent
+		Uuid uuid = Uuid::Null();
+		result = this->_coreObject->GetUuid(uuid);
+		ASSERT( result == S_OK );
+		ASSERT( uuid != Uuid::Null() );
+		result = newCoreObject->SetAttributeValue(attrID, uuid);
+		ASSERT( result == S_OK );
+		// Commit transaction at the CoreProject level
+		result = coreProject->CommitTransaction();
+		ASSERT( result == S_OK );
+		// Now use the core object to create a new metaObject of type T
+		metaObject = new T(newCoreObject, this->_metaProject);
+		ASSERT( metaObject != NULL );
+		return S_OK;
+	}
+	
 public:
 	MetaBase(CoreObject &coreObject, MetaProject* const &metaProject);
 	virtual ~MetaBase();
 
-	virtual const Result_t GetUuid(Uuid &uuid) const throw();
-	virtual const Result_t GetMetaProject(MetaProject* &project) const throw();
+	virtual inline const Result_t GetUuid(Uuid &uuid) const throw()						{ ASSERT( this->_coreObject != NULL ); return this->_coreObject->GetUuid(uuid); }
+	virtual inline const Result_t GetMetaProject(MetaProject* &project) const throw()	{ project = this->_metaProject; return S_OK; }
 	virtual const Result_t GetName(std::string &name) const throw();
+	virtual const Result_t SetName(const std::string &name) throw();
 	virtual const Result_t GetDisplayedName(std::string &name) const throw();
+	virtual const Result_t SetDisplayedName(const std::string &name) throw();
+	virtual const Result_t GetRegistryValue(const std::string &key, std::string &value) const throw();
+	virtual const Result_t SetRegistryValue(const std::string &key, const std::string &value) throw();
 	virtual const Result_t GetObjType(ObjType_t &objType) const throw();
 	virtual const Result_t GetConstraints(std::list<MetaConstraint*> &cList) throw();
-	virtual const Result_t SetName(const std::string &name) throw();
-	virtual const Result_t SetDisplayedName(const std::string &name) throw();
 	virtual const Result_t CreateConstraint(MetaConstraint* &constraint) throw();
 //	virtual const Result_t Delete(void) throw();
 };

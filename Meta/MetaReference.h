@@ -28,8 +28,6 @@ private:
 	MetaReference(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
 
 public:
-	virtual ~MetaReference() { }
-
 	const Result_t GetRefSpec(MetaPointerSpec* &pointerSpec) const throw();			//!<
 	const Result_t CheckPath(const std::string &path, bool &valid) const throw();	//!<
 };

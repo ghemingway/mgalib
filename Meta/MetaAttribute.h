@@ -24,21 +24,22 @@ private:
 	MetaAttribute(const MetaAttribute &);						//!< Deny access to copy constructor
 	MetaAttribute& operator=(const MetaAttribute &);			//!< Deny access to equals operator
 
-	friend class MetaFolder;
+	friend class MetaBase;
 	friend class MetaFCO;
+	friend class MetaEnumItem;
 	MetaAttribute(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
-	const Result_t GetDefinedIn(MetaFCO* &fco) const throw();						//!<
-	const Result_t GetEnumItems(std::list<MetaEnumItem*> &enumList) const throw();	//!<
-	const Result_t GetUsedIn(std::list<MetaFCO*> &fcoList) const throw();			//!<
-	const Result_t GetValueType(AttVal_t &valueType) const throw();					//!<
-	const Result_t SetValueType(const AttVal_t &type) throw();						//!<
-	const Result_t GetDefaultValue(bool &value) const throw();						//!<
-	const Result_t SetDefaultValue(const std::string &value) throw();				//!<
-	const Result_t GetViewable(bool &flag) const throw();							//!<
-	const Result_t SetViewable(const bool &flag) throw();							//!<
-	const Result_t CreateEnumItem(std::list<int> &list) throw();					//!<
+	const Result_t GetDefinedIn(MetaFCO* &fco) const throw();						//!< Get FCO this attribute is defined in
+	const Result_t GetEnumItems(std::list<MetaEnumItem*> &enumList) const throw();	//!< Get list of child EnumItems
+	const Result_t GetUsedIn(std::list<MetaFCO*> &fcoList) const throw();			//!< Get list of FCOs this attribute is used in
+	const Result_t GetValueType(AttVal_t &valueType) const throw();					//!< Get the type of this attribute
+	const Result_t SetValueType(const AttVal_t &valueType) throw();					//!< Set the type of this attribute
+	const Result_t GetDefaultValue(std::string &value) const throw();				//!< Get the default value of this attribute
+	const Result_t SetDefaultValue(const std::string &value) throw();				//!< Set the default value of this attribute
+	const Result_t GetViewable(bool &flag) const throw();							//!< Is this attribute viewable
+	const Result_t SetViewable(const bool &flag) throw();							//!< Set if this attribute is viewable
+	const Result_t CreateEnumItem(MetaEnumItem* &enumItem) throw();					//!< Create a child EnumItem
 };
 
 

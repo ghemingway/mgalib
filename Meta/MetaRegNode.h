@@ -35,11 +35,11 @@ class MetaRegNode : public MetaRegNodes
 public:
 	inline const Result_t GetRegistryNode(const std::string &path, MetaRegNode* &regNode) const throw();
 //		{ return MetaRegNodes::GetRegistryNode(this, path, regNode); }
-	inline const Result_t GetRegistryValue(const std::string &path, std::string value) const throw();
 //		{ return MetaRegNodes::GetRegistryValue(this, path, value); }
 	const Result_t GetRegistryNodes(std::list<MetaRegNode*> &nodeList) const throw();
 	const Result_t GetName(std::string &name) const throw();
 	const Result_t GetValue(std::string &value) const throw();
+	inline const Result_t GetRegistryValue(const std::string &path, std::string value) const throw();
 //	const Result_t SetRegistryValue(const std::string &path, BSTR p){ return MetaRegNodes::SetRegistryValue(this, path, p); }
 //	const Result_t SetValue(const std::string &value)				{ return ComPutAttrValue(this, ATTRID_VALUE, value); }
 //	const Result_t Delete(void);

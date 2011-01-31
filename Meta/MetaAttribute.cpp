@@ -1,7 +1,7 @@
 /*** Included Header Files ***/
 #include "MetaAttribute.h"
 #include "MetaGeneric.h"
-#include "../Core/CoreObject.h"
+#include "MetaEnumItem.h"
 
 
 // --------------------------- Public MetaAttribute Methods --------------------------- //
@@ -23,101 +23,87 @@ const Result_t MetaAttribute::GetEnumItems(std::list<MetaEnumItem*> &enumList) c
 
 const Result_t MetaAttribute::GetUsedIn(std::list<MetaFCO*> &fcoList) const throw()
 {
-	std::list<Uuid> attrList;
-	this->_coreObject->GetAttributeValue(ATTRID_ATTRLINK_ATTR_PTR, attrList);
-	ASSERT(false);
-//	typedef CCoreCollection<MetaFCOs, std::vector<IMgaMetaFCO*>, IMgaMetaFCO, IMgaMetaFCO> COMTYPE;
-//	CComObjPtr<COMTYPE> coll;
-//	CreateComObject(coll);
-//	coreobjects_iterator i = coreobjects.begin();
-//	coreobjects_iterator e = coreobjects.end();
-//	while( i != e )
-//	{
-//		CCoreObjectPtr obj;
-//		(*i).GetPointerValue(ATTRID_ATTRLINK_USEDIN_PTR, obj);
-//		CComObjPtr<IMgaMetaFCO> q;
-//		if( SUCCEEDED( ::QueryInterface(obj, q)) )
-//			coll->Add(q);
-//		++i;
-//	}
-//	MoveTo(coll, p);
-
-//	return this->CollectionFromAttribute(ATTRID_ATTRLINK_ATTR_PTR, fcoList);
-	return S_OK;
+	// Use the MetaBase helper function to get collection of UsedIn FCOs
+	return this->CollectionFromAttribute(ATTRID_ATTRLINK_ATTR_PTR, fcoList);
 }
 
 
 const Result_t MetaAttribute::GetValueType(AttVal_t &valueType) const throw() 
 {
-	int32_t value;
-	// Get the value type from the coreObject
-	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_ATTVALTYPE, value);
-	// A bit of silly conversion magic
-	if (result == S_OK) valueType = (AttVal_t)value;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longValueType;
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_ATTVALTYPE, longValueType);
+	valueType = static_cast<AttVal_t>(longValueType);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
 
-const Result_t MetaAttribute::SetValueType(const AttVal_t &type) throw()
+const Result_t MetaAttribute::SetValueType(const AttVal_t &valueType) throw()
 {
-	ASSERT(false);
-	//	ASSERT( this->_metaProject->BeginTransaction() == S_OK );
-	//	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_ATTVALTYPE, type);
-	//	ASSERT( this->_metaProject->CommitTransaction() == S_OK );
-	//	return result;
-	return S_OK;
-}
-
-
-const Result_t MetaAttribute::GetDefaultValue(bool &value) const throw() 
-{
-	ASSERT(false);
-	std::string strValue;
-	// Get the attribute value
-	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VALUE, strValue);
-	if (result != S_OK ) return result;
-	// Get the value type
-	int32_t valueType;
-	result = this->_coreObject->GetAttributeValue(ATTRID_ATTVALTYPE, valueType);
-	// Change the value into the correct value type
-//	ChangeAttrValueType(v, attval);
-	return S_OK;
-}
-
-
-const Result_t MetaAttribute::SetDefaultValue(const std::string &name) throw()
-{
-	Result_t tmpResult = this->_metaProject->BeginTransaction();
-	ASSERT( tmpResult == S_OK );
-	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_NAME, name);
-	tmpResult = this->_metaProject->CommitTransaction();
-	ASSERT( tmpResult == S_OK );
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longValueType = static_cast<int32_t>(valueType);
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_ATTVALTYPE, longValueType);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
+}
+
+
+const Result_t MetaAttribute::GetDefaultValue(std::string &value) const throw() 
+{
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VALUE, value);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
+}
+
+
+const Result_t MetaAttribute::SetDefaultValue(const std::string &value) throw()
+{
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_VALUE, value);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
+	
 }
 
 
 const Result_t MetaAttribute::GetViewable(bool &flag) const throw()
 {
-	int32_t longValue;
-	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VIEWABLE, longValue);
-	// A bit of silly conversion magic
-	if (result == S_OK) flag = (longValue != FALSE);
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longViewable;
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VIEWABLE, longViewable);
+	flag = static_cast<bool>(longViewable);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
 	return result;
 }
 
 
 const Result_t MetaAttribute::SetViewable(const bool &flag) throw()
 {
-	ASSERT(false);
-//	return ComPutAttrValue(GetUnknown(), ATTRID_VIEWABLE, (p == VARIANT_FALSE)?0L:1L);
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longViewable = static_cast<int32_t>(flag);
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_VIEWABLE, longViewable);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 
 
-const Result_t MetaAttribute::CreateEnumItem(std::list<int> &list) throw()
+const Result_t MetaAttribute::CreateEnumItem(MetaEnumItem* &enumItem) throw()
 {
-	ASSERT(false);
-//	return ComCreateMetaObj(GetUnknown(), METAID_METAENUMITEM, ATTRID_ENUMITEMS_COLL, p);
-	return S_OK;
+	// Use the MetaBase helper function to create a new attribute
+	return this->CreateObject(METAID_METAENUMITEM, ATTRID_ENUMITEMS_COLL, enumItem);
 }
 

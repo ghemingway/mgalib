@@ -37,7 +37,7 @@ public:
 	virtual ~MetaFolder() { }
 
 	const Result_t GetDefinedIn(MetaFolder* &folder) const throw();
-	const Result_t GetDefinedFolders(std::list<MetaFolder*> &folderList) const throw();
+	const Result_t GetChildFolders(std::list<MetaFolder*> &folderList) const throw();
 	const Result_t GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw();
 	const Result_t GetDefinedAttributes(std::list<MetaAttribute*> &attribList) const throw();
 	const Result_t GetLegalChildFolders(std::list<MetaFolder*> &folderList) const throw();

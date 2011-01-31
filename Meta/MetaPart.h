@@ -33,6 +33,10 @@ public:
 
 	inline const Result_t GetDisplayedName(std::string &name) const throw()						{ return E_INVALID_USAGE; }
 	inline const Result_t GetConstraints(std::list<MetaConstraint*> *constraintList) throw()	{ return E_INVALID_USAGE; }
+	inline const Result_t SetName(const std::string &name) throw()								{ return E_INVALID_USAGE; }
+	inline const Result_t SetDisplayedName(const std::string &dispName) throw()					{ return E_INVALID_USAGE; }
+	inline const Result_t CreateConstraint(MetaConstraint* &metaConstraint) throw()				{ return E_INVALID_USAGE; }
+
 	const Result_t GetRole(MetaRole* &metaRole) const throw();
 	const Result_t GetParentAspect(MetaAspect* &MetaAspect) const throw();
 	const Result_t GetKindAspect(std::string &kind) const throw();
@@ -41,13 +45,11 @@ public:
 	const Result_t GetIsPrimary(bool value) const throw();
 	const Result_t GetIsLinked(bool &value) const throw();
 //	const Result_t put_MetaRef)(metaref_type p)	{ HRESULT hr = PutMetaRef(p); if(hr == S_OK) hr = ComPutAttrValue(GetUnknown(), ATTRID_METAREF, p); return hr; }
-//	const Result_t put_Name)(BSTR p)							{ return E_NOTIMPL; }
-//	const Result_t put_DisplayedName)(BSTR p)				{ return E_NOTIMPL; }
-//	const Result_t CreateConstraint)(IMgaMetaConstraint **p) { return E_NOTIMPL; }
-//	const Result_t Delete)()									{ return ComDeleteObject(GetUnknown()); }
-//	const Result_t put_KindAspect)(BSTR p)					{ return ComPutAttrValue(GetUnknown(), ATTRID_KINDASPECT, p); }
-//	const Result_t put_IsPrimary)(VARIANT_BOOL p);
-//	const Result_t put_IsLinked)(VARIANT_BOOL p);
+
+//	const Result_t Delete()									{ return ComDeleteObject(GetUnknown()); }
+//	const Result_t put_KindAspect(BSTR p)					{ return ComPutAttrValue(GetUnknown(), ATTRID_KINDASPECT, p); }
+//	const Result_t put_IsPrimary(VARIANT_BOOL p);
+//	const Result_t put_IsLinked(VARIANT_BOOL p);
 };
 
 

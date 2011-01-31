@@ -55,7 +55,7 @@ public:
 class MetaAtom : public MetaFCO
 {
 private:
-	friend class MetaFolder;
+	friend class MetaBase;
 	MetaAtom(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
 
 public:

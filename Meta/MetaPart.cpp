@@ -10,36 +10,29 @@
 #define MGAMETAPART_PRIMARY		0x0001
 #define MGAMETAPART_LINKED		0x0002
 
-/*
-void MetaPart::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base class
-	MetaBase::Traverse(metaProject, coreObject);
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_REGNODES_COLL);
-}
-*/
 
 const Result_t MetaPart::GetRole(MetaRole* &metaRole) const throw()
 {
-//	return ComGetPointerValue(GetUnknown(), ATTRID_PARTROLE_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get an object from this pointer attribute
+	return this->ObjectFromAttribute(ATTRID_PARTROLE_PTR, metaRole);
 }
 
 
 const Result_t MetaPart::GetParentAspect(MetaAspect* &MetaAspect) const throw()
 {
-//	return ComGetPointerValue(GetUnknown(), ATTRID_PARTASPECT_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get an object from this pointer attribute
+	return this->ObjectFromAttribute(ATTRID_PARTASPECT_PTR, MetaAspect);
 }
 
 
 const Result_t MetaPart::GetKindAspect(std::string &kind) const throw()
 {
-//	return ComGetAttrValue(GetUnknown(), ATTRID_KINDASPECT, p);
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_KINDASPECT, kind);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 
 
@@ -48,7 +41,9 @@ const Result_t MetaPart::GetName(std::string &name) const throw()
 	MetaRole* role;
 	Result_t result = this->GetRole(role);
 	if (result != S_OK) return result;
-	return role->GetName(name);
+	result = role->GetName(name);
+	delete role;
+	return result;
 }
 
 
