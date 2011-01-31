@@ -51,16 +51,7 @@ protected:
 
 public:
 	virtual ~ICoreStorage()									{ }								//!< Default destructor
-	virtual const Result_t GetCacheSize(uint64_t &size) const throw()=0;					//!<
-	virtual const Result_t SetCacheSize(const uint64_t &size) throw()=0;					//!<
-	virtual const Result_t IsCompressed(bool &flag) const throw()=0;						//!<
-	virtual const Result_t EnableCompression(void) throw()=0;								//!<
-	virtual const Result_t DisableCompression(void) throw()=0;								//!<
-	virtual const Result_t IsEncrypted(bool &flag) const throw()=0;							//!<
-	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw()=0;			//!<
-	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw()=0;		//!<
-	virtual const Result_t DisableEncryption(void) throw()=0;								//!<
-	
+
 	// --------------------------- Public Interface Methods --------------------------- //
 
 	// --- Static Methods
@@ -109,17 +100,38 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw()=0;		//!< Set pointer (long or regular)
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw()=0;		//!< Set key value
 
+	// --- Object Caching
+
+	virtual const Result_t EnableCaching(void) throw()=0;									//!<
+	virtual const Result_t DisableCaching(void) throw()=0;									//!<
+	virtual const Result_t IsCaching(bool &flag) const throw()=0;							//!<
+	virtual const Result_t GetCacheSize(uint64_t &size) const throw()=0;					//!<
+	virtual const Result_t SetCacheSize(const uint64_t &size) throw()=0;					//!<
+
 	// --- Undo/Redo
 
+	virtual const Result_t EnableJournaling(void) throw()=0;								//!<
+	virtual const Result_t DisableJournaling(void) throw()=0;								//!<
+	virtual const Result_t IsJournaled(bool &flag) const throw()=0;							//!<
 	virtual const Result_t Undo(Uuid &tag) throw()=0;										//!<
 	virtual const Result_t Redo(Uuid &tag) throw()=0;										//!<
 	virtual const Result_t UndoCount(uint32_t &count) const throw()=0;						//!<
 	virtual const Result_t RedoCount(uint32_t &count) const throw()=0;						//!<
-	virtual const Result_t IsJournaled(bool &flag) const throw()=0;							//!<
 	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
 									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw()=0;
-	virtual const Result_t BeginJournal(void) throw()=0;									//!<
-	virtual const Result_t EndJournal(void) throw()=0;										//!<
+
+	// --- Compression
+
+	virtual const Result_t EnableCompression(void) throw()=0;								//!<
+	virtual const Result_t DisableCompression(void) throw()=0;								//!<
+	virtual const Result_t IsCompressed(bool &flag) const throw()=0;						//!<
+
+	// --- Encryption
+
+	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw()=0;		//!<
+	virtual const Result_t DisableEncryption(void) throw()=0;								//!<
+	virtual const Result_t IsEncrypted(bool &flag) const throw()=0;							//!<
+	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw()=0;			//!<
 };
 	
 	

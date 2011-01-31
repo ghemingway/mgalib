@@ -168,6 +168,7 @@ private:
 	std::fstream						_scratchFile;				//!< Handle to scratch file
 	// Index and Cache Queue Variables
 	IndexHash							_indexHash;					//!< Hash of objects residing in memory cache
+	bool								_isCaching;					//!< Is object caching being used
 	std::list<Uuid>						_cacheQueue;				//!< Most-recently-used queue of memory cache
 	uint64_t							_maxCacheSize;				//!< Maximum size (in bytes) of memory cache
 	// Cursor Variable
@@ -178,7 +179,7 @@ private:
 	std::list<std::pair<Uuid,IndexEntry> >_deletedObjects;			//!< List of all objects deleted in current transaction
 	// Undo/Redo Variables
 	bool								_isJournaling;				//!< Is journaling turned on
-	uint32_t							_maxUndoSize;				//!< Maximum number of journal entries
+	uint64_t							_maxUndoSize;				//!< Maximum number of journal entries
 	JournalList							_undoList;					//!< List of undo journal entries
 	JournalList							_redoList;					//!< List of redo journal entries
 	// Encryption & Compression Variables
@@ -230,8 +231,6 @@ private:
 
 public:
 	virtual ~BinFile();
-	virtual inline const Result_t GetCacheSize(uint64_t &size) const throw()			{ size = this->_cacheQueue.size(); return S_OK; }
-	virtual const Result_t SetCacheSize(const uint64_t &size) throw();					//!< Set limit for number of obj in the cache
 
 	// ------- ICoreStorage Interface
 
@@ -264,24 +263,38 @@ public:
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const Uuid &value) throw();		//!<
 	virtual const Result_t SetAttributeValue(const AttrID_t &attrID, const DictionaryMap &value) throw();	//!< Set key value
 
-	virtual const Result_t Undo(Uuid &tag) throw();											//!<
-	virtual const Result_t Redo(Uuid &tag) throw();											//!<
-	virtual inline const Result_t UndoCount(uint32_t &count) const throw()					{ count = this->_undoList.size(); return S_OK; }
-	virtual inline const Result_t RedoCount(uint32_t &count) const throw()					{ count = this->_redoList.size(); return S_OK; }
-	virtual inline const Result_t IsJournaled(bool &flag) const throw()						{ flag = this->_isJournaling; return S_OK; }
+	// --- Object Caching
+
+	virtual const Result_t EnableCaching(void) throw();									//!< Turn on object caching scheme
+	virtual const Result_t DisableCaching(void) throw();								//!< Turn off object caching scheme
+	virtual inline const Result_t IsCaching(bool &flag) const throw()					{ flag = this->_isCaching; return S_OK; }
+	virtual inline const Result_t GetCacheSize(uint64_t &size) const throw()			{ size = this->_cacheQueue.size(); return S_OK; }
+	virtual const Result_t SetCacheSize(const uint64_t &size) throw();					//!< Set limit for number of obj in the cache
+
+	// --- Transaction Journaling
+
+	virtual inline const Result_t EnableJournaling(void) throw()						{ this->_isJournaling = true; return S_OK; }
+	virtual const Result_t DisableJournaling(void) throw();								//!<
+	virtual const Result_t Undo(Uuid &tag) throw();										//!<
+	virtual const Result_t Redo(Uuid &tag) throw();										//!<
+	virtual inline const Result_t UndoCount(uint32_t &count) const throw()				{ count = this->_undoList.size(); return S_OK; }
+	virtual inline const Result_t RedoCount(uint32_t &count) const throw()				{ count = this->_redoList.size(); return S_OK; }
+	virtual inline const Result_t IsJournaled(bool &flag) const throw()					{ flag = this->_isJournaling; return S_OK; }
 	virtual const Result_t JournalInfo(const uint32_t &undoMaxSize, const uint32_t redoMaxSize,	//!<
 									   std::list<Uuid> &undoJournal, std::list<Uuid> &redoJournal) const throw();
-	virtual inline const Result_t BeginJournal(void) throw()								{ this->_isJournaling = true; return S_OK; }
-	virtual const Result_t EndJournal(void) throw();										//!<
 
-	virtual inline const Result_t IsCompressed(bool &flag) const throw(){ flag = this->_isCompressed; return S_OK; }
-	virtual inline const Result_t EnableCompression(void) throw()		{ if(this->_inTransaction) return E_TRANSACTION; this->_isCompressed = true; return S_OK; }
-	virtual inline const Result_t DisableCompression(void) throw()		{ if(this->_inTransaction) return E_TRANSACTION; this->_isCompressed = false; return S_OK; }
+	// --- Compression
 
-	virtual const Result_t IsEncrypted(bool &flag) const throw()							{ flag = this->_isEncrypted; return S_OK; }
-	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw();				//!<
-	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw();			//!<
-	virtual const Result_t DisableEncryption(void) throw();									//!<	
+	virtual inline const Result_t EnableCompression(void) throw()						{ if(this->_inTransaction) return E_TRANSACTION; this->_isCompressed = true; return S_OK; }
+	virtual inline const Result_t DisableCompression(void) throw()						{ if(this->_inTransaction) return E_TRANSACTION; this->_isCompressed = false; return S_OK; }
+	virtual inline const Result_t IsCompressed(bool &flag) const throw()				{ flag = this->_isCompressed; return S_OK; }
+
+	// --- Encryption
+
+	virtual const Result_t EnableEncryption(const std::vector<char> &key) throw();		//!<
+	virtual const Result_t DisableEncryption(void) throw();								//!<	
+	virtual const Result_t IsEncrypted(bool &flag) const throw()						{ flag = this->_isEncrypted; return S_OK; }
+	virtual const Result_t EncryptionKey(std::vector<char> &key) const throw();			//!<
 };
 
 

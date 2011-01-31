@@ -983,7 +983,8 @@ TEST_F(ICoreStorageTest,BasicRedo)
 // --------------------------- ICoreStorage Hammer Test --------------------------- //
 
 
-static inline void _HammerCreateObject(std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
+static inline void _HammerCreateObject(const bool &isLogging, std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject,
+									   std::tr1::unordered_map<Uuid,void*,Uuid_HashFunc> &objectMap)
 {
 	Result_t result;
 	// Get the list of possible objects to create
@@ -999,26 +1000,25 @@ static inline void _HammerCreateObject(std::ostream &out, ICoreStorage* storage,
 	EXPECT_EQ( S_OK, (*objectIter)->GetMetaID(metaID) ) << GetErrorInfo(result);
 	Uuid uuid = Uuid::Null();
 	// Grok some output
-	out << "\t\tstorage->CreateObject(" << metaID << ", uuid);\n";
+	if (isLogging) out << "\t\tstorage->CreateObject(" << metaID << ", uuid);\n";
 	EXPECT_EQ( S_OK, result = storage->CreateObject(metaID, uuid) ) << GetErrorInfo(result);
 	EXPECT_NE( Uuid::Null(), uuid );
+	objectMap.insert( std::make_pair(uuid,(void*)NULL) );
 }
 
-static inline void _HammerChangeAttribute(std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
+static inline void _HammerChangeAttribute(const bool &isLogging, std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject,
+										  std::tr1::unordered_map<Uuid,void*,Uuid_HashFunc> &objectMap)
 {
 	Result_t result;
-	// Get the list of possible objects to change
-	std::vector<Uuid> objectVector;
-	EXPECT_EQ( S_OK, result = storage->ObjectVector(objectVector) ) << GetErrorInfo(result);
-	if (objectVector.size() == 0) return;
-	// Choose one from the list
-	int selection = rand() % objectVector.size();
-	std::vector<Uuid>::iterator objectIter = objectVector.begin();
+	if (objectMap.size() == 0) return;
+	// Choose one from the map
+	int selection = rand() % objectMap.size();
+	std::tr1::unordered_map<Uuid,void*,Uuid_HashFunc>::iterator objectIter = objectMap.begin();
 	for (int i=0; i<selection; i++) ++objectIter;
-	Uuid uuid = *objectIter;
+	Uuid uuid = objectIter->first;
 	
 	// What attributes does this object have
-	EXPECT_EQ( S_OK, result = storage->OpenObject(*objectIter) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
 	CoreMetaObject *metaObject = NULL;
 	EXPECT_EQ( S_OK, result = storage->MetaObject(metaObject) ) << GetErrorInfo(result);
 	EXPECT_TRUE( metaObject != NULL );
@@ -1041,30 +1041,30 @@ static inline void _HammerChangeAttribute(std::ostream &out, ICoreStorage* stora
 	if (valueType == ValueType::Long())
 	{
 		int32_t longValue = rand();
-		out << "\t\tstorage->SetAttributeValue(" << attrID << ", " << longValue << ");\n";
+		if (isLogging) out << "\t\tstorage->SetAttributeValue(" << attrID << ", " << longValue << ");\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, longValue) ) << GetErrorInfo(result);
 	}
 	else if (valueType == ValueType::Real())
 	{
 		double realValue = (double)(rand() - rand()) / (double)rand();
-		out << "\t\tstorage->SetAttributeValue(" << attrID << ", " << realValue << ");\n";
+		if (isLogging) out << "\t\tstorage->SetAttributeValue(" << attrID << ", " << realValue << ");\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, realValue) ) << GetErrorInfo(result);
 	}
 	else if (valueType == ValueType::String())
 	{
 		std::string stringValue("random string here");
-		out << "\t\tstorage->SetAttributeValue(" << attrID << ", \"" << stringValue << "\");\n";
+		if (isLogging) out << "\t\tstorage->SetAttributeValue(" << attrID << ", \"" << stringValue << "\");\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, stringValue) ) << GetErrorInfo(result);
 	}
 	else if (valueType == ValueType::LongPointer())
 	{
 		Uuid longpointerValue;
-		out << "\t\tstorage->SetAttributeValue(" << attrID << ", \"" << longpointerValue << "\");\n";
+		if (isLogging) out << "\t\tstorage->SetAttributeValue(" << attrID << ", \"" << longpointerValue << "\");\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, longpointerValue) ) << GetErrorInfo(result);
 	}
 	else if (valueType == ValueType::Pointer())
 	{
-		out << "\t\t// Comment taking the place of a pointer SetAttribute.\n";
+		if (isLogging) out << "\t\t// Comment taking the place of a pointer SetAttribute.\n";
 //		Uuid pointerValue;
 //		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, pointerValue) ) << GetErrorInfo(result);
 //		out << "\tstorage->SetAttributeValue(attrID, \"" << pointerValue << "\");\n";		
@@ -1075,50 +1075,50 @@ static inline void _HammerChangeAttribute(std::ostream &out, ICoreStorage* stora
 		EXPECT_EQ( S_OK, storage->GetAttributeValue(attrID, dictionaryValue) ) << GetErrorInfo(result);
 		std::string key("randomKey"), value("randomValue");
 		dictionaryValue.insert( std::make_pair(key, value) );
-		out << "\tstorage->SetAttributeValue(" << attrID << ", dictionaryValue);\n";
+		if (isLogging) out << "\tstorage->SetAttributeValue(" << attrID << ", dictionaryValue);\n";
 		EXPECT_EQ( S_OK, storage->SetAttributeValue(attrID, dictionaryValue) ) << GetErrorInfo(result);
 	}
 	// Can't do anything about a Collection type...
 }
 
-static inline void _HammerDeleteObject(std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
+static inline void _HammerDeleteObject(const bool &isLogging, std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject,
+									   std::tr1::unordered_map<Uuid,void*,Uuid_HashFunc> &objectMap)
 {
 	Result_t result;
-	// Get the list of possible objects to delete
-	std::vector<Uuid> objectVector;
-	EXPECT_EQ( S_OK, result = storage->ObjectVector(objectVector) ) << GetErrorInfo(result);
-	if (objectVector.size() == 0) return;
+	if (objectMap.size() == 0) return;
 	// Choose one from the list
-	int selection = rand() % objectVector.size();
-	std::vector<Uuid>::iterator objectIter = objectVector.begin();
+	int selection = rand() % objectMap.size();
+	std::tr1::unordered_map<Uuid,void*,Uuid_HashFunc>::iterator objectIter = objectMap.begin();
 	for (int i=0; i<selection; i++) ++objectIter;
 
 	// Make sure this is not the root object
 	Uuid rootUuid;
 	EXPECT_EQ( S_OK, storage->RootUuid(rootUuid) ) << GetErrorInfo(result);
-	if (rootUuid == *objectIter) return;
+	if (rootUuid == objectIter->first) return;
 
 	// Grok some output
-	out << "\t\tstorage->OpenObject(\"" << *objectIter << "\");\n";
-	out << "\t\tstorage->DeleteObject();\n";
+	if (isLogging) out << "\t\tstorage->OpenObject(\"" << objectIter->first << "\");\n";
+	if (isLogging) out << "\t\tstorage->DeleteObject();\n";
 	// Ok, open and delete the object
-	EXPECT_EQ( S_OK, result = storage->OpenObject(*objectIter) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->OpenObject(objectIter->first) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->DeleteObject() ) << GetErrorInfo(result);
+	// Remove the item from the map
+	objectMap.erase(objectIter->first);
 }
 
-static inline void _HammerSave(std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
+static inline void _HammerSave(const bool &isLogging, std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
 {
 	Result_t result;
-	out << "\tstorage->Save(\"hammer_test.mga\", true);\n";
+	if (isLogging) out << "\tstorage->Save(\"hammer_test.mga\", true);\n";
 	EXPECT_EQ( S_OK, result = storage->Save("hammer_test.mga", true) ) << GetErrorInfo(result);
 }
 
-static inline void _HammerOpen(std::ostream &out, ICoreStorage* &storage, CoreMetaProject* &coreMetaProject, CoreProject* &coreProject)
+static inline void _HammerOpen(const bool &isLogging, std::ostream &out, ICoreStorage* &storage, CoreMetaProject* &coreMetaProject, CoreProject* &coreProject)
 {
 	Result_t result;
 	// First, delete the coreProject (this will loose all transactions since the last save)
 	delete coreProject;
-	out << "\tdelete coreProject;\n";
+	if (isLogging) out << "\tdelete coreProject;\n";
 
 	// Create a new CoreMetaProject
 	EXPECT_EQ( S_OK, result = CreateMGACoreMetaProject(coreMetaProject) ) << GetErrorInfo(result);
@@ -1126,14 +1126,14 @@ static inline void _HammerOpen(std::ostream &out, ICoreStorage* &storage, CoreMe
 
 	// Now open the file
 	EXPECT_EQ( S_OK, result = CoreProject::Open("MGA=hammer_test.mga", coreMetaProject, coreProject) ) << GetErrorInfo(result);
-	out << "\tCoreProject::Open(\"MGA=hammer_test.mga\", metaProject, coreProject);\n";
+	if (isLogging) out << "\tCoreProject::Open(\"MGA=hammer_test.mga\", metaProject, coreProject);\n";
 
 	// And grab the ICoreStorage pointer
 	EXPECT_EQ( S_OK, result = coreProject->Storage(storage) ) << GetErrorInfo(result);
-	out << "\tcoreProject->Storage(storage);\n";
+	if (isLogging) out << "\tcoreProject->Storage(storage);\n";
 }
 
-static inline void _HammerUndo(std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
+static inline void _HammerUndo(const bool &isLogging, std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
 {
 	// How many undos can we do
 	Result_t result;
@@ -1145,13 +1145,13 @@ static inline void _HammerUndo(std::ostream &out, ICoreStorage* storage, CoreMet
 	// Engage...
 //	for (uint32_t i=0; i < undoCount; i++)
 //	{
-		out << "\tstorage->Undo();\n";
+		if (isLogging) out << "\tstorage->Undo();\n";
 		Uuid tag;
 		EXPECT_EQ( S_OK, result = storage->Undo(tag) ) << GetErrorInfo(result);
 //	}
 }
 
-static inline void _HammerRedo(std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
+static inline void _HammerRedo(const bool &isLogging, std::ostream &out, ICoreStorage* storage, CoreMetaProject *coreMetaProject)
 {
 	// How many undos can we do
 	Result_t result;
@@ -1163,7 +1163,7 @@ static inline void _HammerRedo(std::ostream &out, ICoreStorage* storage, CoreMet
 	// Engage...
 	//	for (uint32_t i=0; i < undoCount; i++)
 //	{
-		out << "\tstorage->Redo();\n";
+		if (isLogging) out << "\tstorage->Redo();\n";
 		Uuid tag;
 		EXPECT_EQ( S_OK, result = storage->Redo(tag) ) << GetErrorInfo(result);
 //	}
@@ -1173,8 +1173,9 @@ TEST(ICoreStorage,Hammer)
 {
 	// Are we running any hammer tests?
 	if (hammerTestSize == 0) return;
-//	std::ostream &out = std::cout;
-	std::ofstream out("hammer_log.log");
+	std::ostream &out = std::cout;
+//	std::ofstream out("hammer_log.log");
+	bool isLogging = false;
 
 	// Prepare the new output file
 	Result_t result;
@@ -1192,7 +1193,11 @@ TEST(ICoreStorage,Hammer)
 	ASSERT_TRUE( storage != NULL );
 	// Save the project (just to make sure in case an Open is called before the first Save)
 	EXPECT_EQ( S_OK, result = storage->Save("hammer_test.mga", true) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->DisableCaching() ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->DisableJournaling() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->DisableCompression() ) << GetErrorInfo(result);
+	// Prep the object hash
+	std::tr1::unordered_map<Uuid,void*,Uuid_HashFunc> objectMap;
 
 	std::cout << "------ Commencing hammer test.  Size: " << hammerTestSize << " ------\n";
 	// Initialize random seed
@@ -1206,7 +1211,7 @@ TEST(ICoreStorage,Hammer)
 		{
 			case 0:	case 1: case 2: case 3: case 4: case 5: case 6: case 7:
 			{	// Transaction selected.  How many items in the transaction
-				out << "\tstorage->BeginTransaction();\n";
+				if (isLogging) out << "\tstorage->BeginTransaction();\n";
 				int txItems = rand() % 10 + 1;
 				EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 				for (int txCount=0; txCount < txItems; txCount++)
@@ -1216,37 +1221,37 @@ TEST(ICoreStorage,Hammer)
 					{
 						case 0: case 1: case 2:
 							// Change an attribute
-							_HammerChangeAttribute(out, storage, coreMetaProject);
+							_HammerChangeAttribute(isLogging, out, storage, coreMetaProject, objectMap);
 							break;
 						case 3: case 4:
 							// Create an object
-							_HammerCreateObject(out, storage, coreMetaProject);
+							_HammerCreateObject(isLogging, out, storage, coreMetaProject, objectMap);
 							break;
 						case 5:
 							// Delete an object
-							_HammerDeleteObject(out, storage, coreMetaProject);
+							_HammerDeleteObject(isLogging, out, storage, coreMetaProject, objectMap);
 							break;
 					}
 				}
 				EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
-				out << "\tstorage->CommitTransaction();\n";
+				if (isLogging) out << "\tstorage->CommitTransaction();\n";
 			}
 				break;
 			case 8: case 9:
 				// Save the file
-//				_HammerSave(out, storage, coreMetaProject);
+//				_HammerSave(isLogging, out, storage, coreMetaProject);
 				break;
 			case 10:
 				// Close the file (without saving changes) and reopen - will loose changes since last save
-//				_HammerOpen(out, storage, coreMetaProject, coreProject);
+//				_HammerOpen(isLogging, out, storage, coreMetaProject, coreProject);
 				break;
 			case 12:
 				// Undo the last n changes
-				_HammerUndo(out, storage, coreMetaProject);
+				_HammerUndo(isLogging, out, storage, coreMetaProject);
 				break;
 			case 11:
 				// Redo the last n undone changes
-				_HammerRedo(out, storage, coreMetaProject);
+				_HammerRedo(isLogging, out, storage, coreMetaProject);
 				break;
 			default:
 				break;
