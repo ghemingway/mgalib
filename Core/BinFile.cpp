@@ -12,10 +12,11 @@
 
 
 /*** Internally Defined Constants ***/
-#define BINFILE_DEFAULTCACHESIZE			10000000L
-#define BINFILE_DEFAULTMAXUNDO				10000000L
-#define BINFILE_DEFAULTJOURNALING			true
+#define BINFILE_DEFAULTCACHING				true
+#define BINFILE_DEFAULTCACHESIZE			SIZE_MAX
+#define BINFILE_DEFAULTMAXUNDO				SIZE_MAX
 #define BINFILE_DEFAULTCOMPRESSION			true
+#define BINFILE_DEFAULTJOURNALING			true
 #define BINFILE_JOURNALCOMPRESSIONLIMIT		0
 #define BINFILE_ENCRYPTIONKEYSIZE			CryptoPP::AES::DEFAULT_KEYLENGTH
 #define BINFILE_ENCRYPTIONIVSIZE			CryptoPP::AES::BLOCKSIZE * 16
@@ -602,7 +603,7 @@ BinAttribute* BinObject::GetAttribute(const AttrID_t &attrID)
 
 BinFile::BinFile(const std::string &filename, CoreMetaProject *coreMetaProject) : ::ICoreStorage(coreMetaProject),
 	_filename(filename), _metaProjectUuid(), _rootUuid(), _inputFile(), _scratchFile(),
-	_indexHash(),_cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
+	_indexHash(), _isCaching(BINFILE_DEFAULTCACHING), _cacheQueue(), _maxCacheSize(BINFILE_DEFAULTCACHESIZE),
 	_openedObject(), _createdObjects(), _changedAttributes(), _deletedObjects(),
 	_isJournaling(BINFILE_DEFAULTJOURNALING), _maxUndoSize(BINFILE_DEFAULTMAXUNDO), _undoList(), _redoList(),
 	_isCompressed(BINFILE_DEFAULTCOMPRESSION), _compressor(NULL), _decompressor(NULL),
@@ -1031,10 +1032,14 @@ IndexHashIterator BinFile::FetchObject(const Uuid &uuid)
 	//Is the object in the cache
 	if (indexIter->second.location == EntryLocation::Cache())
 	{
-		// Remove the object from the cacheQueue
-		this->_cacheQueue.remove(uuid);
-		// Move the object to the top of the cacheQueue
-		this->_cacheQueue.push_front(uuid);
+		// If caching
+		if (this->_isCaching)
+		{
+			// Remove the object from the cacheQueue
+			this->_cacheQueue.remove(uuid);
+			// Move the object to the top of the cacheQueue
+			this->_cacheQueue.push_front(uuid);
+		}
 	}
 	// Next, try the inputFile
 	else if (indexIter->second.location == EntryLocation::Input())
@@ -1075,10 +1080,14 @@ void BinFile::ObjectFromFile(std::fstream &stream, IndexEntry &indexEntry, const
 	delete buffer;
 	// Set the object and mark it as in cache
 	indexEntry.location = EntryLocation::Cache();
-	// Move the object to the cache and to the front of the cacheQueue
-	this->_cacheQueue.push_front(uuid);
-	// Make sure there is space in the cache
-	this->CheckCacheSize();
+	// Are we caching (using the scratch file?)
+	if (this->_isCaching)
+	{
+		// Move the object to the cache and to the front of the cacheQueue
+		this->_cacheQueue.push_front(uuid);
+		// Make sure there is space in the cache
+		this->CheckCacheSize();
+	}
 }
 
 
@@ -1499,7 +1508,7 @@ void BinFile::TryAbortTransaction(void)
 			// Insert into the cache and queue
 			std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( *deletedIter );
 			ASSERT( insertReturn.second );
-			this->_cacheQueue.push_front(deletedIter->first);
+			if (this->_isCaching) this->_cacheQueue.push_front(deletedIter->first);
 			// Move to the next deleted object in the list
 			++deletedIter;
 		}
@@ -1579,7 +1588,7 @@ void BinFile::TryAbortTransaction(void)
 			delete binObject;
 			// Remove object info from cacheHash and cacheQueue
 			this->_indexHash.erase(indexIter);
-			this->_cacheQueue.remove(createdIter->first);
+			if (this->_isCaching) this->_cacheQueue.remove(createdIter->first);
 			// Move on to the next created object
 			++createdIter;
 		}
@@ -1602,7 +1611,7 @@ IndexHashIterator BinFile::TryCreateObject(const MetaID_t &metaID, const Uuid &u
 	IndexEntry indexEntry = { binObject, EntryLocation::Cache(), 0, 0, this->_isCompressed, this->_isEncrypted };
 	std::pair<IndexHashIterator,bool> insertReturn = this->_indexHash.insert( std::make_pair(uuid, indexEntry) );
 	ASSERT( insertReturn.second );
-	this->_cacheQueue.push_front(uuid);
+	if (this->_isCaching) this->_cacheQueue.push_front(uuid);
 	// Return the hashIterator
 	return insertReturn.first;
 }
@@ -1643,17 +1652,6 @@ BinFile::~BinFile()
 }
 
 
-const Result_t BinFile::SetCacheSize(const uint64_t &size) throw()
-{
-	// Can not happen during a transaction (for simplicity)
-	if ( this->_inTransaction ) return E_TRANSACTION;
-	// Set the size and make any needed adjustments to the actual cache (may push some objs to file)
-	this->_maxCacheSize = size;
-	this->CheckCacheSize();
-	return S_OK;
-}
-
-
 const Result_t BinFile::MetaObject(CoreMetaObject* &coreMetaObject) const throw()
 {
 	if( !this->_inTransaction ) return E_TRANSACTION;
@@ -1685,7 +1683,7 @@ const Result_t BinFile::ObjectVector(std::vector<Uuid> &objectVector) const thro
 	objectVector.clear();
 	objectVector.resize(this->_indexHash.size());
 	// Load it with the indexHash
-	uint64_t objCount = 0;
+	size_t objCount = 0;
 	IndexHash::const_iterator indexIter = this->_indexHash.begin();
 	while(indexIter != this->_indexHash.end())
 	{
@@ -2058,7 +2056,7 @@ const Result_t BinFile::DeleteObject(void) throw()
 	// Capture the object's Uuid, pos, and pointer
 	this->_deletedObjects.push_front( std::make_pair(this->_openedObject->first, this->_openedObject->second) );
 	// Remove object from cacheQueue and indexHash
-	this->_cacheQueue.remove(this->_openedObject->first);
+	if (this->_isCaching) this->_cacheQueue.remove(this->_openedObject->first);
 	this->_indexHash.erase(this->_openedObject->first);
 	// "Close" the object
 	return this->CloseObject();
@@ -2263,6 +2261,45 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Dictiona
 }
 
 
+// --------------------------- Configuration Options  --------------------------- //
+
+
+const Result_t BinFile::EnableCaching(void) throw()
+{
+	// Make sure we are not in a transaction
+	if (this->_inTransaction) return E_TRANSACTION;
+	// Set the flag and go
+	this->_isCaching = true;
+	return S_OK;
+}
+
+
+const Result_t BinFile::DisableCaching(void) throw()
+{
+	// Can not happen during a transaction (for simplicity)
+	if ( this->_inTransaction ) return E_TRANSACTION;
+	// Nothing to be done if we already are not caching
+	if (!this->_isCaching) return S_OK;
+	// Otherwise, clear the cache
+	this->FlushCache();
+	// And set the caching flag to false
+	this->_isCaching = false;
+	return S_OK;
+}
+
+
+const Result_t BinFile::SetCacheSize(const uint64_t &size) throw()
+{
+	// Can not happen during a transaction (for simplicity)
+	if ( this->_inTransaction ) return E_TRANSACTION;
+	if ( !this->_isCaching ) return E_INVALID_USAGE;
+	// Set the size and make any needed adjustments to the actual cache (may push some objs to file)
+	this->_maxCacheSize = size;
+	this->CheckCacheSize();
+	return S_OK;
+}
+
+
 const Result_t BinFile::Undo(Uuid &tag) throw()
 {
 	// Must not be in a transaction
@@ -2377,7 +2414,7 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 		// First, fetch the object to the cache
 		this->FetchObject(deletedIter->first);
 		// Now, remove object from cacheQueue and indexHash
-		this->_cacheQueue.remove(deletedIter->first);
+		if (this->_isCaching) this->_cacheQueue.remove(deletedIter->first);
 		this->_indexHash.erase(deletedIter->first);
 		// Delete the object itself
 		BinObject* binObject = deletedIter->second.object;
@@ -2406,14 +2443,14 @@ const Result_t BinFile::JournalInfo(const uint32_t &undoSize, const uint32_t red
 	// Nothing to do if not journaling
 	undoJournal.clear();
 	redoJournal.clear();
-	if (!this->_isJournaling) return S_OK;
+	if (!this->_isJournaling) return E_INVALID_USAGE;
 	// Get journal info
 	// TODO: Get journal info
 	return S_OK;
 }
 
 
-const Result_t BinFile::EndJournal(void) throw()
+const Result_t BinFile::DisableJournaling(void) throw()
 {
 	// Nothing to be done if we already are not journaling
 	if (!this->_isJournaling) return S_OK;

@@ -121,7 +121,12 @@ public:
 	bool operator<(const Uuid &uuid) const;
 	// Friends
 	friend std::ostream& operator<<(std::ostream& out, const Uuid &uuid);
-	static Uuid Null(void);
+	static inline Uuid Null(void)
+	{
+		Uuid retVal;
+		memset(&retVal, 0, sizeof(Uuid));
+		return retVal;
+	}
 };
 
 

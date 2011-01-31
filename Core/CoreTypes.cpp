@@ -225,12 +225,3 @@ std::ostream& MGA::operator<<(std::ostream& out, const Uuid &uuid)
 	return out;
 }
 
-
-Uuid Uuid::Null(void)
-{
-	Uuid retVal;
-	// Return an all zero Uuid (signals Null value)
-	memset(&retVal, 0, 16);
-	return retVal;
-}
-
