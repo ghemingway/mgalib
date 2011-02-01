@@ -13,7 +13,6 @@ namespace MGA {
 /*** Class Predefinitions ***/
 class MetaFCO;
 class MetaAttribute;
-class MgaProject;
 class MetaModel;
 class MetaAtom;
 class MetaReference;
@@ -31,6 +30,7 @@ private:
 	MetaFolder(const MetaFolder &);							//!< Deny access to copy constructor
 	MetaFolder& operator=(const MetaFolder &);				//!< Deny access to equals operator
 
+	friend class MetaProject;
 	MetaFolder(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:

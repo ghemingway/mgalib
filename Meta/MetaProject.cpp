@@ -3,8 +3,10 @@
 #include "MetaGeneric.h"
 #include "MetaFolder.h"
 #include "../Core/CoreProject.h"
-#include "../Core/CoreObject.h"
 #include <time.h>
+
+
+// --------------------------- Private Helper Functions --------------------------- //
 
 
 static std::string _CurrentTime(void)
@@ -51,7 +53,7 @@ MetaProject::~MetaProject()
 
 const Result_t MetaProject::Open(const std::string &connection, MetaProject* &project) throw()
 {
-	if (connection == "") return E_INVALID_USAGE;
+	if( connection == "" ) return E_INVALID_USAGE;
 	// Try to open the project
 	CoreMetaProject* coreMetaProject = NULL;
 	Result_t result = CreateMetaCoreMetaProject(coreMetaProject);
@@ -62,19 +64,14 @@ const Result_t MetaProject::Open(const std::string &connection, MetaProject* &pr
 	if (result != S_OK)
 	{
 		// Clean up and exit
-//		delete coreMetaProject;
+		delete coreMetaProject;
 		return result;
 	}
 	ASSERT( coreProject != NULL );
 	// Create the metaProject
 	MetaProject* metaProject = new MetaProject(coreProject);
 	ASSERT( metaProject != NULL );
-	// Traverse and register the entire project (must be inside a transaction
-	result = coreProject->BeginTransaction(true);
-	ASSERT( result == S_OK );
-//	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
-	result = coreProject->CommitTransaction();
-	ASSERT( result == S_OK );
+	// MetaProject is ready
 	project = metaProject;
 	return S_OK;
 }
@@ -101,13 +98,15 @@ const Result_t MetaProject::Create(const std::string &connection, MetaProject* &
 	// Create the new MetaProject
 	MetaProject* metaProject = new MetaProject(coreProject);
 	ASSERT( metaProject != NULL );
-	// Create the root object
+	// Create the root object (and some attributes)
 	result = metaProject->_coreProject->BeginTransaction(false);
 	ASSERT( result == S_OK );
-	metaProject->_rootObject->SetAttributeValue(ATTRID_CDATE, _CurrentTime());
-	metaProject->_rootObject->SetAttributeValue(ATTRID_MDATE, _CurrentTime());
-	metaProject->_rootObject->SetAttributeValue(ATTRID_NAME, std::string(""));
-//	MetaFolder::Traverse(metaProject, metaProject->_rootObject);
+	result = metaProject->_rootObject->SetAttributeValue(ATTRID_CDATE, _CurrentTime());
+	ASSERT( result == S_OK );
+	result = metaProject->_rootObject->SetAttributeValue(ATTRID_MDATE, _CurrentTime());
+	ASSERT( result == S_OK );
+	result = metaProject->_rootObject->SetAttributeValue(ATTRID_NAME, std::string(""));
+	ASSERT( result == S_OK );
 	result = metaProject->_coreProject->CommitTransaction();
 	ASSERT( result == S_OK );
 	// MetaProject is ready
@@ -351,56 +350,42 @@ const Result_t MetaProject::SetModifiedAt(const std::string &value) throw()
 
 const Result_t MetaProject::RootFolder(MetaFolder* &folder) throw()
 {
-	// Traverse and register the entire project (must be inside a transaction
-	Result_t txResult = this->_coreProject->BeginTransaction(true);
-	ASSERT( txResult == S_OK );
+	// Start a happy CoreProject transaction
+	Result_t result = this->_coreProject->BeginTransaction(true);
+	ASSERT( result == S_OK );
 	// The rootObject is the rootFolder - just need to make a copy of it
 	CoreObject rootObject;
 	Uuid rootUuid;
-	this->_rootObject->GetUuid(rootUuid);
-	this->_coreProject->Object(rootUuid, rootObject);
-	MetaProject* metaProject = this;
-	MetaBase* metaBase = new MetaBase(rootObject, metaProject);
-	ASSERT( metaBase != NULL );
-	folder = (MetaFolder*)metaBase;
+	result = this->_rootObject->GetUuid(rootUuid);
+	ASSERT( result == S_OK );
+	result = this->_coreProject->Object(rootUuid, rootObject);
+	ASSERT( result == S_OK );
+	folder = new MetaFolder(rootObject, this);
 	ASSERT( folder != NULL );
 	// Wrap up the transaction
-	txResult = this->_coreProject->CommitTransaction();
-	ASSERT( txResult == S_OK );
+	result = this->_coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
 	return S_OK;
 }
 
 
 const Result_t MetaProject::FindObject(const Uuid &uuid, MetaBase* &metaBase) throw()
 {
-//	MetaObjectHashIterator metaHashIter = this->_metaObjectHash.find(uuid);
-//	if( metaHashIter == this->_metaObjectHash.end() ) return E_NOTFOUND;
-//	metaBase = metaHashIter->second;
-	ASSERT( metaBase != NULL );
-	return S_OK;
-}
-
-
-void MetaProject::CreateMetaBase(const MetaID_t &metaID, CoreObject &object)
-{
-	ASSERT( this->_coreProject != NULL );
-//	ASSERT( obj == NULL );
-	Result_t result = this->_coreProject->CreateObject(metaID, object);
-	ASSERT( result == S_OK );
-//	COMTHROW( obj->put_AttributeValue(ATTRID_METAREF, PutInVariant(max_metaref + 1)) );
-//	MetaBase::Traverse(this, obj);
+	// Does this Uuid exist in the coreProject
+	Result_t txResult = this->_coreProject->BeginTransaction(true);
+	ASSERT( txResult == S_OK );
+	CoreObject coreObject;
+	// Try to find the object from the Uuid
+	Result_t result = this->_coreProject->Object(uuid, coreObject);
+	// If the object was found, create a metaBase from it
+	if (coreObject != NULL) metaBase = new MetaBase(coreObject, this);
+	else metaBase = NULL;
+	txResult = this->_coreProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 
 /*
-void MetaProject::CreateMetaObj(metaid_type metaid, CCoreObjectPtr &obj)
-{
-	ASSERT( obj == NULL );
-	ASSERT( coreproject != NULL );
-
-	COMTHROW( coreproject->CreateObject(metaid, PutOut(obj)) );
-}
-
-
 void MetaProject::CreatePathItems(bstr_const_iterator i, bstr_const_iterator e, pathitems_type &pathitems)
 {
 	ASSERT( pathitems.empty() );

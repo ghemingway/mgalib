@@ -27,7 +27,7 @@ private:
 	MetaAspect(const MetaAspect &);							//!< Deny access to copy constructor
 	MetaAspect& operator=(const MetaAspect &);				//!< Deny access to equals operator
 
-	friend class MetaModel;
+	friend class MetaBase;
 	MetaAspect(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
