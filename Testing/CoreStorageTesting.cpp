@@ -403,7 +403,7 @@ TEST_F(ICoreStorageTest,StringAttribute)
 	EXPECT_EQ( E_ATTRID, result = storage->GetAttributeValue(12345, value) ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
-	EXPECT_EQ( E_ATTVALTYPE, result = storage->GetAttributeValue(ATTRID_PARGUID, value) ) << GetErrorInfo(result);
+	EXPECT_EQ( E_ATTVALTYPE, result = storage->GetAttributeValue(ATTRID_PARADIGMUUID, value) ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with everything corret (Expect S_OK)
 	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_NAME, value) ) << GetErrorInfo(result);
@@ -422,7 +422,7 @@ TEST_F(ICoreStorageTest,StringAttribute)
 	EXPECT_EQ( E_ATTRID, result = storage->SetAttributeValue(12345, newValue) ) << GetErrorInfo(result);
 
 	// SetAttributeValue with transaction, open object and valid AttrID, but AttrID does not match type (Expect E_ATTVALTYPE)
-	EXPECT_EQ( E_ATTVALTYPE, result = storage->SetAttributeValue(ATTRID_PARGUID, newValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( E_ATTVALTYPE, result = storage->SetAttributeValue(ATTRID_PARADIGMUUID, newValue) ) << GetErrorInfo(result);
 
 	// SetAttributeValue with everything corret (Expect S_OK)
 	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_NAME, newValue) ) << GetErrorInfo(result);
@@ -472,7 +472,7 @@ TEST_F(ICoreStorageTest,LongPointerAttribute)
 	EXPECT_EQ( E_ATTVALTYPE, result = storage->GetAttributeValue(ATTRID_NAME, value) ) << GetErrorInfo(result);
 	
 	// GetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARGUID, value) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARADIGMUUID, value) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
 	
 	// SetAttributeValue outside of transaction (Expect E_TRANSACTION)
@@ -491,27 +491,27 @@ TEST_F(ICoreStorageTest,LongPointerAttribute)
 	EXPECT_EQ( E_ATTVALTYPE, result = storage->SetAttributeValue(ATTRID_NAME, newValue) ) << GetErrorInfo(result);
 	
 	// SetAttributeValue with everything corret (Expect S_OK)
-	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_PARGUID, newValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_PARADIGMUUID, newValue) ) << GetErrorInfo(result);
 	// Test to make sure value was accepted
 	Uuid tmpValue;
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARGUID, tmpValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARADIGMUUID, tmpValue) ) << GetErrorInfo(result);
 	EXPECT_EQ( newValue, tmpValue );
 	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
 	// Test to make sure old value was restored
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARGUID, tmpValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARADIGMUUID, tmpValue) ) << GetErrorInfo(result);
 	EXPECT_EQ( value, tmpValue );
 	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
 	
 	// SetAttributeValue within a commit transaction (Expect S_OK)
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_PARGUID, newValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->SetAttributeValue(ATTRID_PARADIGMUUID, newValue) ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->CommitTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->BeginTransaction() ) << GetErrorInfo(result);
 	EXPECT_EQ( S_OK, result = storage->OpenObject(uuid) ) << GetErrorInfo(result);
-	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARGUID, tmpValue) ) << GetErrorInfo(result);
+	EXPECT_EQ( S_OK, result = storage->GetAttributeValue(ATTRID_PARADIGMUUID, tmpValue) ) << GetErrorInfo(result);
 	EXPECT_EQ( newValue, tmpValue );
 	EXPECT_EQ( S_OK, result = storage->AbortTransaction() ) << GetErrorInfo(result);
 }

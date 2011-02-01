@@ -9,10 +9,10 @@
 	</GUI>
 	<Paradigms>
 		<Paradigm name="ESMoL" currentversion="{abcd}">
-			<Version guid="{abcd}" connection="MGA=/Users/ghemingway/Documents/MGALib/Testing/TestSamples/ESMoL.mta"/>
+			<Version uuid="{abcd}" connection="MGA=/Users/ghemingway/Documents/MGALib/Testing/TestSamples/ESMoL.mta"/>
 		</Paradigm>
 		<Paradigm name="MetaGME" currentversion="{9D3F9884-FE60-409C-8FC1-45789193989B}">
-			<Version guid="{9D3F9884-FE60-409C-8FC1-45789193989B}" connection="MGA=~/Documents/MGALib/Testing/TestSamples/MetaGME.mta"/>
+			<Version uuid="{9D3F9884-FE60-409C-8FC1-45789193989B}" connection="MGA=~/Documents/MGALib/Testing/TestSamples/MetaGME.mta"/>
 		</Paradigm>
 	</Paradigms>
 </MGARegistry>

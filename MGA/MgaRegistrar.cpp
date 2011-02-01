@@ -31,7 +31,7 @@ MgaRegistrar::MgaRegistrar() : _paradigms(), _components()
 }
 
 
-const Result_t MgaRegistrar::QueryParadigm(const std::string &name, const std::string &guid, std::string &connection) const throw()
+const Result_t MgaRegistrar::QueryParadigm(const std::string &name, const std::string &uuidStr, std::string &connection) const throw()
 {
 	// Look through all paradigms for the name
 	std::list<ParadigmStruct>::const_iterator paradigmIter = this->_paradigms.begin();
@@ -40,7 +40,7 @@ const Result_t MgaRegistrar::QueryParadigm(const std::string &name, const std::s
 		// Have we found the paradigm
 		if (paradigmIter->name == name)
 		{
-			// Get the GUID and connection string
+			// Get the Uuid and connection string
 			std::string guidStr = paradigmIter->currentVersion->first;
 			connection = paradigmIter->currentVersion->second;
 			// All is good
@@ -54,7 +54,7 @@ const Result_t MgaRegistrar::QueryParadigm(const std::string &name, const std::s
 }
 
 
-const Result_t MgaRegistrar::GUIDFromVersion(const std::string &name, const std::string &version, std::string &guid) const throw()
+const Result_t MgaRegistrar::UuidFromVersion(const std::string &name, const std::string &version, std::string &uuidStr) const throw()
 {
 	// Look through all paradigms for the name
 	std::list<ParadigmStruct>::const_iterator paradigmIter = this->_paradigms.begin();
@@ -66,7 +66,7 @@ const Result_t MgaRegistrar::GUIDFromVersion(const std::string &name, const std:
 			// Try to find the version
 			std::map<std::string,std::string>::const_iterator versionIter = paradigmIter->versions.find(version);
 			if (versionIter == paradigmIter->versions.end()) return E_NOTFOUND;
-			// Get the GUID and connection string
+			// Get the Uuid and connection string
 //			std::string guidStr = paradigmIter->currentVersion->first;
 //			connection = paradigmIter->currentVersion->second;
 			// All is good
@@ -115,7 +115,7 @@ XMLRegistrar::XMLRegistrar(const std::string &filename) : ::MgaRegistrar(), _fil
 	this->_ATTR_JavaMemory = XMLString::transcode("javamemory");
 	this->_ATTR_Name = XMLString::transcode("name");
 	this->_ATTR_CurrentVersion = XMLString::transcode("currentversion");
-	this->_ATTR_Guid = XMLString::transcode("guid");
+	this->_ATTR_Uuid = XMLString::transcode("uuid");
 	this->_ATTR_Connection = XMLString::transcode("connection");
 
 	// Configure DOM parser.
@@ -306,7 +306,7 @@ const Result_t XMLRegistrar::ParseParadigm(DOMElement* element)
 				if( XMLString::equals(currentElement->getTagName(), this->_TAG_Version))
 				{
 					// Get the version GUID
-					xmlch = currentElement->getAttribute(this->_ATTR_Guid);
+					xmlch = currentElement->getAttribute(this->_ATTR_Uuid);
 					tmpChar = XMLString::transcode(xmlch);
 					std::string guid = tmpChar;
 					XMLString::release(&tmpChar);
@@ -424,7 +424,7 @@ XMLRegistrar::~XMLRegistrar()
 		XMLString::release(&this->_ATTR_JavaMemory);
 		XMLString::release(&this->_ATTR_Name);
 		XMLString::release(&this->_ATTR_CurrentVersion);
-		XMLString::release(&this->_ATTR_Guid);
+		XMLString::release(&this->_ATTR_Uuid);
 		XMLString::release(&this->_ATTR_Connection);
 	}
 	catch( ... )
