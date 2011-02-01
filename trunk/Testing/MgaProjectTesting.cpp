@@ -4,6 +4,22 @@
 #include "../MGA/MgaRegistrar.h"
 
 
+// --------------------------- UtilityTests --------------------------- //
+
+
+TEST(MgaProjectTest, CreateMetaGMEv3)
+{
+	// First create an XML registry
+	MgaRegistrar* registrar;
+	Result_t result;
+	ASSERT_EQ( S_OK, result = XMLRegistrar::OpenRegistry("MGAConfig.xml", registrar) ) << GetErrorInfo(result);
+	// Now create a new MetaGME file
+	MgaProject* mgaProject = NULL;
+	Uuid paradigmUuid;
+	EXPECT_EQ( S_OK, result = MgaProject::Create("MetaGMEv3.mga", "MetaGMEv3.mta", paradigmUuid, registrar, mgaProject) )
+		<< GetMgaErrorInfo(result);
+}
+
 /*
 TEST(MgaProjectTest,OpenProject)
 {

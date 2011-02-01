@@ -54,7 +54,7 @@ MgaProject::MgaProject(CoreProject *coreProject, MetaProject *metaProject, const
 	this->StartAutoAddOns();
 }
 
-
+/*
 const Result_t MgaProject::GetMetaObj(const Uuid &metaRef, MetaBase* &metaBase)
 {
 	if( this->_metaProject == NULL ) return E_MGA_PROJECT_NOT_OPEN;
@@ -62,7 +62,7 @@ const Result_t MgaProject::GetMetaObj(const Uuid &metaRef, MetaBase* &metaBase)
 	return this->_metaProject->FindObject(metaRef, metaBase);
 }
 
-/*
+
 HRESULT CMgaProject::CreateSetupData(BSTR rootname, BSTR paradigmname, VARIANT guid) {
 		COMTRY_IN_TRANSACTION {	
 
@@ -100,20 +100,20 @@ HRESULT CMgaProject::CreateSetupData(BSTR rootname, BSTR paradigmname, VARIANT g
 }
 */
 
-const Result_t MgaProject::OpenParadigm(MgaRegistrar* &registrar, const std::string &paradigm, const std::string &guid, MetaProject* &metaProject)
+const Result_t MgaProject::OpenParadigm(MgaRegistrar* &registrar, const std::string &paradigm, const std::string &uuidStr, MetaProject* &metaProject)
 {
 	// Get the connection string for the paradigm
 	std::string connectionString = "";
-	Result_t result = registrar->QueryParadigm(paradigm, guid, connectionString);
+	Result_t result = registrar->QueryParadigm(paradigm, uuidStr, connectionString);
 	if (result != S_OK || connectionString == "") return E_MGA_PARADIGM_NOTREG;
 	// Try to open the file and create a MetaProject
 	result = MetaProject::Open(connectionString, metaProject);
 	if (result != S_OK || metaProject == NULL) return E_MGA_PARADIGM_INVALID;
-	GUID_t metaGUID;
-	ASSERT( metaProject->GetGUID(metaGUID) == S_OK );
-	// Make sure GUIDs match
-	std::string metaGUIDStr = metaGUID;
-	if(guid != metaGUIDStr)
+	Uuid metaUuid;
+	ASSERT( metaProject->GetUuid(metaUuid) == S_OK );
+	// Make sure Uuids match
+	std::string metaUuidStr = metaUuid;
+	if(uuidStr != metaUuidStr)
 	{
 		delete metaProject;
 		metaProject = NULL;
@@ -169,7 +169,7 @@ MgaProject::~MgaProject() {
 
 
 const Result_t MgaProject::Create(const std::string &projectName, const std::string &paradigmName,
-								  const GUID_t &paradigmGUID, MgaRegistrar* &registrar, MgaProject* &mgaProject) throw()
+								  const Uuid &paradigmUuid, MgaRegistrar* &registrar, MgaProject* &mgaProject) throw()
 {
 //	CoreMetaProject* genericProject;
 //	Result_t result = CreateMGACoreMetaProject(true, genericProject);
@@ -249,9 +249,10 @@ const Result_t MgaProject::Open(const std::string &projectName, MgaRegistrar* &r
 	if (projectName == "") return E_INVALID_USAGE;
 	// Create a coreMetaProject and open the coreProject
 	CoreMetaProject* mgaCoreMetaProject;
-	ASSERT( CreateMGACoreMetaProject(true, mgaCoreMetaProject) == S_OK );
+	Result_t result = CreateMGACoreMetaProject(mgaCoreMetaProject);
+	ASSERT( result == S_OK  );
 	CoreProject* coreProject;
-	Result_t result = CoreProject::OpenProject(projectName, mgaCoreMetaProject, coreProject);
+	result = CoreProject::Open(projectName, mgaCoreMetaProject, coreProject);
 	// Handle case of not being able to open file
 	if (result != S_OK)
 	{
@@ -260,37 +261,43 @@ const Result_t MgaProject::Open(const std::string &projectName, MgaRegistrar* &r
 		return result;
 	}
 	// Try to get the paradigm guid from the open coreProject
-	ASSERT( coreProject->BeginTransaction(true) == S_OK );
-	CoreObject* rootObject;
-	ASSERT( coreProject->RootObject(rootObject) == S_OK );
+	result = coreProject->BeginTransaction(true);
+	ASSERT( result == S_OK );
+	CoreObject rootObject;
+	result = coreProject->RootObject(rootObject);
+	ASSERT( result == S_OK );
 	ASSERT( rootObject != NULL );
 //	ASSERT( rootObject->Project() == coreProject );
 	std::string paradigm, paradigmVersion;
-	std::vector<unsigned char> paradigmGUID;
-	ASSERT( rootObject->GetAttributeValue(ATTRID_PARADIGM, paradigm) == S_OK );
-	ASSERT( rootObject->GetAttributeValue(ATTRID_PARGUID, paradigmGUID) == S_OK );
-	ASSERT( rootObject->GetAttributeValue(ATTRID_PARVERSION, paradigmVersion) == S_OK );
-	ASSERT( coreProject->CommitTransaction() == S_OK );
-	delete rootObject;
+	Uuid paradigmUuid;
+	result = rootObject->GetAttributeValue(ATTRID_PARADIGM, paradigm);
+	ASSERT( result == S_OK );
+	result = rootObject->GetAttributeValue(ATTRID_PARADIGMUUID, paradigmUuid);
+	ASSERT( result == S_OK );
+	result = rootObject->GetAttributeValue(ATTRID_PARADIGMVERSION, paradigmVersion);
+	ASSERT( result == S_OK );
+	result = coreProject->CommitTransaction();
+	ASSERT( result == S_OK );
+	rootObject = NULL;
 
 	// See if we can open the paradigm
 	if (paradigm == "") return E_MGA_MODULE_INCOMPATIBILITY;
 	MetaProject* metaProject = NULL;
 	if (paradigmVersion != "")
 	{
-		// Version string has precedence over GUID - get the guid for the current version
-		std::string guid;
-		Result_t result = registrar->GUIDFromVersion(paradigm, paradigmVersion, guid);
+		// Version string has precedence over Uuid - get the guid for the current version
+		std::string uuidStr;
+		Result_t result = registrar->UuidFromVersion(paradigm, paradigmVersion, uuidStr);
 		ASSERT( result == S_OK );
-		result = MgaProject::OpenParadigm(registrar, paradigm, guid, metaProject);
+		result = MgaProject::OpenParadigm(registrar, paradigm, uuidStr, metaProject);
 		if ( result != S_OK ) return result;
 		ASSERT( metaProject != NULL );
 	}
 	else
 	{
-		// Convert paradigmGUID to string and open paradigm
-		std::string guid = GUID_t::ToString(paradigmGUID);
-		result = MgaProject::OpenParadigm(registrar, paradigm, guid, metaProject);
+		// Convert paradigmUuid to string and open paradigm
+		std::string uuidStr = paradigmUuid;
+		result = MgaProject::OpenParadigm(registrar, paradigm, uuidStr, metaProject);
 		if ( result != S_OK ) return result;
 		ASSERT( metaProject != NULL );
 	}
@@ -299,9 +306,12 @@ const Result_t MgaProject::Open(const std::string &projectName, MgaRegistrar* &r
 	if( project == NULL ) return E_MGA_MUST_ABORT;
 	// Finally, signal everyone that we are ready to run
 	MgaTerritory* territory = NULL;
-	ASSERT( project->BeginTransaction(territory, true) == S_OK );
-	ASSERT( project->GlobalNotify(GLOBALEVENT_OPEN_PROJECT) == S_OK );
-	ASSERT( project->CommitTransaction() == S_OK );
+	result = project->BeginTransaction(territory, true);
+	ASSERT( result == S_OK );
+	result = project->GlobalNotify(GLOBALEVENT_OPEN_PROJECT);
+	ASSERT( result == S_OK );
+	result = project->CommitTransaction();
+	ASSERT( result == S_OK );
 	// And we are done
 	return S_OK;
 }
@@ -407,20 +417,20 @@ STDMETHODIMP CMgaProject::Save(BSTR newname, VARIANT_BOOL keepoldname)
 const Result_t MgaProject::GetRootFolder(MgaFolder* &rootFolder) throw()
 {
 	// TODO: Need to make sure we are in a transaction
-	CoreObject *rootObject;
+	CoreObject rootObject;
 	rootFolder = NULL;
 	if( this->_coreProject->RootObject(rootObject) != S_OK ) return E_MGA_ROOTFCO;
-	std::list<MetaObjIDPair> objList;
+	std::list<Uuid> objList;
 	if( rootObject->GetAttributeValue(ATTRID_FPARENT + ATTRID_COLLECTION, objList) != S_OK ) return E_MGA_ROOTFCO;
 	// No longer need rootObject - make sure to delete it
-	delete rootObject;
-	std::list<MetaObjIDPair>::iterator objListIter = objList.begin();
+	rootObject = NULL;
+	std::list<Uuid>::iterator objListIter = objList.begin();
 	while (objListIter != objList.end())
 	{
-		if (objListIter->metaID == DTID_FOLDER)
+/*		if (objListIter->metaID == DTID_FOLDER)
 		{
 			// Get a coreObject for this item
-			CoreObject* coreObject;
+			CoreObject coreObject;
 			this->_coreProject->Object(*objListIter, coreObject);
 			ASSERT( coreObject != NULL );
 			// Create the MgaFolder object corresponding to this CoreObject
@@ -428,6 +438,7 @@ const Result_t MgaProject::GetRootFolder(MgaFolder* &rootFolder) throw()
 			ASSERT( rootFolder != NULL );
 			return S_OK;
 		}
+*/
 		++objListIter;
 	}
 	// Did we did not find it
@@ -989,11 +1000,12 @@ STDMETHODIMP CMgaProject::get_ProjectStatus(long *status) {
 
 const Result_t MgaProject::BeginTransaction(MgaTerritory* territory, const bool &mode) throw()
 {
-
 	if(this->_baseTerritory != NULL) return E_MGA_ALREADY_IN_TRANSACTION;
 	// Create a territory if one is needed
 	if(territory == NULL)
+	{
 		ASSERT( this->CreateTerritory(NULL, territory) == S_OK );
+	}
 	// Otherwise, verify that the territory is valid for this project
 	else
 	{

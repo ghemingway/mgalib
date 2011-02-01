@@ -47,8 +47,8 @@ const Result_t MGA::CreateMGACoreMetaProject(CoreMetaProject* &metaProject)
 		CREATE_ATTRIBUTE(ATTRID_CREATOR, "Author", "Created by",			ValueType::String());
 		CREATE_ATTRIBUTE(ATTRID_GUID, "GUID", "GUID",					    ValueType::LongPointer());
 		CREATE_ATTRIBUTE(ATTRID_VERSION, "Version", "Version",				ValueType::String());
-		CREATE_ATTRIBUTE(ATTRID_PARGUID, "ParadigmGUID", "Paradigm GUID",	ValueType::LongPointer());
-		CREATE_ATTRIBUTE(ATTRID_PARVERSION, "ParadigmVersion", "Paradigm Version",	ValueType::String());
+		CREATE_ATTRIBUTE(ATTRID_PARADIGMUUID, "ParadigmGUID", "Paradigm GUID",	ValueType::LongPointer());
+		CREATE_ATTRIBUTE(ATTRID_PARADIGMVERSION, "ParadigmVersion", "Paradigm Version",	ValueType::String());
 		CREATE_ATTRIBUTE(ATTRID_PARADIGM, "ExtParadigm", "External Paradigm",ValueType::String());
 		CREATE_ATTRIBUTE(ATTRID_EXTDATA, "Comment", "Project Comments",			ValueType::String());
 		CREATE_ATTRIBUTE(ATTRID_MGAVERSION, "MGA_Version", "MGA Version Code", ValueType::Long());

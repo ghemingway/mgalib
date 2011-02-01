@@ -141,7 +141,7 @@ public:
 	STDMETHOD(UnregisterParadigm)(BSTR name, regaccessmode_enum mode);
 	STDMETHOD(VersionFromGUID)(BSTR name, VARIANT guid, BSTR *ver, regaccessmode_enum mode);
 */
-	const Result_t GUIDFromVersion(const std::string &name, const std::string &version, std::string &guid) const throw();
+	const Result_t UuidFromVersion(const std::string &name, const std::string &version, std::string &uuidStr) const throw();
 /*
 	STDMETHOD(get_Components)(regaccessmode_enum mode, VARIANT *progids);
 	STDMETHOD(RegisterComponent)(BSTR progid, componenttype_enum type, BSTR desc, regaccessmode_enum mode);
@@ -182,7 +182,7 @@ private:
 	XMLCh*						_ATTR_JavaMemory;
 	XMLCh*						_ATTR_Name;
 	XMLCh*						_ATTR_CurrentVersion;
-	XMLCh*						_ATTR_Guid;
+	XMLCh*						_ATTR_Uuid;
 	XMLCh*						_ATTR_Connection;
 	XercesDOMParser*			_configFileParser;
 

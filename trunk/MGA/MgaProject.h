@@ -84,7 +84,7 @@ private:
 	MgaProject();
 	MgaProject(CoreProject *coreProject, MetaProject *metaProject, const bool &readOnly);
 
-	static const Result_t OpenParadigm(MgaRegistrar* &registrar, const std::string &paradigm, const std::string &guid, MetaProject* &metaProject);
+	static const Result_t OpenParadigm(MgaRegistrar* &registrar, const std::string &paradigm, const std::string &uuidStr, MetaProject* &metaProject);
 	void StartAutoAddOns(void);												// start if enabled
 	void StopAutoAddOns(void);												// stop them always
 	void RemoveClients(void);
@@ -112,7 +112,7 @@ public:
 	const Result_t CreateTerritory(IMgaEventSink *handler, MgaTerritory* &territory, IMgaEventSink *handler2=NULL) throw();
 	const Result_t ActiveTerritory(MgaTerritory* &territory) throw()	{ territory = this->_baseTerritory;	return S_OK; }
 	const Result_t CreateAddOn(IMgaEventSink* handler, MgaAddOn* &addOn) throw();
-	const Result_t GetMetaObj(const Uuid &metaRef, MetaBase* &metaBase);
+//	const Result_t GetMetaObj(const Uuid &metaRef, MetaBase* &metaBase);
 /*
 	STDMETHOD(CheckLocks)(BSTR filename, VARIANT_BOOL clearlocks);
 	STDMETHOD(get_Territories)(IMgaTerritories **terrs);

@@ -82,6 +82,12 @@
 		5843908612B9703300F4AB58 /* CoreObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */; };
 		5843908712B9703300F4AB58 /* CoreProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */; };
 		5843908812B9703300F4AB58 /* CoreStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907F12B9703300F4AB58 /* CoreStorage.cpp */; };
+		584AF68412F8AF320036BAE7 /* MgaProjectTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390FF12B9711100F4AB58 /* MgaProjectTesting.cpp */; };
+		584AF68912F8AF510036BAE7 /* MgaProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E812B970C900F4AB58 /* MgaProject.cpp */; };
+		584AF69F12F8B14E0036BAE7 /* MgaRegistrar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E912B970C900F4AB58 /* MgaRegistrar.cpp */; };
+		584AF6A412F8B1C80036BAE7 /* MgaRegistrarTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843910112B9711100F4AB58 /* MgaRegistrarTesting.cpp */; };
+		584AF6BF12F8B3AC0036BAE7 /* MgaTerritory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390EA12B970C900F4AB58 /* MgaTerritory.cpp */; };
+		584AF6CB12F8B3EF0036BAE7 /* MgaError.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390E312B970C900F4AB58 /* MgaError.cpp */; };
 		584B6A8812F84F1F0050E0E4 /* MetaConnJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584B6A8612F84F1F0050E0E4 /* MetaConnJoint.cpp */; };
 		584B6A8912F84F1F0050E0E4 /* MetaConnJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 584B6A8712F84F1F0050E0E4 /* MetaConnJoint.h */; };
 		584B6AE112F869560050E0E4 /* MGALib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58E90A1F124CEFFF00B8E3CF /* MGALib.framework */; };
@@ -114,7 +120,7 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 58E90A1E124CEFFF00B8E3CF /* MGALib */;
+			remoteGlobalIDString = 58E90A1E124CEFFF00B8E3CF;
 			remoteInfo = MGALib;
 		};
 		58542C1912919CBF00947FA9 /* PBXContainerItemProxy */ = {
@@ -216,7 +222,7 @@
 		5843910212B9711100F4AB58 /* MgaRegistrarTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MgaRegistrarTesting.h; path = ../../Testing/MgaRegistrarTesting.h; sourceTree = SOURCE_ROOT; };
 		584B6A8612F84F1F0050E0E4 /* MetaConnJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaConnJoint.cpp; path = ../../Meta/MetaConnJoint.cpp; sourceTree = SOURCE_ROOT; };
 		584B6A8712F84F1F0050E0E4 /* MetaConnJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaConnJoint.h; path = ../../Meta/MetaConnJoint.h; sourceTree = SOURCE_ROOT; };
-		584B6ADA12F869310050E0E4 /* HammerTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = HammerTest; path = Build/Debug/HammerTest; sourceTree = "<group>"; };
+		584B6ADA12F869310050E0E4 /* HammerTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HammerTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		58542D8A1291F25D00947FA9 /* MGALib_wrap.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MGALib_wrap.cxx; path = Interfaces/MGALib_wrap.cxx; sourceTree = "<group>"; };
 		58542D8B1291F25D00947FA9 /* MGALib.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MGALib.py; path = Interfaces/MGALib.py; sourceTree = "<group>"; };
 		587E25BD12BBB8050035DB9E /* CoreTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreTypes.cpp; path = ../../Core/CoreTypes.cpp; sourceTree = SOURCE_ROOT; };
@@ -797,6 +803,8 @@
 				58801D4A12C91E6300935308 /* CoreTesting.cpp in Sources */,
 				58801D5412C91EA700935308 /* MetaProjectTesting.cpp in Sources */,
 				5880224212CAD92500935308 /* XmpParserTesting.cpp in Sources */,
+				584AF68412F8AF320036BAE7 /* MgaProjectTesting.cpp in Sources */,
+				584AF6A412F8B1C80036BAE7 /* MgaRegistrarTesting.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -842,6 +850,10 @@
 				5820C6CD12DCB0FB00D4C50E /* MetaEnumItem.cpp in Sources */,
 				5820C6D512DCB25200D4C50E /* MetaRole.cpp in Sources */,
 				584B6A8812F84F1F0050E0E4 /* MetaConnJoint.cpp in Sources */,
+				584AF68912F8AF510036BAE7 /* MgaProject.cpp in Sources */,
+				584AF69F12F8B14E0036BAE7 /* MgaRegistrar.cpp in Sources */,
+				584AF6BF12F8B3AC0036BAE7 /* MgaTerritory.cpp in Sources */,
+				584AF6CB12F8B3EF0036BAE7 /* MgaError.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

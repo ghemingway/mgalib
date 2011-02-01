@@ -29,7 +29,7 @@ const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 #define ATTRID_REFERENCE				505
 #define ATTRID_XREF						ATTRID_FCOREFATTR
 #define ATTRID_GUID						406
-#define ATTRID_PARGUID					407
+#define ATTRID_PARADIGMUUID				407
 #define ATTRID_RELID					408
 #define ATTRID_LASTRELID				409
 #define ATTRID_FILESTATUS				410
@@ -61,7 +61,7 @@ const Result_t CreateMGACoreMetaProject(CoreMetaProject* &metaProject);
 #define	ATTRID_CREATOR					432
 #define	ATTRID_EXTDATA					433
 #define	ATTRID_VERSION					204
-#define	ATTRID_PARVERSION				435
+#define	ATTRID_PARADIGMVERSION			435
 #define	ATTRID_CONSTROCL				450
 #define	ATTRID_CONSTRPRIORITY			451
 #define	ATTRID_CONSTROWNER				652
