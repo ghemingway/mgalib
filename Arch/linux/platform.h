@@ -36,8 +36,11 @@ extern "C" {
 
 	
 /*** Included Header Files ***/
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <stdio.h>
+#define __STDC_LIMIT_MACROS
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

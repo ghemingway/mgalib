@@ -15,7 +15,7 @@ namespace MGA {
 
 
 /*** Type Definitions ***/
-typedef long Result_t;
+typedef unsigned long Result_t;
 #ifdef DEBUG
 #define ASSERT(condition)	assert(condition)
 #else

@@ -1,4 +1,4 @@
-CXXFLAGS = -g -O2 -Wall -I$(MGALIB_ROOT)/Include -I$(MGALIB_ROOT)/Include/utf8/source -I$(MGALIB_ROOT)
+CXXFLAGS = -DDEBUG -g -O2 -Wall -Wno-deprecated -I$(MGALIB_ROOT)/Include -I$(MGALIB_ROOT)/Include/utf8/source -I$(MGALIB_ROOT)
 # LDFLAGS += -Wl,--gc-sections
 AR = ar
 ARFLAGS = -crs 
@@ -44,6 +44,9 @@ $(CORE_LIB) : $(CORE_OBJS)
 	$(AR) $(ARFLAGS) $@ $(CORE_OBJS)
 
 all : $(CORE_LIB)
+
+clean:
+	rm *.o
 
 .PHONY: all clean
 
