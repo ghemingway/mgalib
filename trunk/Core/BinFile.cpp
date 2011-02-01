@@ -1337,7 +1337,7 @@ const Result_t BinFile::PickleTransaction(const Uuid &tag)
 		++deletedIter;
 	}
 	// Make sure we have written as much as we are supposed to
-	ASSERT( bufferPointer-entry.buffer == entry.sizeB );
+	ASSERT( (uint64_t)(bufferPointer-entry.buffer) == entry.sizeB );
 	// Is there compression (size must be above a certain bounds)
 	if (entry.isCompressed && entry.sizeB > BINFILE_JOURNALCOMPRESSIONLIMIT)
 		entry.sizeB = (uint32_t)_Compress(this->_compressor, entry.buffer, entry.sizeB);
@@ -2240,9 +2240,8 @@ const Result_t BinFile::SetAttributeValue(const AttrID_t &attrID, const Uuid &va
 	if ( valueType == ValueType::Pointer() )
 	{
 		// Try to update the attribute value for a pointer type
-		Result_t result = binAttribute->GetAttributeID();
-		ASSERT( result == attrID );
-		result = this->PointerUpdate(binAttribute->GetAttributeID(), this->_openedObject->first, currentValue, value);
+		ASSERT( binAttribute->GetAttributeID() == attrID );
+		Result_t result = this->PointerUpdate(binAttribute->GetAttributeID(), this->_openedObject->first, currentValue, value);
 		if (result != S_OK) return result;
 	}
 
@@ -2367,6 +2366,7 @@ const Result_t BinFile::Redo(Uuid &tag) throw()
 		this->TryCreateObject(createdIter->second, createdIter->first);
 		// Move on to the next created object
 		++createdIter;
+
 	}
 	// Changed objects
 	ChangedAttributesHashIterator changeIter = this->_changedAttributes.begin();

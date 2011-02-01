@@ -22,7 +22,7 @@ std::string CoreProject::GetFirstToken(const std::string &connection)
 	// Get a local copy
 	std::string con = connection;
 	// Find the equals
-	int pos = con.find('=');
+	size_t pos = con.find('=');
 	// If there is an =, get just the string to that point
 	if( pos != std::string::npos )
 		con.resize(pos);
