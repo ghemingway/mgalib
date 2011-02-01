@@ -25,7 +25,7 @@ private:
 	MetaSet(const MetaSet &);								//!< Deny access to copy constructor
 	MetaSet& operator=(const MetaSet &);					//!< Deny access to equals operator
 
-	friend class MetaModel;
+	friend class MetaBase;
 	MetaSet(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
 
 public:

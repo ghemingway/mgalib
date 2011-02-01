@@ -25,7 +25,7 @@ private:
 	MetaPart(const MetaPart &);							//!< Deny access to copy constructor
 	MetaPart& operator=(const MetaPart &);				//!< Deny access to equals operator
 
-	friend class MetaAspect;
+	friend class MetaBase;
 	MetaPart(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
@@ -44,8 +44,6 @@ public:
 	const Result_t GetObjType(ObjType_t &objType) const throw();
 	const Result_t GetIsPrimary(bool value) const throw();
 	const Result_t GetIsLinked(bool &value) const throw();
-//	const Result_t put_MetaRef)(metaref_type p)	{ HRESULT hr = PutMetaRef(p); if(hr == S_OK) hr = ComPutAttrValue(GetUnknown(), ATTRID_METAREF, p); return hr; }
-
 //	const Result_t Delete()									{ return ComDeleteObject(GetUnknown()); }
 //	const Result_t put_KindAspect(BSTR p)					{ return ComPutAttrValue(GetUnknown(), ATTRID_KINDASPECT, p); }
 //	const Result_t put_IsPrimary(VARIANT_BOOL p);

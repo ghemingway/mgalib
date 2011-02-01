@@ -28,7 +28,7 @@ private:
 	MetaModel(const MetaModel &);							//!< Deny access to copy constructor
 	MetaModel& operator=(const MetaModel &);				//!< Deny access to equals operator
 
-	friend class MetaFolder;
+	friend class MetaBase;
 	MetaModel(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
 
 public:
@@ -44,12 +44,12 @@ public:
 	const Result_t LegalReferenceRoles(const std::string &path, std::list<MetaRole*> &roleList) const throw();
 	const Result_t LegalSetRoles(const std::string &path, std::list<MetaRole*> &roleList) const throw();
 	const Result_t LegalRoles(MetaFCO* &kind, std::list<MetaRole*> &roleList) const throw();
-	const Result_t CreateModel(MetaModel* &metaModel) throw();			//{ return ComDefineBase(this, METAID_METAMODEL, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateAtom(MetaAtom* &metaAtom) throw();				//{ return ComDefineBase(this, METAID_METAATOM, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateReference(MetaReference* &metaRef) throw();	//{ return ComDefineBase(this, METAID_METAREFERENCE, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateSet(MetaSet* &metaSet) throw();				//{ return ComDefineBase(this, METAID_METASET, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateConnection(MetaConnection* &metaConn) throw();	//{ return ComDefineBase(this, METAID_METACONNECTION, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateAspect(MetaAspect* &aspect) throw();			//{ return ComDefineBase(this, METAID_METAASPECT, ATTRID_ASPECTS_COLL, p); }
+	const Result_t CreateModel(MetaModel* &metaModel) throw();
+	const Result_t CreateAtom(MetaAtom* &metaAtom) throw();
+	const Result_t CreateReference(MetaReference* &metaRef) throw();
+	const Result_t CreateSet(MetaSet* &metaSet) throw();
+	const Result_t CreateConnection(MetaConnection* &metaConn) throw();
+	const Result_t CreateAspect(MetaAspect* &aspect) throw();
 	const Result_t CreateRole(const MetaFCO* &kind, MetaRole* &metaRole) throw();
 };
 

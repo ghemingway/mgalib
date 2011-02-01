@@ -1,6 +1,7 @@
 /*** Included Header Files ***/
 #include "MetaAspect.h"
 #include "MetaGeneric.h"
+#include "MetaPart.h"
 
 
 // --------------------------- MetaAspect --------------------------- //
@@ -36,8 +37,10 @@ const Result_t MetaAspect::RemoveAttribute(MetaAttribute* &attrib) throw()
 }
 
 
-const Result_t MetaAspect::CreatePart(MetaRole* &role, MetaPart* &metaPart) throw()
+const Result_t MetaAspect::CreatePart(MetaRole* &metaRole, MetaPart* &metaPart) throw()
 {
+	// Use the MetaBase helper function to create a new attribute
+	return this->CreateObject(METAID_METAPART, ATTRID_PARTASPECT_PTR, metaPart);
 	ASSERT(false);
 	//	if( role == NULL ) return E_POINTER;
 	//	ASSERT( this->_metaProject != NULL );

@@ -27,7 +27,7 @@ private:
 	MetaRole(const MetaRole &);								//!< Deny access to copy constructor
 	MetaRole& operator=(const MetaRole &);					//!< Deny access to equals operator
 
-	friend class MetaModel;
+	friend class MetaBase;
 	MetaRole(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
