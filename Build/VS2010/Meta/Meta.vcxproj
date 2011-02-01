@@ -73,7 +73,9 @@
     <ClCompile Include="..\..\..\Meta\MetaAttribute.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaBase.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaConnection.cpp" />
+    <ClCompile Include="..\..\..\Meta\MetaConnJoint.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaConstraint.cpp" />
+    <ClCompile Include="..\..\..\Meta\MetaEnumItem.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaFCO.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaFolder.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaGeneric.cpp" />
@@ -82,22 +84,14 @@
     <ClCompile Include="..\..\..\Meta\MetaPointerSpec.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaProject.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaReference.cpp" />
-    <ClCompile Include="..\..\..\Meta\MetaRegNode.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaSet.cpp" />
-    <ClCompile Include="..\..\..\Meta\MgaMetaConnJoint.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Meta\MgaMetaPointerItem.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Meta\MetaAspect.h" />
     <ClInclude Include="..\..\..\Meta\MetaAttribute.h" />
     <ClInclude Include="..\..\..\Meta\MetaBase.h" />
     <ClInclude Include="..\..\..\Meta\MetaConnection.h" />
+    <ClInclude Include="..\..\..\Meta\MetaConnJoint.h" />
     <ClInclude Include="..\..\..\Meta\MetaConstraint.h" />
     <ClInclude Include="..\..\..\Meta\MetaEnumItem.h" />
     <ClInclude Include="..\..\..\Meta\MetaFCO.h" />
@@ -108,11 +102,8 @@
     <ClInclude Include="..\..\..\Meta\MetaPointerSpec.h" />
     <ClInclude Include="..\..\..\Meta\MetaProject.h" />
     <ClInclude Include="..\..\..\Meta\MetaReference.h" />
-    <ClInclude Include="..\..\..\Meta\MetaRegNode.h" />
     <ClInclude Include="..\..\..\Meta\MetaRole.h" />
     <ClInclude Include="..\..\..\Meta\MetaSet.h" />
-    <ClInclude Include="..\..\..\Meta\MgaMetaConnJoint.h" />
-    <ClInclude Include="..\..\..\Meta\MgaMetaPointerItem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

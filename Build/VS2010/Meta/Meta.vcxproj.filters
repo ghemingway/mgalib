@@ -50,16 +50,13 @@
     <ClCompile Include="..\..\..\Meta\MetaReference.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Meta\MetaRegNode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Meta\MetaSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Meta\MgaMetaConnJoint.cpp">
+    <ClCompile Include="..\..\..\Meta\MetaConnJoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Meta\MgaMetaPointerItem.cpp">
+    <ClCompile Include="..\..\..\Meta\MetaEnumItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,19 +103,13 @@
     <ClInclude Include="..\..\..\Meta\MetaReference.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Meta\MetaRegNode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Meta\MetaRole.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Meta\MetaSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Meta\MgaMetaConnJoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Meta\MgaMetaPointerItem.h">
+    <ClInclude Include="..\..\..\Meta\MetaConnJoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

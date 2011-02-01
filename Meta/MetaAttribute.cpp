@@ -82,7 +82,7 @@ const Result_t MetaAttribute::GetViewable(bool &flag) const throw()
 	ASSERT( txResult == S_OK );
 	int32_t longViewable;
 	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_VIEWABLE, longViewable);
-	flag = static_cast<bool>(longViewable);
+	flag = (longViewable == false);
 	txResult = this->_metaProject->CommitTransaction();
 	ASSERT( txResult == S_OK );
 	return result;
