@@ -1,22 +1,12 @@
 /*** Included Header Files ***/
 #include "MetaConnection.h"
 #include "MetaGeneric.h"
-//#include "MetaConnJoint.h"
+#include "MetaConnJoint.h"
 
 
 // --------------------------- MetaConnection --------------------------- //
 
-/*
-void MetaConnection::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base class
-	MetaFCO::Traverse(metaProject, coreObject);
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_CONNJOINTS_COLL);
-}
-*/
+
 /*
 bool MetaConnection::CheckPaths(CCoreObjectPtr &self, jointpaths_type jointpaths)
 {
@@ -39,9 +29,8 @@ bool MetaConnection::CheckPaths(CCoreObjectPtr &self, jointpaths_type jointpaths
 
 const Result_t MetaConnection::GetJoints(std::list<MetaConnJoint*> &jointList) const throw()
 {
-	// Use the MetaBase helper function to get collection from the attribute
-	//	return this->CollectionFromAttribute(ATTRID_CONNJOINTS_COLL, enumList);
-	return S_OK;
+	// Use the MetaBase helper function to get collection from an attribute
+	return this->CollectionFromAttribute(ATTRID_CONNJOINTS_COLL, jointList);
 }
 
 
@@ -54,25 +43,10 @@ const Result_t MetaConnection::CheckPaths(const std::string &paths, bool &valid)
 	return S_OK;
 }
 
-/*
-STDMETHODIMP MetaConnection::CreateJoint(IMgaMetaConnJoint **p)
+
+const Result_t MetaConnection::CreateJoint(MetaConnJoint* &connJoint) throw()
 {
-	CHECK_OUT(p);
-
-	ASSERT( metaproject != NULL );
-
-	COMTRY
-	{
-		CCoreObjectPtr self(GetUnknown());
-		ASSERT( self != NULL );
-
-		CCoreObjectPtr joint;
-		metaproject->CreateMetaObj(METAID_METACONNJOINT, joint);
-
-		joint.PutPointerValue(ATTRID_CONNJOINTS_COLL, self);
-
-		COMTHROW( ::QueryInterface(joint, p) );
-	}
-	COMCATCH(;)
+	// Use the MetaBase helper function to create a new MetaConnJoint
+	return this->CreateObject(METAID_METACONNJOINT, ATTRID_CONNJOINTS_COLL, connJoint);
 }
-*/
+

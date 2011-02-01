@@ -1,6 +1,7 @@
 #ifndef __META_ATTRIBUTE_H_
 #define __META_ATTRIBUTE_H_
 
+
 /*** Included Header Files ***/
 #include "MetaBase.h"
 
@@ -25,7 +26,6 @@ private:
 	MetaAttribute& operator=(const MetaAttribute &);			//!< Deny access to equals operator
 
 	friend class MetaBase;
-	friend class MetaFCO;
 	friend class MetaEnumItem;
 	MetaAttribute(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
 

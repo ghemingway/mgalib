@@ -34,7 +34,7 @@ public:
 
 	const Result_t GetJoints(std::list<MetaConnJoint*> &jointList) const throw();
 	const Result_t CheckPaths(const std::string &paths, bool &valid) const throw();
-//	const Result_t CreateJoint(MetaConnJoint* &connJoint) throw();
+	const Result_t CreateJoint(MetaConnJoint* &connJoint) throw();
 };
 
 

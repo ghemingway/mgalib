@@ -82,6 +82,9 @@
 		5843908612B9703300F4AB58 /* CoreObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907D12B9703300F4AB58 /* CoreObject.cpp */; };
 		5843908712B9703300F4AB58 /* CoreProject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907E12B9703300F4AB58 /* CoreProject.cpp */; };
 		5843908812B9703300F4AB58 /* CoreStorage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5843907F12B9703300F4AB58 /* CoreStorage.cpp */; };
+		584B6A8812F84F1F0050E0E4 /* MetaConnJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584B6A8612F84F1F0050E0E4 /* MetaConnJoint.cpp */; };
+		584B6A8912F84F1F0050E0E4 /* MetaConnJoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 584B6A8712F84F1F0050E0E4 /* MetaConnJoint.h */; };
+		584B6AE112F869560050E0E4 /* MGALib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58E90A1F124CEFFF00B8E3CF /* MGALib.framework */; };
 		587E25BE12BBB8050035DB9E /* CoreTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 587E25BD12BBB8050035DB9E /* CoreTypes.cpp */; };
 		587E25C512BBB9EF0035DB9E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 587E25C412BBB9EF0035DB9E /* CoreFoundation.framework */; };
 		58801D4312C91E4900935308 /* CoreStorageTesting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F812B970F400F4AB58 /* CoreStorageTesting.cpp */; };
@@ -106,6 +109,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 58E90A1E124CEFFF00B8E3CF;
 			remoteInfo = GMECore;
+		};
+		584B6ADF12F869510050E0E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58E90A1E124CEFFF00B8E3CF /* MGALib */;
+			remoteInfo = MGALib;
 		};
 		58542C1912919CBF00947FA9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -204,6 +214,9 @@
 		5843910012B9711100F4AB58 /* MgaProjectTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MgaProjectTesting.h; path = ../../Testing/MgaProjectTesting.h; sourceTree = SOURCE_ROOT; };
 		5843910112B9711100F4AB58 /* MgaRegistrarTesting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MgaRegistrarTesting.cpp; path = ../../Testing/MgaRegistrarTesting.cpp; sourceTree = SOURCE_ROOT; };
 		5843910212B9711100F4AB58 /* MgaRegistrarTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MgaRegistrarTesting.h; path = ../../Testing/MgaRegistrarTesting.h; sourceTree = SOURCE_ROOT; };
+		584B6A8612F84F1F0050E0E4 /* MetaConnJoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaConnJoint.cpp; path = ../../Meta/MetaConnJoint.cpp; sourceTree = SOURCE_ROOT; };
+		584B6A8712F84F1F0050E0E4 /* MetaConnJoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaConnJoint.h; path = ../../Meta/MetaConnJoint.h; sourceTree = SOURCE_ROOT; };
+		584B6ADA12F869310050E0E4 /* HammerTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = HammerTest; path = Build/Debug/HammerTest; sourceTree = "<group>"; };
 		58542D8A1291F25D00947FA9 /* MGALib_wrap.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MGALib_wrap.cxx; path = Interfaces/MGALib_wrap.cxx; sourceTree = "<group>"; };
 		58542D8B1291F25D00947FA9 /* MGALib.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MGALib.py; path = Interfaces/MGALib.py; sourceTree = "<group>"; };
 		587E25BD12BBB8050035DB9E /* CoreTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreTypes.cpp; path = ../../Core/CoreTypes.cpp; sourceTree = SOURCE_ROOT; };
@@ -234,6 +247,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		584B6AD812F869310050E0E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				584B6AE112F869560050E0E4 /* MGALib.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		58E90A1D124CEFFF00B8E3CF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -252,6 +273,7 @@
 			children = (
 				58E90A1F124CEFFF00B8E3CF /* MGALib.framework */,
 				5843398F125B8AFC00DD904D /* TestHarness */,
+				584B6ADA12F869310050E0E4 /* HammerTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -454,6 +476,7 @@
 				584390B112B970A300F4AB58 /* MetaAttribute.cpp */,
 				584390B212B970A300F4AB58 /* MetaBase.cpp */,
 				584390B312B970A300F4AB58 /* MetaConnection.cpp */,
+				584B6A8612F84F1F0050E0E4 /* MetaConnJoint.cpp */,
 				584390B412B970A300F4AB58 /* MetaConstraint.cpp */,
 				5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */,
 				584390B512B970A300F4AB58 /* MetaFCO.cpp */,
@@ -477,6 +500,7 @@
 				5843908B12B9708D00F4AB58 /* MetaAttribute.h */,
 				5843908C12B9708D00F4AB58 /* MetaBase.h */,
 				5843908D12B9708D00F4AB58 /* MetaConnection.h */,
+				584B6A8712F84F1F0050E0E4 /* MetaConnJoint.h */,
 				5843908E12B9708D00F4AB58 /* MetaConstraint.h */,
 				5843908F12B9708D00F4AB58 /* MetaEnumItem.h */,
 				5843909012B9708D00F4AB58 /* MetaFCO.h */,
@@ -650,6 +674,7 @@
 				582BD6E112C8F7E300B18A19 /* MetaRole.h in Headers */,
 				582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */,
 				5880222512CA857800935308 /* XmpParser.h in Headers */,
+				584B6A8912F84F1F0050E0E4 /* MetaConnJoint.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -671,6 +696,23 @@
 			name = TestHarness;
 			productName = GMEHarness;
 			productReference = 5843398F125B8AFC00DD904D /* TestHarness */;
+			productType = "com.apple.product-type.tool";
+		};
+		584B6AD912F869310050E0E4 /* HammerTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 584B6AE212F869740050E0E4 /* Build configuration list for PBXNativeTarget "HammerTest" */;
+			buildPhases = (
+				584B6AD712F869310050E0E4 /* Sources */,
+				584B6AD812F869310050E0E4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				584B6AE012F869510050E0E4 /* PBXTargetDependency */,
+			);
+			name = HammerTest;
+			productName = HammerTest;
+			productReference = 584B6ADA12F869310050E0E4 /* HammerTest */;
 			productType = "com.apple.product-type.tool";
 		};
 		58E90A1E124CEFFF00B8E3CF /* MGALib */ = {
@@ -709,6 +751,7 @@
 			targets = (
 				58E90A1E124CEFFF00B8E3CF /* MGALib */,
 				5843398E125B8AFC00DD904D /* TestHarness */,
+				584B6AD912F869310050E0E4 /* HammerTest */,
 				58542C1512919C9600947FA9 /* Swig Generation */,
 			);
 		};
@@ -757,6 +800,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		584B6AD712F869310050E0E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		58E90A1C124CEFFF00B8E3CF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -791,6 +841,7 @@
 				5880222612CA857800935308 /* XmpParser.cpp in Sources */,
 				5820C6CD12DCB0FB00D4C50E /* MetaEnumItem.cpp in Sources */,
 				5820C6D512DCB25200D4C50E /* MetaRole.cpp in Sources */,
+				584B6A8812F84F1F0050E0E4 /* MetaConnJoint.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -801,6 +852,11 @@
 			isa = PBXTargetDependency;
 			target = 58E90A1E124CEFFF00B8E3CF /* MGALib */;
 			targetProxy = 5843399A125B8B4E00DD904D /* PBXContainerItemProxy */;
+		};
+		584B6AE012F869510050E0E4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 58E90A1E124CEFFF00B8E3CF /* MGALib */;
+			targetProxy = 584B6ADF12F869510050E0E4 /* PBXContainerItemProxy */;
 		};
 		58542C1A12919CBF00947FA9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -898,6 +954,36 @@
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
 				PRODUCT_NAME = TestHarness;
 				VALID_ARCHS = "i386 x86_64";
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		584B6ADC12F869310050E0E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = HammerTest;
+			};
+			name = Debug;
+		};
+		584B6ADD12F869310050E0E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = HammerTest;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -1019,6 +1105,15 @@
 			buildConfigurations = (
 				58433991125B8AFD00DD904D /* Debug */,
 				58433992125B8AFD00DD904D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		584B6AE212F869740050E0E4 /* Build configuration list for PBXNativeTarget "HammerTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				584B6ADC12F869310050E0E4 /* Debug */,
+				584B6ADD12F869310050E0E4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
