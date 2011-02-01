@@ -30,6 +30,8 @@ private:
 	MetaAttribute(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
+	virtual ~MetaAttribute() { }
+	
 	const Result_t GetDefinedIn(MetaFCO* &fco) const throw();						//!< Get FCO this attribute is defined in
 	const Result_t GetEnumItems(std::list<MetaEnumItem*> &enumList) const throw();	//!< Get list of child EnumItems
 	const Result_t GetUsedIn(std::list<MetaFCO*> &fcoList) const throw();			//!< Get list of FCOs this attribute is used in

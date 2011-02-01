@@ -24,10 +24,12 @@ private:
 	MetaReference(const MetaReference &);						//!< Deny access to copy constructor
 	MetaReference& operator=(const MetaReference &);			//!< Deny access to equals operator
 
-	friend class MetaModel;
+	friend class MetaBase;
 	MetaReference(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
 
 public:
+	virtual ~MetaReference() { }
+	
 	const Result_t GetRefSpec(MetaPointerSpec* &pointerSpec) const throw();			//!<
 	const Result_t CheckPath(const std::string &path, bool &valid) const throw();	//!<
 };

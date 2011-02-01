@@ -5,19 +5,10 @@
 
 // --------------------------- MetaReference --------------------------- //
 
-/*
-void MetaReference::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse the base classes
-	MetaFCO::Traverse(metaProject, coreObject);
-	MetaPointerSpec::Traverse(metaProject, coreObject);
-}
-*/
 
 const Result_t MetaReference::GetRefSpec(MetaPointerSpec* &pointerSpec) const throw()
 {
+	ASSERT(false);
 	return S_OK;
 }
 

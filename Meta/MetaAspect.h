@@ -31,6 +31,8 @@ private:
 	MetaAspect(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
+	virtual ~MetaAspect() { }
+
 	const Result_t GetParentModel(MetaModel* &metaModel) const throw();					//!< Get the parent metaModel
 	const Result_t GetParts(std::list<MetaPart*> &partList)	const throw();				//!< Get all child parts
 	const Result_t GetAttributes(std::list<MetaAttribute*> &attribList) const throw();	//!< Get all child attributes

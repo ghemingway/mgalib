@@ -24,7 +24,7 @@ private:
 	MetaConnection(const MetaConnection &);						//!< Deny access to copy constructor
 	MetaConnection& operator=(const MetaConnection &);			//!< Deny access to equals operator
 
-	friend class MetaModel;
+	friend class MetaBase;
 	MetaConnection(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaFCO(coreObject, metaProject) { }
 
 public:
