@@ -134,7 +134,6 @@ public:
 	virtual const Result_t GetObjType(ObjType_t &objType) const throw();
 	virtual const Result_t GetConstraints(std::list<MetaConstraint*> &cList) throw();
 	virtual const Result_t CreateConstraint(MetaConstraint* &constraint) throw();
-//	virtual const Result_t Delete(void) throw();
 };
 
 

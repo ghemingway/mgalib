@@ -22,6 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		581EA9B912F99BA5007F1A2A /* MetaPointerItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 581EA9B712F99BA5007F1A2A /* MetaPointerItem.cpp */; };
+		581EA9BA12F99BA5007F1A2A /* MetaPointerItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 581EA9B812F99BA5007F1A2A /* MetaPointerItem.h */; };
 		5820C6CD12DCB0FB00D4C50E /* MetaEnumItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */; };
 		5820C6D512DCB25200D4C50E /* MetaRole.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5820C6D412DCB25200D4C50E /* MetaRole.cpp */; };
 		582BD65E12C8F07B00B18A19 /* TestingHarness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 584390F412B970E200F4AB58 /* TestingHarness.cpp */; };
@@ -133,6 +135,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		581EA9B712F99BA5007F1A2A /* MetaPointerItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaPointerItem.cpp; path = ../../Meta/MetaPointerItem.cpp; sourceTree = SOURCE_ROOT; };
+		581EA9B812F99BA5007F1A2A /* MetaPointerItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MetaPointerItem.h; path = ../../Meta/MetaPointerItem.h; sourceTree = SOURCE_ROOT; };
 		5820C6CC12DCB0FB00D4C50E /* MetaEnumItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaEnumItem.cpp; path = ../../Meta/MetaEnumItem.cpp; sourceTree = SOURCE_ROOT; };
 		5820C6D412DCB25200D4C50E /* MetaRole.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MetaRole.cpp; path = ../../Meta/MetaRole.cpp; sourceTree = SOURCE_ROOT; };
 		5843398F125B8AFC00DD904D /* TestHarness */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TestHarness; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -490,6 +494,7 @@
 				584390B712B970A300F4AB58 /* MetaGeneric.cpp */,
 				584390B812B970A300F4AB58 /* MetaModel.cpp */,
 				584390B912B970A300F4AB58 /* MetaPart.cpp */,
+				581EA9B712F99BA5007F1A2A /* MetaPointerItem.cpp */,
 				584390BA12B970A300F4AB58 /* MetaPointerSpec.cpp */,
 				584390BB12B970A300F4AB58 /* MetaProject.cpp */,
 				584390BC12B970A300F4AB58 /* MetaReference.cpp */,
@@ -514,6 +519,7 @@
 				5843909212B9708D00F4AB58 /* MetaGeneric.h */,
 				5843909312B9708D00F4AB58 /* MetaModel.h */,
 				5843909412B9708D00F4AB58 /* MetaPart.h */,
+				581EA9B812F99BA5007F1A2A /* MetaPointerItem.h */,
 				5843909512B9708D00F4AB58 /* MetaPointerSpec.h */,
 				5843909612B9708D00F4AB58 /* MetaProject.h */,
 				5843909712B9708D00F4AB58 /* MetaReference.h */,
@@ -681,6 +687,7 @@
 				582BD6E212C8F7E300B18A19 /* MetaSet.h in Headers */,
 				5880222512CA857800935308 /* XmpParser.h in Headers */,
 				584B6A8912F84F1F0050E0E4 /* MetaConnJoint.h in Headers */,
+				581EA9BA12F99BA5007F1A2A /* MetaPointerItem.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -854,6 +861,7 @@
 				584AF69F12F8B14E0036BAE7 /* MgaRegistrar.cpp in Sources */,
 				584AF6BF12F8B3AC0036BAE7 /* MgaTerritory.cpp in Sources */,
 				584AF6CB12F8B3EF0036BAE7 /* MgaError.cpp in Sources */,
+				581EA9B912F99BA5007F1A2A /* MetaPointerItem.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

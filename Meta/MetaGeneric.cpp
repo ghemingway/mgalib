@@ -42,8 +42,8 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 
 #define DECLARE_FOLDER() \
 	DECLARE_BASE(); \
-	CREATE_POINTER(ATTRID_FOLDER_PTR, "FolderParent", "Defined In"); \
-	CREATE_COLLECTION(ATTRID_FOLDER_PTR, "ChildFolders", "Child Folders"); \
+	CREATE_POINTER(ATTRID_DEFFOLDER_PTR, "FolderParent", "Defined In"); \
+	CREATE_COLLECTION(ATTRID_DEFFOLDER_PTR, "DefinedFolders", "Defined Folders"); \
 	CREATE_COLLECTION(ATTRID_DEFFCO_PTR, "DefinedFCOs", "Defined FCOs"); \
 	CREATE_COLLECTION(ATTRID_DEFATTR_PTR, "DefinedAttributes", "Defined Attributes"); \
 	CREATE_COLLECTION(ATTRID_FOLDERLINK_PARENT_PTR, "LegalFolders", "Legal Child Folders"); \

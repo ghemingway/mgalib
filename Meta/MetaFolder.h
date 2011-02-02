@@ -31,6 +31,7 @@ private:
 	MetaFolder& operator=(const MetaFolder &);				//!< Deny access to equals operator
 
 	friend class MetaProject;
+	friend class MetaBase;
 	MetaFolder(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
@@ -48,17 +49,15 @@ public:
 	const Result_t GetDefinedFolderByName(const std::string &name, const bool &inScope, MetaFolder* &metaFolder) const throw();
 	const Result_t GetDefinedFCOByName(const std::string &name, const bool &inScope, MetaFCO* &metaFCO) const throw();
 	const Result_t GetDefinedAttributeByName(const std::string &name, const bool &inScope, MetaAttribute* &metaAttribute) const throw();
-	const Result_t CreateFolder(MetaFolder* &metaFolder) throw();					//{ return ComDefineBase(this, METAID_METAFOLDER, ATTRID_DEFFOLDER_PTR, p); }
-	const Result_t CreateModel(MetaModel* &metaModel) throw();						//{ return ComDefineBase(this, METAID_METAMODEL, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateAtom(MetaAtom* &metaAtom) throw();							//{ return ComDefineBase(this, METAID_METAATOM, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateReference(MetaReference* &metaReference) throw();			//{ return ComDefineBase(this, METAID_METAREFERENCE, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateSet(MetaSet* &metaSet) throw();							//{ return ComDefineBase(this, METAID_METASET, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateConnection(MetaConnection* &metaConnection) throw();		//{ return ComDefineBase(this, METAID_METACONNECTION, ATTRID_DEFFCO_PTR, p); }
-	const Result_t CreateAttribute(MetaAttribute* &metaAttribute) throw();			//{ return ComDefineBase(this, METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, p); }
-//	const Result_t AddLegalChildFolder(MetaFolder* &metaFolder) throw()				{ return ComAddLink(this, METAID_METAFOLDERLINK, ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, p); }
-//	const Result_t RemoveLegalChildFolder(MetaFolder* &metaFolder) throw()			{ return ComRemoveLink(this, METAID_METAFOLDERLINK, ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, p); }
-//	const Result_t AddLegalRootObject(MetaFCO* &metaFCO) throw()					{ return ComAddLink(this, METAID_METAROOTOBJLINK, ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p); }
-//	const Result_t RemoveLegalRootObject(MetaFCO* &metaFCO) throw()					{ return ComRemoveLink(this, METAID_METAROOTOBJLINK, ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p); }
+	const Result_t CreateFolder(MetaFolder* &metaFolder) throw();				//!<
+	const Result_t CreateModel(MetaModel* &metaModel) throw();					//!<
+	const Result_t CreateAtom(MetaAtom* &metaAtom) throw();						//!<
+	const Result_t CreateReference(MetaReference* &metaReference) throw();		//!<
+	const Result_t CreateSet(MetaSet* &metaSet) throw();						//!<
+	const Result_t CreateConnection(MetaConnection* &metaConnection) throw();	//!<
+	const Result_t CreateAttribute(MetaAttribute* &metaAttribute) throw();		//!<
+//	const Result_t AddLegalChildFolder(MetaFolder* &metaFolder) throw()			{ return ComAddLink(this, METAID_METAFOLDERLINK, ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, p); }
+//	const Result_t AddLegalRootObject(MetaFCO* &metaFCO) throw()				{ return ComAddLink(this, METAID_METAROOTOBJLINK, ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p); }
 };
 
 

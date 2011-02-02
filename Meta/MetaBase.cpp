@@ -167,10 +167,3 @@ const Result_t MetaBase::CreateConstraint(MetaConstraint* &constraint) throw()
 	return S_OK;
 }
 
-/*
-const Result_t MetaBase::Delete(void) throw()
-{
-	// { return ComDeleteObject(GetUnknown()); }
-	return S_OK;
-}
-*/

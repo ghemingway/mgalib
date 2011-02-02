@@ -1,19 +1,20 @@
+/*** Included Header Files ***/
+#include "MetaPointerItem.h"
+#include "MetaBase.h"
+#include "MetaGeneric.h"
 
-#include "stdafx.h"
-#include "MgaMetaPointerItem.h"
-#include "MgaMetaBase.h"
 
-// --------------------------- CMgaMetaPointerItem
-STDMETHODIMP CMgaMetaPointerItem::get_Desc(BSTR *p)
+// --------------------------- MetaPointerItem
+
+
+MetaPointerItem::MetaPointerItem(CoreObject &coreObject, MetaProject* &metaProject) :
+	_coreObject(coreObject), _metaProject(metaProject)
 {
-	COMTRY {
-		CComBSTR pn;
-		COMTHROW( ComGetAttrValue(GetUnknown(), ATTRID_PTRITEMDESC, &pn));
-		CComBSTR tn = truncateName( GetUnknown(), pn);
-		*p = tn.Detach();
-	} COMCATCH(;)
+	ASSERT(coreObject != NULL);
+	ASSERT(metaProject != NULL);
 }
 
+/*
 bool CMgaMetaPointerItem::CheckToken(CComBstrObj &token, bstr_const_iterator i, bstr_const_iterator &e)
 {
 	// the last character cannot be a space
@@ -56,51 +57,20 @@ bool CMgaMetaPointerItem::CheckPath(CCoreObjectPtr &self, pathitems_type &pathit
 {
 	CComBstrObj bstr;
 	self.GetStringValue(ATTRID_PTRITEMDESC, PutOut(bstr));
-
-#ifdef _DEBUG
-	std::string s;
-	CopyTo(bstr, s);
-
-	PATH_TRACE("PointerItem \"%s\"", s.c_str());
-
-	pathitems_type::iterator i = pathitems.begin();
-	pathitems_type::iterator e = pathitems.end();
-	while( i != e )
-	{
-		CopyTo( (*i).terminal_name, s );
-		PATH_TRACE(" (term \"%s\" ", s.c_str());
-
-		CopyTo( (*i).continual_name, s );
-		PATH_TRACE("cont \"%s\") ", s.c_str());
-
-		++i;
-	}
-
-	if( global )
-		PATH_TRACE("(global) ");
-
-	PATH_TRACE("returns ");
-#endif
-
 	// we will check the lists and path from the back
-
 	// bstr iterators
 	bstr_const_iterator bi = begin(bstr);
 	bstr_const_iterator be = end(bstr);
-
 	// eat the white spaces
 	while( bi != be && *(be-1) == L' ' )
 		--be;
-
 	// pathitem iterators
 	pathitems_type::iterator pi = pathitems.begin();
 	pathitems_type::iterator pe = pathitems.end();
-
 	while( bi != be && pi != pe )
 	{
 		// get the next pathitem
 		--pe;
-
 		bstr_const_iterator bf = be;
 		if( global && CheckToken(pe->terminal_name, bi, be) )
 		{
@@ -109,7 +79,6 @@ bool CMgaMetaPointerItem::CheckPath(CCoreObjectPtr &self, pathitems_type &pathit
 				PATH_TRACE("true\n");
 				return true;
 			}
-
 			be = bf;
 		}
 		ASSERT( be == bf );
@@ -119,10 +88,41 @@ bool CMgaMetaPointerItem::CheckPath(CCoreObjectPtr &self, pathitems_type &pathit
 			PATH_TRACE("false\n");
 			return false;
 		}
-
 		ASSERT( be < bf );
 	}
-
 	PATH_TRACE( (!global && bi == be && pi == pe) ? "true\n" : "false\n");
 	return !global && bi == be && pi == pe;
 }
+*/
+
+ 
+const Result_t MetaPointerItem::GetDescription(std::string &description) const throw()
+{
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_PTRITEMDESC, description);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
+}
+
+
+const Result_t MetaPointerItem::SetDescription(const std::string &description) throw()
+{
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_PTRITEMDESC, description);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
+}
+
+
+const Result_t MetaPointerItem::GetParent(MetaPointerSpec* &parent) throw()
+{
+	ASSERT(false);
+	// Use the MetaBase helper function to get an object from this pointer attribute
+//	return this->ObjectFromAttribute(ATTRID_PTRITEMS_COLL, parent);
+	return S_OK;
+}
+
