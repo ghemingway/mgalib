@@ -8,19 +8,19 @@ typedef struct MgaErrorCodes {
 } MgaErrorCodes;
 
 MgaErrorCodes mga_descs[] = {
-	{E_MGA_NOT_IMPLEMENTED, "This method is not yet implemented"},
-	{E_MGA_NOT_SUPPORTED, "This mode of operation is not supported"},
-	{E_MGA_MODULE_INCOMPATIBILITY, "MGA data structure conflict: error or incompatibility"},
-	{E_MGA_PARADIGM_NOTREG, "The paradigm is not registered"},
-	{E_MGA_PARADIGM_INVALID, "The paradigm is invalid"},
-	{E_MGA_COMPONENT_ERROR, "Some addons cannot be loaded/initialized"},
-	{E_MGA_DATA_INCONSISTENCY, "Inconsistent data in database metainfo violated"},
-	{E_MGA_META_INCOMPATIBILITY, "Meta incompatibility"},
-	{E_MGA_PROJECT_OPEN, "Project must be closed"},
-	{E_MGA_PROJECT_NOT_OPEN, "Project must be open"},
-	{E_MGA_READ_ONLY_ACCESS, "Database is in read-only mode"},
-	{E_MGA_NOT_IN_TERRITORY, "Object is unknown in this territory"},
-	{E_MGA_NOT_IN_TRANSACTION, "Operation must execute within transaction"},
+	{E_MGA_NOT_IMPLEMENTED,			"This method is not yet implemented"},
+	{E_MGA_NOT_SUPPORTED,			"This mode of operation is not supported"},
+	{E_MGA_MODULE_INCOMPATIBILITY,	"MGA data structure conflict: error or incompatibility"},
+	{E_MGA_PARADIGM_NOTREG,			"The paradigm is not registered"},
+	{E_MGA_PARADIGM_INVALID,		"The paradigm is invalid"},
+	{E_MGA_COMPONENT_ERROR,			"Some addons cannot be loaded/initialized"},
+	{E_MGA_DATA_INCONSISTENCY,		"Inconsistent data in database metainfo violated"},
+	{E_MGA_META_INCOMPATIBILITY,	"Meta incompatibility"},
+	{E_MGA_PROJECT_OPEN,			"Project must be closed"},
+	{E_MGA_PROJECT_NOT_OPEN,		"Project must be open"},
+	{E_MGA_READ_ONLY_ACCESS,		"Database is in read-only mode"},
+	{E_MGA_NOT_IN_TERRITORY,		"Object is unknown in this territory"},
+	{E_MGA_NOT_IN_TRANSACTION,		"Operation must execute within transaction"},
 	{E_MGA_ALREADY_IN_TRANSACTION, "The project is already in transaction"},
 	{E_MGA_MUST_ABORT, "This transaction must be aborted"},
 	{E_MGA_TARGET_DESTROYED, "Territory/AddOn already destroyed"},
@@ -76,10 +76,14 @@ MgaErrorCodes mga_descs[] = {
 const std::string MGA::GetMgaErrorInfo(const Result_t &result)
 {
 	std::string desc = "Unknown Error Code";
-//	if( E_COMMON_FIRST <= result && result <= E_COMMON_LAST ) desc = common_descs[result - E_COMMON_FIRST];
-//	else if( E_CORE_FIRST <= result && result <= E_CORE_LAST ) desc = core_descs[result - E_CORE_FIRST];
-//	else if( E_META_FIRST <= result && result <= E_META_LAST ) desc = meta_descs[result - E_META_FIRST];
-//	else if( E_PARSER_FIRST <= result && result <= E_PARSER_LAST ) desc = parser_descs[result - E_PARSER_FIRST];
-//	else if( result == S_OK ) desc = "No Error";
-	return desc;
+	unsigned int i=0;
+	while (mga_descs[i].code != E_MGA_ERRCODE_ERROR)
+	{
+		// Does the error code match
+		if (result == mga_descs[i].code)
+			return mga_descs[i].helpText;
+		// Try the next error code
+		++i;
+	}
+	return GetErrorInfo(result);
 }

@@ -181,7 +181,7 @@ typedef unsigned long Result_t;
 #define E_INVALID_XML_LONG				0x80734008
 
 // the description table is in CommonError.cpp
-#define E_PARSER_FIRST				E_INVALID_DTD
+#define E_PARSER_FIRST				E_XMLPARSER
 #define E_PARSER_LAST				E_INVALID_XML_LONG
 
 // XSLT transformation error codes

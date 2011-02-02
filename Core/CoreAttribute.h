@@ -244,7 +244,7 @@ protected:
 			AttrID_t attrID = ATTRID_NONE;
 			Result_t result = this->_metaAttribute->GetAttributeID(attrID);
 			ASSERT( result == S_OK );
-			ASSERT( attrID == ATTRID_NONE );
+			ASSERT( attrID != ATTRID_NONE );
 			result = storage->GetAttributeValue(attrID, this->_dictionary);
 			if (result != S_OK) return result;
 			// Mark as loaded

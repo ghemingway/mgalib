@@ -32,14 +32,19 @@ namespace MGA {
 	
 	
 /*** Class Predefinitions ***/
+class MetaProject;
+class MetaBase;
+class MetaFCO;
 class MetaFolder;
 class MetaConstraint;
-class MetaRegNode;
 class MetaEnumItem;
 class MetaAtom;
+class MetaAttribute;
 class MetaSet;
+class MetaPointerItem;
 class MetaPointerSpec;
 class MetaConnection;
+class MetaConnJoint;
 class MetaReference;
 class MetaModel;
 class MetaRole;
@@ -62,16 +67,16 @@ private:
 	static XMLCh* TAG_Comment;
 	static XMLCh* TAG_Author;
 	static XMLCh* TAG_Constraint;
-	static XMLCh* TAG_Dispname;
-	static XMLCh* TAG_Attrdef;
-	static XMLCh* TAG_Regnode;
-	static XMLCh* TAG_Enumitem;
+	static XMLCh* TAG_DispName;
+	static XMLCh* TAG_AttrDef;
+	static XMLCh* TAG_RegNode;
+	static XMLCh* TAG_EnumItem;
 	static XMLCh* TAG_Atom;
 	static XMLCh* TAG_Set;
-	static XMLCh* TAG_Pointerspec;
-	static XMLCh* TAG_Pointeritem;
+	static XMLCh* TAG_PointerSpec;
+	static XMLCh* TAG_PointerItem;
 	static XMLCh* TAG_Connection;
-	static XMLCh* TAG_Connjoint;
+	static XMLCh* TAG_ConnJoint;
 	static XMLCh* TAG_Reference;
 	static XMLCh* TAG_Model;
 	static XMLCh* TAG_Role;
@@ -83,13 +88,13 @@ private:
 	static XMLCh* ATTR_MDate;
 	static XMLCh* ATTR_Metaref;
 	static XMLCh* ATTR_Subfolders;
-	static XMLCh* ATTR_Rootobjects;
-	static XMLCh* ATTR_Eventmask;
+	static XMLCh* ATTR_RootObjects;
+	static XMLCh* ATTR_EventMask;
 	static XMLCh* ATTR_Depth;
 	static XMLCh* ATTR_Priority;
 	static XMLCh* ATTR_Type;
-	static XMLCh* ATTR_Valuetype;
-	static XMLCh* ATTR_Defvalue;
+	static XMLCh* ATTR_ValueType;
+	static XMLCh* ATTR_DefValue;
 	static XMLCh* ATTR_Value;
 	static XMLCh* ATTR_Attributes;
 	static XMLCh* ATTR_Desc;
@@ -97,25 +102,25 @@ private:
 	static XMLCh* ATTR_Primary;
 	static XMLCh* ATTR_Linked;
 
-	static MetaFolder* ParseFolder(DOMElement* element);
+	static MetaFolder* ParseFolder(DOMElement* element, MetaFolder* parentFolder);
 	static std::string ParseComment(DOMElement* element);
 	static std::string ParseAuthor(DOMElement* element);
-	static MetaConstraint* ParseConstraint(DOMElement* element);
+	static MetaConstraint* ParseConstraint(DOMElement* element, MetaBase* metaBase);
 	static std::string ParseDispname(DOMElement* element);
-	static void ParseAttrdef(DOMElement* element);
-	static MetaRegNode* ParseRegnode(DOMElement* element);
-	static MetaEnumItem* ParseEnumitem(DOMElement* element);
-	static MetaAtom* ParseAtom(DOMElement* element);
-	static MetaSet* ParseSet(DOMElement* element);
-	static MetaPointerSpec* ParsePointerspec(DOMElement* element);
-	static void ParsePointeritem(DOMElement* element);
-	static MetaConnection* ParseConnection(DOMElement* element);
-	static void ParseConnjoint(DOMElement* element);
-	static MetaReference* ParseReference(DOMElement* element);
-	static MetaModel* ParseModel(DOMElement* element);
-	static MetaRole* ParseRole(DOMElement* element);
-	static MetaAspect* ParseAspect(DOMElement* element);
-	static MetaPart* ParsePart(DOMElement* element);
+	static MetaAttribute* ParseAttrdef(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
+	static void ParseRegNode(DOMElement* element, std::string &key, std::string &value);
+	static MetaEnumItem* ParseEnumitem(DOMElement* element, MetaAttribute* metaAttribute);
+	static MetaAtom* ParseAtom(DOMElement* element, MetaFolder* metaFolder);
+	static MetaSet* ParseSet(DOMElement* element, MetaFolder* metaFolder);
+	static MetaPointerSpec* ParsePointerspec(DOMElement* element, MetaSet* metaSet);
+	static MetaPointerItem* ParsePointeritem(DOMElement* element, MetaPointerSpec* metaPointerSpec);
+	static MetaConnection* ParseConnection(DOMElement* element, MetaFolder* metaFolder);
+	static MetaConnJoint* ParseConnjoint(DOMElement* element, MetaConnection* metaConnection);
+	static MetaReference* ParseReference(DOMElement* element, MetaFolder* metaFolder);
+	static MetaModel* ParseModel(DOMElement* element, MetaFolder* metaFolder);
+	static MetaRole* ParseRole(DOMElement* element, MetaModel* metaModel);
+	static MetaAspect* ParseAspect(DOMElement* element, MetaModel* metaModel);
+	static MetaPart* ParsePart(DOMElement* element, MetaAspect* metaAspect);
 	static void CleanUp(void);
 	
 public:

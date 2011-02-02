@@ -4,5 +4,6 @@
 
 TEST(XmpParserTest,Create)
 {
-//	EXPECT_EQ( S_OK, XmpParser::Parse("MetaGME.xmp", "MetaGME-Parser.mta") );
+//	Result_t result;
+//	EXPECT_EQ( S_OK, result = XmpParser::Parse("MetaGME.xmp", "MetaGME-Parser.mta") ) << GetMgaErrorInfo(result);
 }
