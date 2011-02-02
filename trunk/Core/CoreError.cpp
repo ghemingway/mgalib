@@ -74,7 +74,7 @@ const std::string MGA::GetErrorInfo(const Result_t &result)
 	else if( E_CORE_FIRST <= result && result <= E_CORE_LAST ) desc = core_descs[result - E_CORE_FIRST];
 	else if( E_META_FIRST <= result && result <= E_META_LAST ) desc = meta_descs[result - E_META_FIRST];
 	else if( E_PARSER_FIRST <= result && result <= E_PARSER_LAST ) desc = parser_descs[result - E_PARSER_FIRST];
-	else if( result == S_OK) desc = "No Error";
+	else desc = "No Error";
 	return desc;
 }
 
