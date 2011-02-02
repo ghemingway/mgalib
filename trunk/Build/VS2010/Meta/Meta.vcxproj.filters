@@ -59,6 +59,9 @@
     <ClCompile Include="..\..\..\Meta\MetaEnumItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Meta\MetaPointerItem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Meta\MetaAspect.h">
@@ -110,6 +113,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Meta\MetaConnJoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Meta\MetaPointerItem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
