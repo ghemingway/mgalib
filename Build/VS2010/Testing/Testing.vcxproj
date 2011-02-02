@@ -94,11 +94,8 @@
     <ClCompile Include="..\..\..\Testing\CoreStorageTesting.cpp" />
     <ClCompile Include="..\..\..\Testing\CoreTesting.cpp" />
     <ClCompile Include="..\..\..\Testing\MetaProjectTesting.cpp" />
-    <ClCompile Include="..\..\..\Testing\MgaProjectTesting.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\..\Testing\MgaProjectTesting.cpp" />
     <ClCompile Include="..\..\..\Testing\MgaRegistrarTesting.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\Testing\TestingHarness.cpp" />

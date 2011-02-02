@@ -81,6 +81,7 @@
     <ClCompile Include="..\..\..\Meta\MetaGeneric.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaModel.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaPart.cpp" />
+    <ClCompile Include="..\..\..\Meta\MetaPointerItem.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaPointerSpec.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaProject.cpp" />
     <ClCompile Include="..\..\..\Meta\MetaReference.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="..\..\..\Meta\MetaGeneric.h" />
     <ClInclude Include="..\..\..\Meta\MetaModel.h" />
     <ClInclude Include="..\..\..\Meta\MetaPart.h" />
+    <ClInclude Include="..\..\..\Meta\MetaPointerItem.h" />
     <ClInclude Include="..\..\..\Meta\MetaPointerSpec.h" />
     <ClInclude Include="..\..\..\Meta\MetaProject.h" />
     <ClInclude Include="..\..\..\Meta\MetaReference.h" />
