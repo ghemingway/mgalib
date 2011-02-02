@@ -186,8 +186,8 @@ private:
 	// Encryption & Compression Variables
 	bool								_isCompressed;				//!< Is compression turned on
 	CryptoPP::Filter					*_compressor, *_decompressor;	//!< Compression filters
-	bool								_isEncrypted;				//!< Is
-	CryptoPP::Filter					*_encryptor, *_decryptor;	//!< Encryption filters encryption turned on
+	bool								_isEncrypted;				//!< Is encryption turned on
+	CryptoPP::Filter					*_encryptor, *_decryptor;	//!< Encryption filters
 	char								*_encryptionKey;			//!< What is the encryption key
 	char								*_encryptionIV;				//!< The encryption IV
 

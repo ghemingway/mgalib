@@ -1,20 +1,11 @@
 /*** Included Header Files ***/
 #include "MetaPointerSpec.h"
+#include "MetaPointerItem.h"
 #include "MetaGeneric.h"
-//#include "MetaPointerItem.h"
 
 
 // --------------------------- MetaPointerSpec --------------------------- //
 
-/*
-void MetaPointerSpec::Traverse(MetaProject* &metaProject, CoreObject* &coreObject)
-{
-	ASSERT( metaProject != NULL );
-	ASSERT( coreObject != NULL );
-	// Traverse any children
-	MetaBase::TraverseCollection(metaProject, coreObject, ATTRID_PTRITEMS_COLL);
-}
-*/
 /*
 bool MetaPointerSpec::CheckPath(CCoreObjectPtr &self, pathitems_type &pathitems, bool global)
 {
@@ -36,36 +27,50 @@ bool MetaPointerSpec::CheckPath(CCoreObjectPtr &self, pathitems_type &pathitems,
 	return false;
 }
 */
-/*
-const Result_t MetaPointerSpec::GetParent(IDispatch **p)
+
+const Result_t MetaPointerSpec::GetParent(MetaBase* &parent) throw()
 {
-	CHECK_OUT(p);
-
-	{
-		CComObjPtr<IMgaMetaReference> self;
-		if( SUCCEEDED(::QueryInterface(GetUnknown(), self)) )
-			return ::QueryInterface(GetUnknown(), p);
-	}
-
-	{
-		CComObjPtr<IMgaMetaSet> self;
-		if( SUCCEEDED(::QueryInterface(GetUnknown(), self)) )
-			return ::QueryInterface(GetUnknown(), p);
-	}
-
-	return ComGetPointerValue(GetUnknown(), ATTRID_PTRSPECS_COLL,p);
+	ASSERT(false);
+	// Use the MetaBase helper function to get an object from this pointer attribute
+//	return this->ObjectFromAttribute(ATTRID_PTRSPECS_COLL, parent);
+	return S_OK;
 }
-*/
+
 
 const Result_t MetaPointerSpec::GetName(std::string &name) const throw()
 {
-//	return ComGetAttrValue(GetUnknown(), ATTRID_PTRSPECNAME, p);
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_PTRSPECNAME, name);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
+}
+
+const Result_t MetaPointerSpec::SetName(const std::string &name) throw()
+{
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_PTRSPECNAME, name);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 
 
 const Result_t MetaPointerSpec::GetItems(std::list<MetaPointerItem*> &pointerList) const throw()
 {
-//	return ComGetCollectionValue<IMgaMetaPointerItem>(GetUnknown(), ATTRID_PTRITEMS_COLL, p);
+	ASSERT(false);
+	// Use the MetaBase helper function to get collection of MetaPointerItems
+//	return this->CollectionFromAttribute(ATTRID_PTRITEMS_COLL, pointerList);
+	return S_OK;
+}
+
+
+const Result_t MetaPointerSpec::CreateItem(MetaPointerItem* &pointerItem) throw()
+{
+	ASSERT(false);
+	// Use the MetaBase helper function to create a new attribute
+//	return this->CreateObject(METAID_METAPOINTERITEM, ATTRID_PTRITEMS_COLL, pointerItem);
 	return S_OK;
 }

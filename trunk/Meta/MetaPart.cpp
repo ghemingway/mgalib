@@ -4,11 +4,12 @@
 #include "MetaRole.h"
 
 
+/*** Locally Defined Values ***/
+#define METAPART_PRIMARY	0x0001
+#define METAPART_LINKED		0x0002
+
+
 // --------------------------- MetaPart --------------------------- //
-
-
-#define MGAMETAPART_PRIMARY		0x0001
-#define MGAMETAPART_LINKED		0x0002
 
 
 const Result_t MetaPart::GetRole(MetaRole* &metaRole) const throw()
@@ -36,6 +37,17 @@ const Result_t MetaPart::GetKindAspect(std::string &kind) const throw()
 }
 
 
+const Result_t MetaPart::SetKindAspect(const std::string &kind) throw()
+{
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_KINDASPECT, kind);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
+}
+
+
 const Result_t MetaPart::GetName(std::string &name) const throw()
 {
 	MetaRole* role;
@@ -49,66 +61,73 @@ const Result_t MetaPart::GetName(std::string &name) const throw()
 
 const Result_t MetaPart::GetObjType(ObjType_t &objType) const throw()
 {
+	ASSERT(false);
 //	return ComGetObjType(GetUnknown(), p);
 	return S_OK;
 }
 
 
-const Result_t MetaPart::GetIsPrimary(bool value) const throw()
+const Result_t MetaPart::GetIsPrimary(bool &isPrimary) const throw()
 {
-//	CCoreObjectPtr self(GetUnknown());
-//	ASSERT( self != NULL );
-//	long a = self.GetLongValue(ATTRID_PARTDATA);
-//	*p = (a & MGAMETAPART_PRIMARY) ? VARIANT_TRUE : VARIANT_FALSE;
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longValue;
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_PARTDATA, longValue);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	isPrimary = (longValue & METAPART_PRIMARY) ? true : false;
+	return result;
 }
 
 
-const Result_t MetaPart::GetIsLinked(bool &value) const throw()
+const Result_t MetaPart::SetIsPrimary(const bool &isPrimary) throw()
 {
-//	CCoreObjectPtr self(GetUnknown());
-//	ASSERT( self != NULL );
-//	long a = self.GetLongValue(ATTRID_PARTDATA);
-//	*p = (a & MGAMETAPART_LINKED) ? VARIANT_TRUE : VARIANT_FALSE;
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longValue;
+	// Get the current value
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_PARTDATA, longValue);
+	if (result != S_OK) return result;
+	// Add in the isLinked value
+	if(!isPrimary) longValue &= (~METAPART_PRIMARY);
+	else longValue |= METAPART_PRIMARY;
+	// Now set the updated value
+	result = this->_coreObject->SetAttributeValue(ATTRID_PARTDATA, longValue);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 
-/*
-STDMETHODIMP CMgaMetaPart::put_IsPrimary(VARIANT_BOOL p)
+
+const Result_t MetaPart::GetIsLinked(bool &isLinked) const throw()
 {
-	COMTRY
-	{
-		CCoreObjectPtr self(GetUnknown());
-		ASSERT( self != NULL );
-
-		long a = self.GetLongValue(ATTRID_PARTDATA);
-
-		if( p == VARIANT_FALSE )
-			a &= (~MGAMETAPART_PRIMARY);
-		else
-			a |= MGAMETAPART_PRIMARY;
-
-		self.PutLongValue(ATTRID_PARTDATA, a);
-	}
-	COMCATCH(;)
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longValue;
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_PARTDATA, longValue);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	isLinked = (longValue & METAPART_LINKED) ? true : false;
+	return result;
 }
 
-STDMETHODIMP CMgaMetaPart::put_IsLinked(VARIANT_BOOL p)
+
+
+const Result_t MetaPart::SetIsLinked(const bool &isLinked) throw()
 {
-	COMTRY
-	{
-		CCoreObjectPtr self(GetUnknown());
-		ASSERT( self != NULL );
-
-		long a = self.GetLongValue(ATTRID_PARTDATA);
-
-		if( p == VARIANT_FALSE )
-			a &= (~MGAMETAPART_LINKED);
-		else
-			a |= MGAMETAPART_LINKED;
-
-		self.PutLongValue(ATTRID_PARTDATA, a);
-	}
-	COMCATCH(;)
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longValue;
+	// Get the current value
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_PARTDATA, longValue);
+	if (result != S_OK) return result;
+	// Add in the isLinked value
+	if(!isLinked) longValue &= (~METAPART_LINKED);
+	else longValue |= METAPART_LINKED;
+	// Now set the updated value
+	result = this->_coreObject->SetAttributeValue(ATTRID_PARTDATA, longValue);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
-*/
+

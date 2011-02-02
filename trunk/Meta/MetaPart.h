@@ -37,17 +37,16 @@ public:
 	inline const Result_t SetDisplayedName(const std::string &dispName) throw()					{ return E_INVALID_USAGE; }
 	inline const Result_t CreateConstraint(MetaConstraint* &metaConstraint) throw()				{ return E_INVALID_USAGE; }
 
-	const Result_t GetRole(MetaRole* &metaRole) const throw();
-	const Result_t GetParentAspect(MetaAspect* &MetaAspect) const throw();
-	const Result_t GetKindAspect(std::string &kind) const throw();
-	const Result_t GetName(std::string &name) const throw();
-	const Result_t GetObjType(ObjType_t &objType) const throw();
-	const Result_t GetIsPrimary(bool value) const throw();
-	const Result_t GetIsLinked(bool &value) const throw();
-//	const Result_t Delete()									{ return ComDeleteObject(GetUnknown()); }
-//	const Result_t put_KindAspect(BSTR p)					{ return ComPutAttrValue(GetUnknown(), ATTRID_KINDASPECT, p); }
-//	const Result_t put_IsPrimary(VARIANT_BOOL p);
-//	const Result_t put_IsLinked(VARIANT_BOOL p);
+	const Result_t GetRole(MetaRole* &metaRole) const throw();				//!<
+	const Result_t GetParentAspect(MetaAspect* &MetaAspect) const throw();	//!<
+	const Result_t GetKindAspect(std::string &kind) const throw();			//!<
+	const Result_t SetKindAspect(const std::string &kind) throw();			//!<
+	const Result_t GetName(std::string &name) const throw();				//!<
+	const Result_t GetObjType(ObjType_t &objType) const throw();			//!<
+	const Result_t GetIsPrimary(bool &isPrimary) const throw();				//!<
+	const Result_t SetIsPrimary(const bool &isPrimary) throw();				//!<
+	const Result_t GetIsLinked(bool &isLinked) const throw();				//!<
+	const Result_t SetIsLinked(const bool &isLinked) throw();				//!<
 };
 
 

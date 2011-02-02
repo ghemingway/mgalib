@@ -34,10 +34,10 @@ private:
 public:
 //	static bool CheckPaths(CoreObject &coreObject, JointPaths &jointPaths) throw();
 
-	const Result_t GetPointerSpecs(std::list<MetaPointerSpec*> &pointerSpecList) const throw();
-	const Result_t GetParent(MetaConnection* &parent) const throw();
-	const Result_t GetPointerSpecByName(const std::string &name, MetaPointerSpec* &pointerSpec) const throw();
-	const Result_t CreatePointerSpec(MetaPointerSpec* &pointerSpec) throw();
+	const Result_t GetPointerSpecs(std::list<MetaPointerSpec*> &pointerSpecList) const throw();					//!<
+	const Result_t GetParent(MetaConnection* &parent) const throw();											//!<
+	const Result_t GetPointerSpecByName(const std::string &name, MetaPointerSpec* &pointerSpec) const throw();	//!<
+	const Result_t CreatePointerSpec(MetaPointerSpec* &pointerSpec) throw();									//!<
 
 };
 

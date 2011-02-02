@@ -1,9 +1,13 @@
 /*** Included Header Files ***/
 #include "MetaFolder.h"
 #include "MetaProject.h"
-#include "MetaGeneric.h"
+#include "MetaReference.h"
+#include "MetaModel.h"
+#include "MetaSet.h"
+#include "MetaConnection.h"
 #include "MetaFCO.h"
 #include "MetaAttribute.h"
+#include "MetaGeneric.h"
 
 
 // --------------------------- MetaFolder --------------------------- //
@@ -12,14 +16,14 @@
 const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
 {
 	// Use the MetaBase helper function to get a Folder from this pointer attribute
-	return this->ObjectFromAttribute(ATTRID_FOLDER_PTR, folder);
+	return this->ObjectFromAttribute(ATTRID_DEFFOLDER_PTR, folder);
 }
 
 
 const Result_t MetaFolder::GetChildFolders(std::list<MetaFolder*> &folderList) const throw()
 {
 	// Use the MetaBase helper function to get collection of child folders
-	return this->CollectionFromAttribute(ATTRID_FOLDER_PTR, folderList);
+	return this->CollectionFromAttribute(ATTRID_DEFFOLDER_PTR, folderList);
 }
 
 
@@ -160,10 +164,45 @@ const Result_t MetaFolder::GetDefinedAttributeByName(const std::string &name, co
 }
 
 
+const Result_t MetaFolder::CreateFolder(MetaFolder* &metaFolder) throw()
+{
+	// Use the MetaBase helper function to create a new object
+	return this->CreateObject(METAID_METAFOLDER, ATTRID_DEFFOLDER_PTR, metaFolder);
+}
+
+
+const Result_t MetaFolder::CreateModel(MetaModel* &metaModel) throw()
+{
+	// Use the MetaBase helper function to create a new object
+	return this->CreateObject(METAID_METAMODEL, ATTRID_DEFFCO_PTR, metaModel);
+}
+
+
 const Result_t MetaFolder::CreateAtom(MetaAtom* &metaAtom) throw()
 {
 	// Use the MetaBase helper function to create a new atom
 	return this->CreateObject(METAID_METAATOM, ATTRID_DEFFCO_PTR, metaAtom);
+}
+
+
+const Result_t MetaFolder::CreateReference(MetaReference* &metaReference) throw()
+{
+	// Use the MetaBase helper function to create a new atom
+	return this->CreateObject(METAID_METAATOM, ATTRID_DEFFCO_PTR, metaReference);
+}
+
+
+const Result_t MetaFolder::CreateSet(MetaSet* &metaSet) throw()
+{
+	// Use the MetaBase helper function to create a new atom
+	return this->CreateObject(METAID_METASET, ATTRID_DEFFCO_PTR, metaSet);
+}
+
+
+const Result_t MetaFolder::CreateConnection(MetaConnection* &metaConnection) throw()
+{
+	// Use the MetaBase helper function to create a new atom
+	return this->CreateObject(METAID_METACONNECTION, ATTRID_DEFFCO_PTR, metaConnection);
 }
 
 
