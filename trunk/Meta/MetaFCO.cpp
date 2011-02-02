@@ -1,5 +1,6 @@
 /*** Included Header Files ***/
 #include "MetaFCO.h"
+#include "MetaAttribute.h"
 #include "MetaGeneric.h"
 
 
@@ -214,9 +215,8 @@ const Result_t MetaFCO::GetAttributeByRef(const Uuid &uuid, MetaAttribute* &attr
 
 const Result_t MetaFCO::CreateAttribute(MetaAttribute* &metaAttribute) throw()
 {
-	ASSERT(false);
-//	return ComDefineBase(this, METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to create a new attribute
+	return this->CreateObject(METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, metaAttribute);
 }
 
 

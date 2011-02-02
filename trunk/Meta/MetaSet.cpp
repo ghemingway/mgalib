@@ -5,7 +5,7 @@
 
 // --------------------------- MetaSet --------------------------- //
 
-
+/*
 const Result_t MetaSet::CheckPath(const std::string &path, bool &flag) const throw()
 {
 	ASSERT( this->_metaProject != NULL );
@@ -16,4 +16,11 @@ const Result_t MetaSet::CheckPath(const std::string &path, bool &flag) const thr
 //	*p = valid ? VARIANT_TRUE : VARIANT_FALSE;
 	return S_OK;
 }
+*/
 
+
+const Result_t MetaSet::CreateMemberSpec(MetaPointerSpec* &metaPointerSpec) throw()
+{
+	ASSERT(false);
+	return S_OK;
+}

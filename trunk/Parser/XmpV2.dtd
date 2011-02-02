@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ENTITY lt     "&#38;#60;"> 
+<!ENTITY gt     "&#62;"> 
+<!ENTITY amp    "&#38;#38;"> 
+<!ENTITY apos   "&#39;"> 
+<!ENTITY quot   "&#34;">
+
+<!ELEMENT paradigm (comment?, author?, dispname?, folder)>
+<!ATTLIST paradigm
+	name		NMTOKEN		#REQUIRED
+	guid		CDATA		#IMPLIED
+	version		CDATA		#IMPLIED
+	cdate		CDATA		#IMPLIED
+	mdate		CDATA		#IMPLIED
+>
+
+<!ELEMENT dispname (#PCDATA)>
+<!ELEMENT comment (#PCDATA)>
+<!ELEMENT author (#PCDATA)>
+
+<!ELEMENT constraint (#PCDATA|dispname)*>
+<!ATTLIST constraint
+	name		NMTOKEN		#IMPLIED
+	eventmask	CDATA		#IMPLIED
+	priority	CDATA		"5"
+	depth		(0|1|any)	"1"
+	type		(eventbased|ondemand|function)	"eventbased"
+	defdfornamesp	CDATA		#IMPLIED
+>
+
+<!ELEMENT regnode (regnode)*>
+<!ATTLIST regnode
+	name		NMTOKEN		#REQUIRED
+	value		CDATA		#IMPLIED
+>
+
+<!ELEMENT folder (dispname?, 
+	(regnode|constraint|attrdef|atom|reference|set|connection|model)*, folder*)>
+<!ATTLIST folder
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	subfolders	NMTOKENS	#IMPLIED
+	rootobjects	NMTOKENS	#IMPLIED
+>
+
+<!ELEMENT model (dispname?, 
+	(regnode|constraint|attrdef|atom|reference|set|connection|model)*, role*, aspect*)>
+<!ATTLIST model 
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	attributes	NMTOKENS	#IMPLIED
+	aliasenabled (yes|no)	"no"
+>
+
+<!ELEMENT role (dispname?, regnode*)>
+<!ATTLIST role
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	kind		NMTOKEN		#REQUIRED
+>
+
+<!ELEMENT aspect (dispname?, regnode*, part*)>
+<!ATTLIST aspect
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	attributes	NMTOKENS	#IMPLIED
+>
+
+<!ELEMENT part (regnode*)>
+<!ATTLIST part
+	metaref		CDATA		#IMPLIED
+	role		NMTOKEN		#REQUIRED
+	kindaspect	NMTOKEN		#IMPLIED
+	primary		(yes|no)	#IMPLIED
+	linked		(yes|no)	#IMPLIED
+>
+
+<!ELEMENT atom (dispname?, (regnode|constraint|attrdef)*)>
+<!ATTLIST atom 
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	attributes	NMTOKENS	#IMPLIED
+	aliasenabled (yes|no)	"no"
+>
+
+<!ELEMENT attrdef (dispname?, (regnode|enumitem)*)>
+<!ATTLIST attrdef
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	viewable	CDATA		#IMPLIED
+	defvalue	CDATA		#IMPLIED
+	valuetype	(integer|double|boolean|string|enum|dynamic)	"string"
+>
+
+<!ELEMENT enumitem EMPTY>
+<!ATTLIST enumitem
+	dispname	CDATA		#REQUIRED
+	value		CDATA		#REQUIRED
+>
+
+<!ELEMENT reference (dispname?, (regnode|constraint|attrdef)*, pointerspec)>
+<!ATTLIST reference
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	attributes	NMTOKENS	#IMPLIED
+	aliasenabled (yes|no)	"no"
+>
+
+<!ELEMENT set (dispname?, (regnode|constraint|attrdef)*, pointerspec)>
+<!ATTLIST set
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	attributes	NMTOKENS	#IMPLIED
+	aliasenabled (yes|no)	"no"
+>
+
+<!ELEMENT connection (dispname?, (regnode|constraint|attrdef)*, connjoint*)>
+<!ATTLIST connection
+	metaref		CDATA		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+	attributes	NMTOKENS	#IMPLIED
+	aliasenabled (yes|no)	"no"
+>
+
+<!ELEMENT connjoint (pointerspec)*>
+<!ATTLIST connjoint
+>
+
+<!ELEMENT pointerspec (pointeritem)*>
+<!ATTLIST pointerspec
+	name		NMTOKEN		#REQUIRED
+	min			NMTOKEN		"1"
+	max			NMTOKEN		"1"
+>
+
+<!ELEMENT pointeritem EMPTY>
+<!ATTLIST pointeritem
+	desc		NMTOKENS	#IMPLIED
+>
+

@@ -31,8 +31,9 @@ private:
 public:
 	virtual ~MetaSet() { }
 
+//	const Result_t CheckPath(const std::string &path, bool &valid) const throw();
 	const Result_t GetMemberSpec(MetaPointerSpec* &metaPointerSpec) const throw();
-	const Result_t CheckPath(const std::string &path, bool &valid) const throw();
+	const Result_t CreateMemberSpec(MetaPointerSpec* &metaPointerSpec) throw();
 };
 
 
