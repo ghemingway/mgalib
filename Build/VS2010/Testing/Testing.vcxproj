@@ -35,12 +35,14 @@
     <Import Project="..\Debug.props" />
     <Import Project="..\MGALib.props" />
     <Import Project="..\googletest.props" />
+    <Import Project="..\xerces_c.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Release.props" />
     <Import Project="..\MGALib.props" />
     <Import Project="..\googletest.props" />
+    <Import Project="..\xerces_c.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
