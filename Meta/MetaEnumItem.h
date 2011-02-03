@@ -28,7 +28,7 @@ private:
 	MetaProject					*_metaProject;				//!<
 
 	friend class MetaBase;
-	MetaEnumItem(CoreObject &coreObject, MetaProject* &metaProject);
+	MetaEnumItem(CoreObject &coreObject, MetaProject* const &metaProject);
 
 public:
 	const Result_t GetParent(MetaAttribute* &metaAttribute) throw();	//!<

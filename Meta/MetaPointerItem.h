@@ -28,12 +28,9 @@ private:
 	MetaProject					*_metaProject;						//!< Contained in this metaProject
 
 	friend class MetaBase;
-	MetaPointerItem(CoreObject &coreObject, MetaProject* &metaProject);
+	MetaPointerItem(CoreObject &coreObject, MetaProject* const &metaProject);
 
 public:
-//	static bool CheckToken(CComBstrObj &token, bstr_const_iterator i, bstr_const_iterator &e);
-//	static bool CheckPath(CCoreObjectPtr &self, pathitems_type &pathitems, bool global);
-
 	const Result_t GetDescription(std::string &description) const throw();	//!<
 	const Result_t SetDescription(const std::string &description) throw();	//<!
 	const Result_t GetParent(MetaPointerSpec* &parent) throw();				//!<

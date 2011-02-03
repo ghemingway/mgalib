@@ -4,6 +4,7 @@
 
 /*** Included Header Files ***/
 #include "MetaFCO.h"
+#include "MetaPointerSpec.h"
 
 
 /*** Namespace Declaration ***/
@@ -11,13 +12,13 @@ namespace MGA {
 
 
 /*** Class Predefinitions ***/
-class MetaPointerSpec;
+// None
 
 
 // --------------------------- MetaReference --------------------------- //
 
 
-class MetaReference : public MetaFCO
+class MetaReference : public MetaFCO, public IMetaPointerSpec
 {
 private:
 	MetaReference();											//!< Deny access to default constructor
@@ -29,9 +30,9 @@ private:
 
 public:
 	virtual ~MetaReference() { }
-	
-	const Result_t GetRefSpec(MetaPointerSpec* &pointerSpec) const throw();			//!<
-	const Result_t CheckPath(const std::string &path, bool &valid) const throw();	//!<
+
+	virtual const Result_t GetItems(std::list<MetaPointerItem*> &pointerList) const throw();//!<
+	virtual const Result_t CreateItem(MetaPointerItem* &pointerItem) throw();				//!<
 };
 
 

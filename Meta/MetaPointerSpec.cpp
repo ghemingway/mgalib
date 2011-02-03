@@ -6,34 +6,11 @@
 
 // --------------------------- MetaPointerSpec --------------------------- //
 
-/*
-bool MetaPointerSpec::CheckPath(CCoreObjectPtr &self, pathitems_type &pathitems, bool global)
-{
-	ASSERT( self != NULL );
-	
-	coreobjects_type coreobjects;
-	self.GetCollectionValue(ATTRID_PTRITEMS_COLL, coreobjects);
-	
-	coreobjects_iterator i = coreobjects.begin();
-	coreobjects_iterator e = coreobjects.end();
-	while( i != e )
-	{
-		if( CMgaMetaPointerItem::CheckPath(*i, pathitems, global) )
-			return true;
-		
-		++i;
-	}
-	
-	return false;
-}
-*/
 
 const Result_t MetaPointerSpec::GetParent(MetaBase* &parent) throw()
 {
-	ASSERT(false);
 	// Use the MetaBase helper function to get an object from this pointer attribute
-//	return this->ObjectFromAttribute(ATTRID_PTRSPECS_COLL, parent);
-	return S_OK;
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_PTRSPECS_COLL, parent);
 }
 
 
@@ -60,17 +37,14 @@ const Result_t MetaPointerSpec::SetName(const std::string &name) throw()
 
 const Result_t MetaPointerSpec::GetItems(std::list<MetaPointerItem*> &pointerList) const throw()
 {
-	ASSERT(false);
-	// Use the MetaBase helper function to get collection of MetaPointerItems
-//	return this->CollectionFromAttribute(ATTRID_PTRITEMS_COLL, pointerList);
-	return S_OK;
+	// Use the MetaBase helper function to get collection of objects
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_PTRITEMS_COLL, pointerList);
 }
 
 
 const Result_t MetaPointerSpec::CreateItem(MetaPointerItem* &pointerItem) throw()
 {
-	ASSERT(false);
-	// Use the MetaBase helper function to create a new attribute
-//	return this->CreateObject(METAID_METAPOINTERITEM, ATTRID_PTRITEMS_COLL, pointerItem);
-	return S_OK;
+	// Use the helper function to create a new object
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAPOINTERITEM, ATTRID_PTRITEMS_COLL, pointerItem);
 }
+

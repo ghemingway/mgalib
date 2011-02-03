@@ -15,14 +15,14 @@
 const Result_t MetaPart::GetRole(MetaRole* &metaRole) const throw()
 {
 	// Use the MetaBase helper function to get an object from this pointer attribute
-	return this->ObjectFromAttribute(ATTRID_PARTROLE_PTR, metaRole);
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_PARTROLE_PTR, metaRole);
 }
 
 
 const Result_t MetaPart::GetParentAspect(MetaAspect* &MetaAspect) const throw()
 {
 	// Use the MetaBase helper function to get an object from this pointer attribute
-	return this->ObjectFromAttribute(ATTRID_PARTASPECT_PTR, MetaAspect);
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_PARTASPECT_PTR, MetaAspect);
 }
 
 

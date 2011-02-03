@@ -27,7 +27,7 @@ private:
 
 	friend class MetaBase;
 	friend class MetaEnumItem;
-	MetaAttribute(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
+	MetaAttribute(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
 	virtual ~MetaAttribute() { }

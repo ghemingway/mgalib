@@ -6,7 +6,7 @@
 // --------------------------- MetaConnJoint --------------------------- //
 
 
-MetaConnJoint::MetaConnJoint(CoreObject &coreObject, MetaProject* &metaProject) :
+MetaConnJoint::MetaConnJoint(CoreObject &coreObject, MetaProject* const &metaProject) :
 	_coreObject(coreObject), _metaProject(metaProject)
 {
 	ASSERT(coreObject != NULL);
@@ -45,28 +45,3 @@ const Result_t MetaConnJoint::CreatePointerSpec(MetaPointerSpec* &pointerSpec) t
 	return S_OK;
 }
 
-/*
-bool MetaConnJoint::CheckPaths(CoreObject &coreObject, JointPaths &jointPaths) throw()
-{
-/*	ASSERT( self != NULL );
-
-	jointpaths_type::iterator i = jointpaths.begin();
-	jointpaths_type::iterator e = jointpaths.end();
-	while( i != e )
-	{
-		CCoreObjectPtr spec;
-
-		if( FAILED(ComGetCollValueByName(i->ptrspec_name,
-				self, ATTRID_PTRSPECS_COLL, ATTRID_PTRSPECNAME, PutOut(spec))) )
-			return false;
-
-		ASSERT( spec != NULL );
-
-		if( !CMgaMetaPointerSpec::CheckPath(spec, i->pathitems, false) )
-			return false;
-
-		++i;
-	}
-*/
-//	return true;
-//}

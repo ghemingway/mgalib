@@ -28,7 +28,7 @@ private:
 	MetaAspect& operator=(const MetaAspect &);				//!< Deny access to equals operator
 
 	friend class MetaBase;
-	MetaAspect(CoreObject &coreObject, MetaProject* &metaProject) : ::MetaBase(coreObject, metaProject) { }
+	MetaAspect(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
 	virtual ~MetaAspect() { }
@@ -37,7 +37,6 @@ public:
 	const Result_t GetParts(std::list<MetaPart*> &partList)	const throw();				//!< Get all child parts
 	const Result_t GetAttributes(std::list<MetaAttribute*> &attribList) const throw();	//!< Get all child attributes
 	const Result_t AddAttribute(MetaAttribute* &attrib) throw();						//!< Add a child attribute
-	const Result_t RemoveAttribute(MetaAttribute* &attrib) throw();						//!< Remove a child attribute
 	const Result_t CreatePart(MetaRole* &role, MetaPart* &part) throw();				//!< Create a child part
 };
 
