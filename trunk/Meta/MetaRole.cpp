@@ -7,7 +7,7 @@
 // --------------------------- MetaRole --------------------------- //
 
 
-const Result_t MetaRole::GetParentModel(MetaModel* &metaModel) throw()
+const Result_t  MetaRole::GetParentModel(MetaModel* &metaModel) throw()
 {
 	// Use the MetaBase helper function to get a parent MetaModel from this pointer attribute
 	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ROLES_COLL, metaModel);
@@ -27,7 +27,3 @@ const Result_t MetaRole::GetKind(MetaFCO* &metaFCO) throw()
 	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_KIND_PTR, metaFCO);
 }
 
-
-const Result_t GetParts(std::list<MetaPart*> &partList) throw();	//!<
-const Result_t GetKind(MetaFCO* &metaFCO) throw();					//!<
-const Result_t SetKind(MetaFCO* &metaFCO) throw();					//!<

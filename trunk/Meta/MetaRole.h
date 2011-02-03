@@ -34,10 +34,8 @@ public:
 	virtual ~MetaRole() { }
 
 	const Result_t GetParentModel(MetaModel* &metaModel) throw();		//!<
-//	const Result_t SetParentModel(MetaModel* &metaModel) throw();		//!<
 	const Result_t GetParts(std::list<MetaPart*> &partList) throw();	//!<
 	const Result_t GetKind(MetaFCO* &metaFCO) throw();					//!<
-//	const Result_t SetKind(MetaFCO* &metaFCO) throw();					//!<
 };
 
 

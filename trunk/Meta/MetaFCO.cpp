@@ -100,18 +100,27 @@ const Result_t MetaFCO::AddAttribute(MetaAttribute* &attrib) throw()
 }
 
 
-const Result_t MetaFCO::GetAliasingEnabled(bool &value) const throw()
+const Result_t MetaFCO::GetAliasingEnabled(bool &flag) const throw()
 {
-	ASSERT(false);
-//		self.PutBoolValue(ATTRID_ALIASENABLED,p);
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longAlias;
+	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_ALIASENABLED, longAlias);
+	flag = (longAlias == false);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 
 
-const Result_t MetaFCO::SetAliasingEnabled(const bool &value) throw()
+const Result_t MetaFCO::SetAliasingEnabled(const bool &flag) throw()
 {
-	ASSERT(false);
-//		self.PutBoolValue(ATTRID_ALIASENABLED,p);
-	return S_OK;
+	Result_t txResult = this->_metaProject->BeginTransaction();
+	ASSERT( txResult == S_OK );
+	int32_t longAlias = static_cast<int32_t>(flag);
+	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_ALIASENABLED, longAlias);
+	txResult = this->_metaProject->CommitTransaction();
+	ASSERT( txResult == S_OK );
+	return result;
 }
 

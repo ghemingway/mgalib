@@ -845,9 +845,10 @@ const Result_t MgaProject::CreateAddOn(IMgaEventSink *handler, MgaAddOn* &addOn)
 {
 	if (handler == NULL) return E_MGA_INPTR_NULL;
 	// Checking for something
-	if(!this->_reserveTerritory) {
+	if(!this->_reserveTerritory)
+	{
 		MgaTerritory* territory;
-		Result_t result;// = this->CreateTerritory(NULL, territory);
+		Result_t result = this->CreateTerritory(NULL, territory);
 		if (result != S_OK) return result;
 		this->_reserveTerritory = territory;
 	}
@@ -1009,7 +1010,7 @@ const Result_t MgaProject::BeginTransaction(MgaTerritory* territory, const bool 
 	// Otherwise, verify that the territory is valid for this project
 	else
 	{
-		MgaProject* project;
+		MgaProject* project = NULL;
 		ASSERT( territory->Project(project) == S_OK );
 		if( project != this) return E_MGA_FOREIGN_OBJECT;
 	}
