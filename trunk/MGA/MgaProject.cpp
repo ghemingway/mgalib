@@ -1424,7 +1424,7 @@ void CMgaProject::UpdateMGAVersion(CoreObj& p_dataroot)
 void MgaProject::SetNamespaceInMeta(void)
 {
 	ASSERT( this->_metaProject != NULL );
-	this->_metaProject->SetNamespace( this->GetNamespace() );
+//	this->_metaProject->SetNamespace( this->GetNamespace() );
 }
 
 

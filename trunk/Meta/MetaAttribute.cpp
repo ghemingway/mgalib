@@ -10,21 +10,21 @@
 const Result_t MetaAttribute::GetDefinedIn(MetaFCO* &fco) const throw()
 {
 	// Use the MetaBase helper function to get an FCO from this pointer attribute
-	return this->ObjectFromAttribute(ATTRID_DEFATTR_PTR, fco);
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFATTR_PTR, fco);
 }
 
 
 const Result_t MetaAttribute::GetEnumItems(std::list<MetaEnumItem*> &enumList) const throw()
 {
 	// Use the MetaBase helper function to get collection of MetaEnumItems
-	return this->CollectionFromAttribute(ATTRID_ENUMITEMS_COLL, enumList);
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ENUMITEMS_COLL, enumList);
 }
 
 
 const Result_t MetaAttribute::GetUsedIn(std::list<MetaFCO*> &fcoList) const throw()
 {
 	// Use the MetaBase helper function to get collection of UsedIn FCOs
-	return this->CollectionFromAttribute(ATTRID_ATTRLINK_ATTR_PTR, fcoList);
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ATTRLINK_ATTR_PTR, fcoList);
 }
 
 
@@ -104,6 +104,6 @@ const Result_t MetaAttribute::SetViewable(const bool &flag) throw()
 const Result_t MetaAttribute::CreateEnumItem(MetaEnumItem* &enumItem) throw()
 {
 	// Use the MetaBase helper function to create a new attribute
-	return this->CreateObject(METAID_METAENUMITEM, ATTRID_ENUMITEMS_COLL, enumItem);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAENUMITEM, ATTRID_ENUMITEMS_COLL, enumItem);
 }
 

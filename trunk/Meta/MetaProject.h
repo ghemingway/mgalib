@@ -29,10 +29,6 @@ class MetaProject
 private:
 	CoreProject					*_coreProject;
 	CoreObject					_rootObject;
-	std::string					_namespace;
-
-//	void CreatePathItems(bstr_const_iterator i, bstr_const_iterator e, pathitems_type &pathitems);
-//	void CreateJointPaths(std::string paths, jointpaths_type &jointpaths);
 
 	MetaProject();													//!< Deny access to default constructor
 	MetaProject(const MetaProject &);								//!< Deny access to copy constructor
@@ -67,8 +63,6 @@ public:
 	const Result_t SetModifiedAt(const std::string &dateTime) throw();
 	const Result_t RootFolder(MetaFolder* &folder) throw();
 	const Result_t FindObject(const Uuid &uuid, MetaBase* &metaBase) throw();
-	inline const Result_t GetNamespace(std::string &name) const throw()		{ name = this->_namespace; return S_OK; }
-	inline const Result_t SetNamespace(const std::string &name) throw()		{ this->_namespace = name; return S_OK; }
 };
 
 

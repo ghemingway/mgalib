@@ -15,6 +15,7 @@
 
 const Result_t MetaModel::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {
+	ASSERT(false);
 //	return ComGetSortedCollValue<IMgaMetaFCO>(GetUnknown(), ATTRID_DEFFCO_PTR, p);
 	return S_OK;
 }
@@ -22,20 +23,23 @@ const Result_t MetaModel::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const thr
 
 const Result_t MetaModel::GetRoles(std::list<MetaRole*> &roleList) const throw()
 {
+	ASSERT(false);
 	// Use the MetaBase helper function to get collection of objects
-	return this->CollectionFromAttribute(ATTRID_ROLES_COLL, roleList);
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ROLES_COLL, roleList);
 }
 
 
 const Result_t MetaModel::GetAspects(std::list<MetaAspect*> &aspectList) const throw()
 {
+	ASSERT(false);
 	// Use the MetaBase helper function to get collection of objects
-	return this->CollectionFromAttribute(ATTRID_ASPECTS_COLL, aspectList);
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ASPECTS_COLL, aspectList);
 }
 
 
 const Result_t MetaModel::GetDefinedFCOByName(const std::string &name, bool &inScope, MetaFCO* &metaFCO) const throw()
 {
+	ASSERT(false);
 /*		CCoreObjectPtr self(GetUnknown());
 		CComBstrObj_lightequal equal( GetUnknown());
 		coreobjects_type coreobjects;
@@ -75,6 +79,7 @@ const Result_t MetaModel::GetDefinedFCOByName(const std::string &name, bool &inS
 
 const Result_t MetaModel::GetRoleByName(const std::string &name, MetaRole* &metaRole) const throw()
 {
+	ASSERT(false);
 /*
 	CCoreObjectPtr self(GetUnknown());
 	CComBstrObj_lightequal equal( GetUnknown());
@@ -102,6 +107,7 @@ const Result_t MetaModel::GetRoleByName(const std::string &name, MetaRole* &meta
 
 const Result_t MetaModel::GetAspectByName(const std::string &name, MetaAspect* &metaAspect) const throw()
 {
+	ASSERT(false);
 /*
 	CCoreObjectPtr self(GetUnknown());
 	coreobjects_type coreobjects;
@@ -127,6 +133,7 @@ const Result_t MetaModel::GetAspectByName(const std::string &name, MetaAspect* &
 
 const Result_t MetaModel::LegalConnectionRoles(const std::string &paths, std::list<MetaRole*> &roleList) const throw()
 {
+	ASSERT(false);
 /*
 	// create the collection
 	CComObjPtr<RolesExCOMType> coll;
@@ -163,6 +170,7 @@ const Result_t MetaModel::LegalConnectionRoles(const std::string &paths, std::li
 
 const Result_t MetaModel::LegalReferenceRoles(const std::string &path, std::list<MetaRole*> &roleList) const throw()
 {
+	ASSERT(false);
 /*
 	// create the collection
 	CComObjPtr<RolesExCOMType> coll;
@@ -205,6 +213,7 @@ const Result_t MetaModel::LegalReferenceRoles(const std::string &path, std::list
 
 const Result_t MetaModel::LegalSetRoles(const std::string &path, std::list<MetaRole*> &roleList) const throw()
 {
+	ASSERT(false);
 /*
 	// create the collection
 	CComObjPtr<RolesExCOMType> coll;
@@ -248,6 +257,7 @@ const Result_t MetaModel::LegalSetRoles(const std::string &path, std::list<MetaR
 const Result_t MetaModel::LegalRoles(MetaFCO* &kind, std::list<MetaRole*> &roleList) const throw()
 {
 	if( kind == NULL ) return E_INVALID_USAGE;
+	ASSERT(false);
 /*
 	CComObjPtr<RolesExCOMType> coll;
 	CreateComObject(coll);
@@ -283,50 +293,50 @@ const Result_t MetaModel::LegalRoles(MetaFCO* &kind, std::list<MetaRole*> &roleL
 const Result_t MetaModel::CreateModel(MetaModel* &metaModel) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAMODEL, ATTRID_DEFFCO_PTR, metaModel);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAMODEL, ATTRID_DEFFCO_PTR, metaModel);
 }
 
 
 const Result_t MetaModel::CreateAtom(MetaAtom* &metaAtom) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAATOM, ATTRID_DEFFCO_PTR, metaAtom);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAATOM, ATTRID_DEFFCO_PTR, metaAtom);
 }
 
 
 const Result_t MetaModel::CreateReference(MetaReference* &metaReference) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAREFERENCE, ATTRID_DEFFCO_PTR, metaReference);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAREFERENCE, ATTRID_DEFFCO_PTR, metaReference);
 }
 
 
 const Result_t MetaModel::CreateSet(MetaSet* &metaSet) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METASET, ATTRID_DEFFCO_PTR, metaSet);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METASET, ATTRID_DEFFCO_PTR, metaSet);
 }
 
 
 const Result_t MetaModel::CreateConnection(MetaConnection* &metaConnection) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METACONNECTION, ATTRID_DEFFCO_PTR, metaConnection);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METACONNECTION, ATTRID_DEFFCO_PTR, metaConnection);
 }
 
 
 const Result_t MetaModel::CreateAspect(MetaAspect* &metaAspect) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAASPECT, ATTRID_ASPECTS_COLL, metaAspect);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAASPECT, ATTRID_ASPECTS_COLL, metaAspect);
 }
 
 
-const Result_t MetaModel::CreateRole(const MetaFCO* &kind, MetaRole* &metaRole) throw()
+const Result_t MetaModel::CreateRole(MetaFCO* &kind, MetaRole* &metaRole) throw()
 {
 	ASSERT(false);
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAROLE, ATTRID_ROLES_COLL, metaRole);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAROLE, ATTRID_ROLES_COLL, metaRole);
 //	role.PutPointerValue(ATTRID_ROLES_COLL, self);
 //	role.PutPointerValue(ATTRID_KIND_PTR, other);
 	return S_OK;

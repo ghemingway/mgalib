@@ -29,16 +29,13 @@ private:
 	MetaProject					*_metaProject;					//!< Contained in this metaProject
 	
 	friend class MetaBase;
-	MetaConnJoint(CoreObject &coreObject, MetaProject* &metaProject);
+	MetaConnJoint(CoreObject &coreObject, MetaProject* const &metaProject);
 	
 public:
-//	static bool CheckPaths(CoreObject &coreObject, JointPaths &jointPaths) throw();
-
-	const Result_t GetPointerSpecs(std::list<MetaPointerSpec*> &pointerSpecList) const throw();					//!<
 	const Result_t GetParent(MetaConnection* &parent) const throw();											//!<
+	const Result_t GetPointerSpecs(std::list<MetaPointerSpec*> &pointerSpecList) const throw();					//!<
 	const Result_t GetPointerSpecByName(const std::string &name, MetaPointerSpec* &pointerSpec) const throw();	//!<
 	const Result_t CreatePointerSpec(MetaPointerSpec* &pointerSpec) throw();									//!<
-
 };
 
 

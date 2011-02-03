@@ -30,29 +30,30 @@ protected:
 	CoreObject					_coreObject;					//!< Pointer to wrapped core object
 	MetaProject					*_metaProject;					//!< Pointer to parent project
 
+public:
 	template <class T>
-	const Result_t ObjectFromAttribute(const AttrID_t &attrID, T* &obj) const throw()
+	static inline const Result_t ObjectFromAttribute(const CoreObject &coreObject, MetaProject* const &metaProject, const AttrID_t &attrID, T* &obj) throw()
 	{
 		Uuid uuid;
-		Result_t result = this->_coreObject->GetAttributeValue(attrID, uuid);
+		Result_t result = coreObject->GetAttributeValue(attrID, uuid);
 		if ( result != S_OK ) return result;
 		// Get a coreObject for the uuid
 		CoreProject* coreProject = NULL;
-		result = this->_coreObject->Project(coreProject);
+		result = coreObject->Project(coreProject);
 		ASSERT( result == S_OK );
 		ASSERT( coreProject != NULL );
-		CoreObject coreObject;
-		result = coreProject->Object(uuid, coreObject);
+		CoreObject newCoreObject;
+		result = coreProject->Object(uuid, newCoreObject);
 		ASSERT( result == S_OK );
-		ASSERT( coreObject != NULL );
+		ASSERT( newCoreObject != NULL );
 		// Create a new MetaBase object and cast to the correct type
-		obj = (T*)new MetaBase(coreObject, this->_metaProject);
+		obj = (T*)new MetaBase(newCoreObject, metaProject);
 		ASSERT(obj != NULL);
 		return S_OK;
 	}
 
 	template <class T>
-	const Result_t CollectionFromAttribute(const AttrID_t &attrID, std::list<T> &objList) const throw()
+	static inline const Result_t CollectionFromAttribute(const CoreObject &coreObject, MetaProject* const &metaProject, const AttrID_t &attrID, std::list<T> &objList) throw()
 	{
 		ASSERT(false);
 /*		objList.clear();
@@ -88,11 +89,11 @@ protected:
 	}
 
 	template<class T>
-	const Result_t CreateObject(const MetaID_t &metaID, const AttrID_t &attrID, T* &metaObject) throw()
+	static inline const Result_t CreateObject(const CoreObject &coreObject, MetaProject* const &metaProject, const MetaID_t &metaID, const AttrID_t &attrID, T* &metaObject) throw()
 	{
 		// Get the associated coreProject
 		CoreProject* coreProject = NULL;
-		Result_t result = this->_coreObject->Project(coreProject);
+		Result_t result = coreObject->Project(coreProject);
 		ASSERT( result == S_OK );
 		ASSERT( coreProject != NULL );
 		// Start a transaction
@@ -105,7 +106,7 @@ protected:
 		ASSERT( newCoreObject != NULL );
 		// Link the new child to this object as parent
 		Uuid uuid = Uuid::Null();
-		result = this->_coreObject->GetUuid(uuid);
+		result = coreObject->GetUuid(uuid);
 		ASSERT( result == S_OK );
 		ASSERT( uuid != Uuid::Null() );
 		result = newCoreObject->SetAttributeValue(attrID, uuid);
@@ -114,12 +115,38 @@ protected:
 		result = coreProject->CommitTransaction();
 		ASSERT( result == S_OK );
 		// Now use the core object to create a new metaObject of type T
-		metaObject = new T(newCoreObject, this->_metaProject);
+		metaObject = new T(newCoreObject, metaProject);
 		ASSERT( metaObject != NULL );
 		return S_OK;
 	}
-	
-public:
+
+	template<class T>
+	const Result_t ObjectFromCollectionByName(const CoreObject &coreObject, MetaProject* const &metaProject, const AttrID_t &attrID, const std::string &name, T* &obj) const throw()
+	{
+		// Use the helper function to get collection of objects
+		std::list<T*> objList;
+		Result_t result = MetaBase::CollectionFromAttribute(coreObject, metaProject, attrID, objList);
+		ASSERT( result == S_OK );
+		// Iterate through the list to find the one with name
+		obj = NULL;
+		typename std::list<T*>::iterator objIter = objList.begin();
+		while (objIter != objList.end())
+		{
+			// Does the name match
+			std::string objName;
+			result = (*objIter)->GetName(objName);
+			ASSERT( result == S_OK );
+			if (objName == name) obj = *objIter;
+			// Otherwise, delete this item
+			else delete *objIter;
+			// Move on to the next item in the list
+			++objIter;
+		}
+		// Did we find it
+		if (obj == NULL) return E_NOTFOUND;
+		return S_OK;
+	}
+
 	MetaBase(CoreObject &coreObject, MetaProject* const &metaProject);
 	virtual ~MetaBase();
 

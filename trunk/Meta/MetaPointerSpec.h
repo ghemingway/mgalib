@@ -11,14 +11,24 @@ namespace MGA {
 
 
 /*** Class Predefinitions ***/
-class MetaProject;
 class MetaPointerItem;
 
 
 // --------------------------- MetaPointerSpec --------------------------- //
 
 
-class MetaPointerSpec
+class IMetaPointerSpec
+{
+public:
+	virtual const Result_t GetItems(std::list<MetaPointerItem*> &pointerList) const throw()=0;	//!<
+	virtual const Result_t CreateItem(MetaPointerItem* &pointerItem) throw()=0;					//!<
+};
+
+
+// --------------------------- MetaPointerSpec --------------------------- //
+
+
+class MetaPointerSpec : public IMetaPointerSpec
 {
 private:
 	MetaPointerSpec();												//!< Deny access to default constructor
@@ -32,13 +42,11 @@ private:
 	MetaPointerSpec(CoreObject &coreObject, MetaProject* &metaProject);
 
 public:
-//	static bool CheckPath(CoreObject* &coreObject, pathitems_type &pathitems, bool &global);
-	
 	const Result_t GetParent(MetaBase* &parent) throw();							//!<
 	const Result_t GetName(std::string &name) const throw();						//!<
 	const Result_t SetName(const std::string &name) throw();						//!<
-	const Result_t GetItems(std::list<MetaPointerItem*> &pointerList) const throw();//!<
-	const Result_t CreateItem(MetaPointerItem* &pointerItem) throw();				//!<
+	virtual const Result_t GetItems(std::list<MetaPointerItem*> &pointerList) const throw();//!<
+	virtual const Result_t CreateItem(MetaPointerItem* &pointerItem) throw();				//!<
 };
 
 

@@ -1,26 +1,22 @@
 /*** Included Header Files ***/
 #include "MetaSet.h"
-#include "MetaPointerSpec.h"
+#include "MetaPointerItem.h"
+#include "MetaGeneric.h"
 
 
 // --------------------------- MetaSet --------------------------- //
 
-/*
-const Result_t MetaSet::CheckPath(const std::string &path, bool &flag) const throw()
+
+const Result_t MetaSet::GetItems(std::list<MetaPointerItem*> &pointerList) const throw()
 {
-	ASSERT( this->_metaProject != NULL );
-//	pathitems_type pathitems;
-//	metaproject->CreatePathItems(begin(path), end(path), pathitems);
-//	CCoreObjectPtr self(GetUnknown());
-//	bool valid = CMgaMetaPointerSpec::CheckPath(self, pathitems, false);
-//	*p = valid ? VARIANT_TRUE : VARIANT_FALSE;
-	return S_OK;
+	// Use the MetaBase helper function to get collection of objects
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_PTRITEMS_COLL, pointerList);
 }
-*/
 
 
-const Result_t MetaSet::CreateMemberSpec(MetaPointerSpec* &metaPointerSpec) throw()
+const Result_t MetaSet::CreateItem(MetaPointerItem* &pointerItem) throw()
 {
-	ASSERT(false);
-	return S_OK;
+	// Use the helper function to create a new object
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAPOINTERITEM, ATTRID_PTRITEMS_COLL, pointerItem);
 }
+

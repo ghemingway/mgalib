@@ -18,6 +18,9 @@
 #include "../Meta/MetaPart.h"
 
 
+// --------------------------- XmpParser Static Variables --------------------------- //
+
+
 XMLCh* XmpParser::TAG_Folder = NULL;
 XMLCh* XmpParser::TAG_Comment = NULL;
 XMLCh* XmpParser::TAG_Author = NULL;
@@ -39,6 +42,7 @@ XMLCh* XmpParser::TAG_Aspect = NULL;
 XMLCh* XmpParser::TAG_Part = NULL;
 XMLCh* XmpParser::ATTR_Name = NULL;
 XMLCh* XmpParser::ATTR_Uuid = NULL;
+XMLCh* XmpParser::ATTR_Version = NULL;
 XMLCh* XmpParser::ATTR_CDate = NULL;
 XMLCh* XmpParser::ATTR_MDate = NULL;
 XMLCh* XmpParser::ATTR_Metaref = NULL;
@@ -49,6 +53,7 @@ XMLCh* XmpParser::ATTR_Depth = NULL;
 XMLCh* XmpParser::ATTR_Priority = NULL;
 XMLCh* XmpParser::ATTR_Type = NULL;
 XMLCh* XmpParser::ATTR_ValueType = NULL;
+XMLCh* XmpParser::ATTR_Aliasenabled = NULL;
 XMLCh* XmpParser::ATTR_DefValue = NULL;
 XMLCh* XmpParser::ATTR_Value = NULL;
 XMLCh* XmpParser::ATTR_Attributes = NULL;
@@ -56,6 +61,25 @@ XMLCh* XmpParser::ATTR_Desc = NULL;
 XMLCh* XmpParser::ATTR_Kind = NULL;
 XMLCh* XmpParser::ATTR_Primary = NULL;
 XMLCh* XmpParser::ATTR_Linked = NULL;
+XMLCh* XmpParser::ATTR_Min = NULL;
+XMLCh* XmpParser::ATTR_Max = NULL;
+XMLCh* XmpParser::ATTR_Kindaspect = NULL;
+
+
+// --------------------------- XmpParser Helper Methods --------------------------- //
+
+
+template <class T>
+static inline void _XmpName(DOMElement* element, T* object)
+{
+	// Get the name
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
+	char* tmpChar = XMLString::transcode(xmlch);
+	std::string name = tmpChar;
+	Result_t result = object->SetName(name);
+	ASSERT( result == S_OK );
+	XMLString::release(&tmpChar);
+}
 
 
 // --------------------------- Public XmpParser Methods --------------------------- //
@@ -90,6 +114,7 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 	XmpParser::TAG_Part			= XMLString::transcode("part");
 	XmpParser::ATTR_Name		= XMLString::transcode("name");
 	XmpParser::ATTR_Uuid		= XMLString::transcode("guid");
+	XmpParser::ATTR_Version		= XMLString::transcode("version");
 	XmpParser::ATTR_CDate		= XMLString::transcode("cdate");
 	XmpParser::ATTR_MDate		= XMLString::transcode("mdate");
 	XmpParser::ATTR_Metaref		= XMLString::transcode("metaref");
@@ -100,6 +125,7 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 	XmpParser::ATTR_Priority	= XMLString::transcode("priority");
 	XmpParser::ATTR_Type		= XMLString::transcode("type");
 	XmpParser::ATTR_ValueType	= XMLString::transcode("valuetype");
+	XmpParser::ATTR_Aliasenabled= XMLString::transcode("aliasenabled");
 	XmpParser::ATTR_DefValue	= XMLString::transcode("defvalue");
 	XmpParser::ATTR_Value		= XMLString::transcode("value");
 	XmpParser::ATTR_Attributes	= XMLString::transcode("attributes");
@@ -107,14 +133,17 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 	XmpParser::ATTR_Kind		= XMLString::transcode("kind");
 	XmpParser::ATTR_Primary		= XMLString::transcode("primary");
 	XmpParser::ATTR_Linked		= XMLString::transcode("linked");
+	XmpParser::ATTR_Min			= XMLString::transcode("min");
+	XmpParser::ATTR_Max			= XMLString::transcode("max");
+	XmpParser::ATTR_Kindaspect	= XMLString::transcode("kindaspect");
+	
 
 	// Configure DOM parser.
 	XercesDOMParser* xmpParser = new XercesDOMParser();
 	ASSERT( xmpParser != NULL );
-	xmpParser->setValidationScheme(XercesDOMParser::Val_Never);
+	xmpParser->setValidationScheme(XercesDOMParser::Val_Auto);
 	xmpParser->setDoNamespaces(false);
 	xmpParser->setDoSchema(false);
-	xmpParser->setLoadExternalDTD(false);
 
 	// Try parsing the file
 	try
@@ -147,16 +176,11 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 		ASSERT( result == S_OK && rootFolder != NULL );
 
 		// Get the paradigm name
-		const XMLCh* xmlch = elementRoot->getAttribute(XmpParser::ATTR_Name);
-		char* tmpChar = XMLString::transcode(xmlch);
-		std::string paradigmName = tmpChar;
-		result = metaProject->SetName(paradigmName);
-		ASSERT( result == S_OK );
-		XMLString::release(&tmpChar);
+		_XmpName(elementRoot, metaProject);
 
 		// Get the Uuid
-		xmlch = elementRoot->getAttribute(XmpParser::ATTR_Uuid);
-		tmpChar = XMLString::transcode(xmlch);
+		const XMLCh* xmlch = elementRoot->getAttribute(XmpParser::ATTR_Uuid);
+		char *tmpChar = XMLString::transcode(xmlch);
 		std::string paradigmUuidStr = tmpChar;
 		if (paradigmUuidStr != "" )
 		{
@@ -164,6 +188,14 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 			result = metaProject->SetUuid(paradigmUuid);
 			ASSERT( result == S_OK );
 		}
+		XMLString::release(&tmpChar);
+
+		// Get the version
+		xmlch = elementRoot->getAttribute(XmpParser::ATTR_Version);
+		tmpChar = XMLString::transcode(xmlch);
+		std::string version = tmpChar;
+		result = metaProject->SetVersion(version);
+		ASSERT( result == S_OK );
 		XMLString::release(&tmpChar);
 
 		// Get the cdate
@@ -219,6 +251,13 @@ const Result_t XmpParser::Parse(const std::string &xmpFile, const std::string &m
 					result = metaProject->SetAuthor(author);
 					ASSERT( result == S_OK );
 				}
+				else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+				{
+					// Extract the displayName string and place it into the metaProject
+					std::string displayName = XmpParser::ParseDispname(currentElement);
+					result = metaProject->SetDisplayedName(displayName);
+					ASSERT( result == S_OK );
+				}
 			}
 		}
 	}
@@ -247,11 +286,7 @@ MetaFolder* XmpParser::ParseFolder(DOMElement* element, MetaFolder* parentFolder
 	ASSERT( result == S_OK && metaFolder != NULL );
 	
 	// Get the folder name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string folderName = tmpChar;
-	metaFolder->SetName(folderName);
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaFolder);
 
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -260,8 +295,8 @@ MetaFolder* XmpParser::ParseFolder(DOMElement* element, MetaFolder* parentFolder
 //	XMLString::release(&tmpChar);
 
 	// Get the subfolders
-	xmlch = element->getAttribute(XmpParser::ATTR_Subfolders);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Subfolders);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string subfoldersStr = tmpChar;
 	XMLString::release(&tmpChar);
 
@@ -289,6 +324,14 @@ MetaFolder* XmpParser::ParseFolder(DOMElement* element, MetaFolder* parentFolder
 				// Look for possible errors
 				if (metaFolder == NULL) return NULL;
 			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			{
+				std::string key, value;
+				XmpParser::ParseRegNode(currentElement, key, value);
+				// Set the K-V pair in the folder
+				result = metaFolder->SetRegistryValue(key, value);
+				ASSERT( result == S_OK );
+			}
 			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Constraint) )
 			{
 				MetaConstraint* metaConstraint = XmpParser::ParseConstraint(currentElement, metaFolder);
@@ -303,42 +346,40 @@ MetaFolder* XmpParser::ParseFolder(DOMElement* element, MetaFolder* parentFolder
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Atom) )
 			{
-				MetaAtom* metaAtom = XmpParser::ParseAtom(currentElement, metaFolder);
+				MetaAtom* metaAtom = XmpParser::ParseAtom(currentElement, metaFolder, NULL);
 				// Look for possible errors
 				if (metaAtom == NULL) return NULL;
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Set) )
 			{
-				MetaSet* metaSet = XmpParser::ParseSet(currentElement, metaFolder);
+				MetaSet* metaSet = XmpParser::ParseSet(currentElement, metaFolder, NULL);
 				// Look for possible errors
 				if (metaSet == NULL) return NULL;
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Connection) )
 			{
-				MetaConnection* metaConnection = XmpParser::ParseConnection(currentElement, metaFolder);
+				MetaConnection* metaConnection = XmpParser::ParseConnection(currentElement, metaFolder, NULL);
 				// Look for possible errors
 				if (metaConnection == NULL) return NULL;
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Reference) )
 			{
-				MetaReference* metaReference = XmpParser::ParseReference(currentElement, metaFolder);
+				MetaReference* metaReference = XmpParser::ParseReference(currentElement, metaFolder, NULL);
 				// Look for possible errors
 				if (metaReference == NULL) return NULL;
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Model) )
 			{
-				MetaModel* metaModel = XmpParser::ParseModel(currentElement, metaFolder);
+				MetaModel* metaModel = XmpParser::ParseModel(currentElement, metaFolder, NULL);
 				// Look for possible errors
 				if (metaModel == NULL) return NULL;
 			}
 		}
 	}
 	// Handle all rootObjects
-	// ...
-
+	// TODO: Do something with rootObjects
 	// Handle all subfolders
-	// ...
-
+	// TODO: Do something with subFolders
 	// All done, return the folder
 	return metaFolder;
 }
@@ -433,12 +474,7 @@ MetaConstraint* XmpParser::ParseConstraint(DOMElement* element, MetaBase* metaBa
 	ASSERT (result == S_OK && metaConstraint != NULL );
 
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string constraintName = tmpChar;
-	result = metaConstraint->SetName(constraintName);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaConstraint);
 
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -447,8 +483,8 @@ MetaConstraint* XmpParser::ParseConstraint(DOMElement* element, MetaBase* metaBa
 //	XMLString::release(&tmpChar);
 
 	// Get the eventmask
-	xmlch = element->getAttribute(XmpParser::ATTR_EventMask);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_EventMask);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string eventMaskStr = tmpChar;
 	if (eventMaskStr != "")
 	{
@@ -468,7 +504,7 @@ MetaConstraint* XmpParser::ParseConstraint(DOMElement* element, MetaBase* metaBa
 	if (depthStr != "")
 	{
 		ConstraintDepth depth = CONSTRAINT_DEPTH_ZERO;
-		if (depthStr == "one") depth = CONSTRAINT_DEPTH_ONE;
+		if (depthStr == "1") depth = CONSTRAINT_DEPTH_ONE;
 		else if (depthStr == "any") depth = CONSTRAINT_DEPTH_ANY;
 		result = metaConstraint->SetDepth(depth);
 		ASSERT( result == S_OK );
@@ -552,12 +588,7 @@ MetaAttribute* XmpParser::ParseAttrdef(DOMElement* element, MetaFolder* metaFold
 	ASSERT( result == S_OK && metaAttribute != NULL );
 
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaAttribute->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaAttribute);
 	
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -566,8 +597,8 @@ MetaAttribute* XmpParser::ParseAttrdef(DOMElement* element, MetaFolder* metaFold
 //	XMLString::release(&tmpChar);
 	
 	// Get the ValueType
-	xmlch = element->getAttribute(XmpParser::ATTR_ValueType);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_ValueType);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string valueTypeStr = tmpChar;
 	if (valueTypeStr != "" )
 	{
@@ -576,9 +607,8 @@ MetaAttribute* XmpParser::ParseAttrdef(DOMElement* element, MetaFolder* metaFold
 		else if (valueTypeStr == "string") valueType = ATTVAL_STRING;
 		else if (valueTypeStr == "enum") valueType = ATTVAL_ENUM;
 		else if (valueTypeStr == "integer") valueType = ATTVAL_INTEGER;
-//		ATTVAL_DOUBLE = 3,
-//		ATTVAL_REFERENCE = 5,
-//		ATTVAL_DYNAMIC
+		else if (valueTypeStr == "double") valueType = ATTVAL_DOUBLE;
+		else if (valueTypeStr == "double") valueType = ATTVAL_DYNAMIC;
 		result = metaAttribute->SetValueType(valueType);
 		ASSERT( result == S_OK );
 	}
@@ -630,7 +660,7 @@ MetaAttribute* XmpParser::ParseAttrdef(DOMElement* element, MetaFolder* metaFold
 	return metaAttribute;
 }
 
-
+// TODO: RegNodes can contain RegNodes
 void XmpParser::ParseRegNode(DOMElement* element, std::string &key, std::string &value)
 {
 	// Get the key(aka name)
@@ -675,7 +705,7 @@ MetaEnumItem* XmpParser::ParseEnumitem(DOMElement* element, MetaAttribute* metaA
 }
 
 
-MetaAtom* XmpParser::ParseAtom(DOMElement* element, MetaFolder* metaFolder)
+MetaAtom* XmpParser::ParseAtom(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO)
 {
 	// Create the atom
 	MetaAtom* metaAtom = NULL;
@@ -683,12 +713,7 @@ MetaAtom* XmpParser::ParseAtom(DOMElement* element, MetaFolder* metaFolder)
 	ASSERT( result == S_OK && metaAtom != NULL );
 	
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaAtom->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaAtom);
 
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -697,11 +722,17 @@ MetaAtom* XmpParser::ParseAtom(DOMElement* element, MetaFolder* metaFolder)
 //	XMLString::release(&tmpChar);
 
 	// Get the Attributes string
-	xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string attributesStr = tmpChar;
 	XMLString::release(&tmpChar);
-	
+
+	// Get the AliasEnabled string
+	xmlch = element->getAttribute(XmpParser::ATTR_Aliasenabled);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string aliasEnabled = tmpChar;
+	XMLString::release(&tmpChar);
+
 	// Look one level down
 	DOMNodeList* children = element->getChildNodes();
 	const XMLSize_t nodeCount = children->getLength();
@@ -714,7 +745,13 @@ MetaAtom* XmpParser::ParseAtom(DOMElement* element, MetaFolder* metaFolder)
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaAtom->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
 			{
 				std::string key, value;
 				XmpParser::ParseRegNode(currentElement, key, value);
@@ -737,12 +774,12 @@ MetaAtom* XmpParser::ParseAtom(DOMElement* element, MetaFolder* metaFolder)
 		}
 	}
 	// Set the attributes values
-	// ...
+	// TODO: Do something with attributes
 	return metaAtom;
 }
 
 
-MetaSet* XmpParser::ParseSet(DOMElement* element, MetaFolder* metaFolder)
+MetaSet* XmpParser::ParseSet(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO)
 {
 	// Create the set
 	MetaSet* metaSet = NULL;
@@ -750,12 +787,7 @@ MetaSet* XmpParser::ParseSet(DOMElement* element, MetaFolder* metaFolder)
 	ASSERT( result == S_OK && metaSet != NULL );
 	
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaSet->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaSet);
 	
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -764,11 +796,17 @@ MetaSet* XmpParser::ParseSet(DOMElement* element, MetaFolder* metaFolder)
 //	XMLString::release(&tmpChar);
 	
 	// Get the Attributes
-	xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string attributes = tmpChar;
 	XMLString::release(&tmpChar);
-	
+
+	// Get the AliasEnabled string
+	xmlch = element->getAttribute(XmpParser::ATTR_Aliasenabled);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string aliasEnabled = tmpChar;
+	XMLString::release(&tmpChar);
+
 	// Look one level nested
 	DOMNodeList* children = element->getChildNodes();
 	const XMLSize_t nodeCount = children->getLength();
@@ -781,7 +819,13 @@ MetaSet* XmpParser::ParseSet(DOMElement* element, MetaFolder* metaFolder)
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaSet->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
 			{
 				std::string key, value;
 				XmpParser::ParseRegNode(currentElement, key, value);
@@ -803,34 +847,48 @@ MetaSet* XmpParser::ParseSet(DOMElement* element, MetaFolder* metaFolder)
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_PointerSpec) )
 			{
-				MetaPointerSpec* metaPointerSpec = XmpParser::ParsePointerspec(currentElement, metaSet);
+				IMetaPointerSpec* iMetaPointerSpec = XmpParser::ParseIPointerspec(currentElement, metaSet);
 				// Look for possible errors
-				if (metaPointerSpec == NULL) return NULL;
+				if (iMetaPointerSpec == NULL) return NULL;
 			}
 		}
 	}
 	// Do something with the attributes
-	// ...
+	// TODO: Do something with attributes
 	// Return the happy set
 	return metaSet;
 }
 
 
-MetaPointerSpec* XmpParser::ParsePointerspec(DOMElement* element, MetaSet* metaSet)
+MetaPointerSpec* XmpParser::ParsePointerspec(DOMElement* element, MetaConnJoint* metaConnJoint)
 {
 	// Create the pointerSpec
 	MetaPointerSpec* metaPointerSpec = NULL;
-	Result_t result = metaSet->CreateMemberSpec(metaPointerSpec);
+	Result_t result = metaConnJoint->CreatePointerSpec(metaPointerSpec);
 	ASSERT( result == S_OK && metaPointerSpec != NULL );
 	
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
+	_XmpName(element, metaPointerSpec);
+
+	// Get the min
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Min);
 	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaPointerSpec->SetName(name);
-	ASSERT( result == S_OK );
+	std::string min = tmpChar;
 	XMLString::release(&tmpChar);
 
+	// Get the max
+	xmlch = element->getAttribute(XmpParser::ATTR_Max);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string max = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Now parse the pointerSpec
+	return (MetaPointerSpec*)XmpParser::ParseIPointerspec(element, metaPointerSpec);
+}
+
+
+IMetaPointerSpec* XmpParser::ParseIPointerspec(DOMElement* element, IMetaPointerSpec* iMetaPointerSpec)
+{
 	// Look one level nested
 	DOMNodeList* children = element->getChildNodes();
 	const XMLSize_t nodeCount = children->getLength();
@@ -845,18 +903,18 @@ MetaPointerSpec* XmpParser::ParsePointerspec(DOMElement* element, MetaSet* metaS
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
 			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_PointerItem) )
 			{
-				MetaPointerItem* metaPointerItem = XmpParser::ParsePointeritem(currentElement, metaPointerSpec);
+				MetaPointerItem* metaPointerItem = XmpParser::ParsePointeritem(currentElement, iMetaPointerSpec);
 				// Look for possible errors
 				if (metaPointerItem == NULL) return NULL;
 			}
 		}
 	}
 	// Return the happy metaPointerSpec
-	return metaPointerSpec;
+	return iMetaPointerSpec;
 }
 
 
-MetaPointerItem* XmpParser::ParsePointeritem(DOMElement* element, MetaPointerSpec* metaPointerSpec)
+MetaPointerItem* XmpParser::ParsePointeritem(DOMElement* element, IMetaPointerSpec* metaPointerSpec)
 {
 	// Create the pointerItem
 	MetaPointerItem* metaPointerItem = NULL;
@@ -876,20 +934,17 @@ MetaPointerItem* XmpParser::ParsePointeritem(DOMElement* element, MetaPointerSpe
 }
 
 
-MetaConnection* XmpParser::ParseConnection(DOMElement* element, MetaFolder* metaFolder)
+MetaConnection* XmpParser::ParseConnection(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel)
 {
 	// Create the MetaConnection
 	MetaConnection* metaConnection = NULL;
-	Result_t result = metaFolder->CreateConnection(metaConnection);
+	Result_t result;
+	if (metaFolder != NULL) result = metaFolder->CreateConnection(metaConnection);
+	else if (metaModel != NULL) result = metaModel->CreateConnection(metaConnection);
 	ASSERT( result == S_OK && metaConnection != NULL );
 	
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaConnection->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaConnection);
 
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -898,9 +953,15 @@ MetaConnection* XmpParser::ParseConnection(DOMElement* element, MetaFolder* meta
 //	XMLString::release(&tmpChar);
 
 	// Get the Attributes
-	xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string attributes = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the AliasEnabled string
+	xmlch = element->getAttribute(XmpParser::ATTR_Aliasenabled);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string aliasEnabled = tmpChar;
 	XMLString::release(&tmpChar);
 
 	// Look one level nested
@@ -915,7 +976,13 @@ MetaConnection* XmpParser::ParseConnection(DOMElement* element, MetaFolder* meta
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaConnection->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
 			{
 				std::string key, value;
 				XmpParser::ParseRegNode(currentElement, key, value);
@@ -944,7 +1011,7 @@ MetaConnection* XmpParser::ParseConnection(DOMElement* element, MetaFolder* meta
 		}
 	}
 	// Do something with the attributes
-	// ...
+	// TODO: Do something with the attributes
 	// Return the happy metaConnection
 	return metaConnection;
 }
@@ -971,8 +1038,7 @@ MetaConnJoint* XmpParser::ParseConnjoint(DOMElement* element, MetaConnection* me
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
 			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_PointerSpec) )
 			{
-				ASSERT(false);
-				MetaPointerSpec* metaPointerSpec = NULL;//XmpParser::ParsePointerspec(currentElement, metaConnJoint);
+				MetaPointerSpec* metaPointerSpec = XmpParser::ParsePointerspec(currentElement, metaConnJoint);
 				// Look for possible errors
 				if (metaPointerSpec == NULL) return NULL;
 			}
@@ -983,33 +1049,36 @@ MetaConnJoint* XmpParser::ParseConnjoint(DOMElement* element, MetaConnection* me
 }
 
 
-MetaReference* XmpParser::ParseReference(DOMElement* element, MetaFolder* metaFolder)
+MetaReference* XmpParser::ParseReference(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel)
 {
 	// Create the MetaReference
 	MetaReference* metaReference = NULL;
-	Result_t result = metaFolder->CreateReference(metaReference);
+	Result_t result;
+	if (metaFolder != NULL ) result = metaFolder->CreateReference(metaReference);
+	else if (metaModel != NULL ) result = metaModel->CreateReference(metaReference);
 	ASSERT( result == S_OK && metaReference != NULL );
-	
+
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaReference->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
-	
+	_XmpName(element, metaReference);
+
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
 //	tmpChar = XMLString::transcode(xmlch);
 //	std::string metaRefStr = tmpChar;
 //	XMLString::release(&tmpChar);
-	
+
 	// Get the Attributes
-	xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
-	tmpChar = XMLString::transcode(xmlch);
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	char* tmpChar = XMLString::transcode(xmlch);
 	std::string attributes = tmpChar;
 	XMLString::release(&tmpChar);
-	
+
+	// Get the AliasEnabled string
+	xmlch = element->getAttribute(XmpParser::ATTR_Aliasenabled);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string aliasEnabled = tmpChar;
+	XMLString::release(&tmpChar);
+
 	// Look one level nested
 	DOMNodeList* children = element->getChildNodes();
 	const XMLSize_t nodeCount = children->getLength();
@@ -1022,7 +1091,13 @@ MetaReference* XmpParser::ParseReference(DOMElement* element, MetaFolder* metaFo
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaReference->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
 			{
 				std::string key, value;
 				XmpParser::ParseRegNode(currentElement, key, value);
@@ -1038,10 +1113,9 @@ MetaReference* XmpParser::ParseReference(DOMElement* element, MetaFolder* metaFo
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_PointerSpec) )
 			{
-				ASSERT(false);
-				MetaPointerSpec* metaPointerSpec = NULL;//XmpParser::ParsePointerspec(currentElement, metaReference);
+				IMetaPointerSpec* iMetaPointerSpec = XmpParser::ParseIPointerspec(currentElement, metaReference);
 				// Look for possible errors
-				if (metaPointerSpec == NULL) return NULL;
+				if (iMetaPointerSpec == NULL) return NULL;
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_AttrDef) )
 			{
@@ -1052,33 +1126,42 @@ MetaReference* XmpParser::ParseReference(DOMElement* element, MetaFolder* metaFo
 		}
 	}
 	// Do something with the attributes
-	// ...
+	// TODO: Do something with attributes
 	// Return the happy metaConnection
 	return metaReference;
 }
 
 
-MetaModel* XmpParser::ParseModel(DOMElement* element, MetaFolder* metaFolder)
+MetaModel* XmpParser::ParseModel(DOMElement* element, MetaFolder* metaFolder, MetaModel* parentModel)
 {
 	// Create the MetaModel
 	MetaModel* metaModel = NULL;
-	Result_t result = metaFolder->CreateModel(metaModel);
+	Result_t result;
+	if (metaFolder != NULL) result = metaFolder->CreateModel(metaModel);
+	else if (parentModel != NULL) result = parentModel->CreateModel(metaModel);
 	ASSERT( result == S_OK && metaModel != NULL );
 	
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaModel->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
-	
+	_XmpName(element, metaModel);
+
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
 //	tmpChar = XMLString::transcode(xmlch);
 //	std::string metaRefStr = tmpChar;
 //	XMLString::release(&tmpChar);
-	
+
+	// Get the Attributes
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	char* tmpChar = XMLString::transcode(xmlch);
+	std::string attributes = tmpChar;
+	XMLString::release(&tmpChar);
+
+	// Get the AliasEnabled string
+	xmlch = element->getAttribute(XmpParser::ATTR_Aliasenabled);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string aliasEnabled = tmpChar;
+	XMLString::release(&tmpChar);
+
 	// Look one level nested
 	DOMNodeList* children = element->getChildNodes();
 	const XMLSize_t nodeCount = children->getLength();
@@ -1091,7 +1174,13 @@ MetaModel* XmpParser::ParseModel(DOMElement* element, MetaFolder* metaFolder)
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaModel->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
 			{
 				std::string key, value;
 				XmpParser::ParseRegNode(currentElement, key, value);
@@ -1099,18 +1188,53 @@ MetaModel* XmpParser::ParseModel(DOMElement* element, MetaFolder* metaFolder)
 				result = metaModel->SetRegistryValue(key, value);
 				ASSERT( result == S_OK );
 			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Constraint) )
+			{
+				MetaConstraint* metaConstraint = XmpParser::ParseConstraint(currentElement, metaModel);
+				// Look for possible errors
+				if (metaConstraint == NULL) return NULL;
+			}			
+			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_AttrDef) )
+			{
+				MetaAttribute* metaAttribute = XmpParser::ParseAttrdef(currentElement, NULL, metaModel);
+				// Look for possible errors
+				if (metaAttribute == NULL) return NULL;
+			}
+			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Atom) )
+			{
+				MetaAtom* metaAtom = XmpParser::ParseAtom(currentElement, NULL, metaModel);
+				// Look for possible errors
+				if (metaAtom == NULL) return NULL;
+			}
+			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Reference) )
+			{
+				MetaReference* metaReference = XmpParser::ParseReference(currentElement, NULL, metaModel);
+				// Look for possible errors
+				if (metaReference == NULL) return NULL;
+			}
+			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Set) )
+			{
+				MetaSet* metaSet = XmpParser::ParseSet(currentElement, NULL, metaModel);
+				// Look for possible errors
+				if (metaSet == NULL) return NULL;
+			}
+			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Connection) )
+			{
+				MetaConnection* metaConnection = XmpParser::ParseConnection(currentElement, NULL, metaModel);
+				// Look for possible errors
+				if (metaConnection == NULL) return NULL;
+			}
+			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Model) )
+			{
+				MetaModel* metaModel = XmpParser::ParseModel(currentElement, NULL, metaModel);
+				// Look for possible errors
+				if (metaModel == NULL) return NULL;
+			}
 			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Role) )
 			{
 				MetaRole* metaRole = XmpParser::ParseRole(currentElement, metaModel);
 				// Look for possible errors
 				if (metaRole == NULL) return NULL;
-			}
-			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_PointerSpec) )
-			{
-				ASSERT(false);
-				MetaPointerSpec* metaPointerSpec = NULL;//XmpParser::ParsePointerspec(currentElement, metaReference);
-				// Look for possible errors
-				if (metaPointerSpec == NULL) return NULL;
 			}
 			else if ( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Aspect) )
 			{
@@ -1120,6 +1244,8 @@ MetaModel* XmpParser::ParseModel(DOMElement* element, MetaFolder* metaFolder)
 			}
 		}
 	}
+	// Do something with the attributes
+	// TODO: Do something with attributes
 	// Return the happy object
 	return metaModel;
 }
@@ -1129,16 +1255,12 @@ MetaRole* XmpParser::ParseRole(DOMElement* element, MetaModel* metaModel)
 {
 	// Create the MetaRole
 	MetaRole* metaRole = NULL;
-	Result_t result = S_OK;//metaModel->CreateRole(metaRole);
+	MetaFCO* kind = NULL;
+	Result_t result = metaModel->CreateRole(kind, metaRole);
 	ASSERT( result == S_OK && metaRole != NULL );
 	
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaRole->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
+	_XmpName(element, metaRole);
 	
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
@@ -1147,11 +1269,42 @@ MetaRole* XmpParser::ParseRole(DOMElement* element, MetaModel* metaModel)
 //	XMLString::release(&tmpChar);
 
 	// Get the kind
-	xmlch = element->getAttribute(XmpParser::ATTR_Kind);
-	tmpChar = XMLString::transcode(xmlch);
-	std::string kind = tmpChar;
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Kind);
+	char* tmpChar = XMLString::transcode(xmlch);
+	std::string kindStr = tmpChar;
 	XMLString::release(&tmpChar);
 
+	// Set the kind and stuff
+	// TODO: Set the kind and stuff
+
+	// Look one level nested
+	DOMNodeList* children = element->getChildNodes();
+	const XMLSize_t nodeCount = children->getLength();
+	// For all nodes, children in the XML tree.
+	for(XMLSize_t i = 0; i < nodeCount; ++i)
+	{
+		DOMNode* currentNode = children->item(i);
+		if( currentNode->getNodeType() &&  // true is not NULL
+		   currentNode->getNodeType() == DOMNode::ELEMENT_NODE ) // is element
+		{
+			// Found node which is an Element. Re-cast node as element
+			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaRole->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			{
+				std::string key, value;
+				XmpParser::ParseRegNode(currentElement, key, value);
+				// Set the K-V pair in the object
+				result = metaRole->SetRegistryValue(key, value);
+				ASSERT( result == S_OK );
+			}
+		}
+	}
 	// Return the happy object
 	return metaRole;
 }
@@ -1163,21 +1316,22 @@ MetaAspect* XmpParser::ParseAspect(DOMElement* element, MetaModel* metaModel)
 	MetaAspect* metaAspect = NULL;
 	Result_t result = metaModel->CreateAspect(metaAspect);
 	ASSERT( result == S_OK && metaAspect != NULL );
-	
+
 	// Get the name
-	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Name);
-	char* tmpChar = XMLString::transcode(xmlch);
-	std::string name = tmpChar;
-	result = metaAspect->SetName(name);
-	ASSERT( result == S_OK );
-	XMLString::release(&tmpChar);
-	
+	_XmpName(element, metaAspect);
+
 	// Get the metaRef
 //	xmlch = element->getAttribute(XmpParser::ATTR_Metaref);
 //	tmpChar = XMLString::transcode(xmlch);
 //	std::string metaRefStr = tmpChar;
 //	XMLString::release(&tmpChar);
-	
+
+	// Get the Attributes
+	const XMLCh* xmlch = element->getAttribute(XmpParser::ATTR_Attributes);
+	char* tmpChar = XMLString::transcode(xmlch);
+	std::string attributes = tmpChar;
+	XMLString::release(&tmpChar);
+
 	// Look one level nested
 	DOMNodeList* children = element->getChildNodes();
 	const XMLSize_t nodeCount = children->getLength();
@@ -1190,7 +1344,21 @@ MetaAspect* XmpParser::ParseAspect(DOMElement* element, MetaModel* metaModel)
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
-			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Part) )
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_DispName) )
+			{
+				std::string dispName = XmpParser::ParseDispname(currentElement);
+				result = metaAspect->SetDisplayedName(dispName);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			{
+				std::string key, value;
+				XmpParser::ParseRegNode(currentElement, key, value);
+				// Set the K-V pair in the object
+				result = metaAspect->SetRegistryValue(key, value);
+				ASSERT( result == S_OK );
+			}
+			else if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_Part) )
 			{
 				MetaPart* metaPart = XmpParser::ParsePart(currentElement, metaAspect);
 				// Look for possible errors
@@ -1207,8 +1375,8 @@ MetaPart* XmpParser::ParsePart(DOMElement* element, MetaAspect* metaAspect)
 {
 	// Create the MetaPart
 	MetaPart* metaPart = NULL;
-	ASSERT(false);
-	Result_t result = NULL;//metaAspect->CreatePart(metaPart);
+	MetaRole* metaRole = NULL;
+	Result_t result = metaAspect->CreatePart(metaRole, metaPart);
 	ASSERT( result == S_OK && metaPart != NULL );
 	
 	// Get the metaRef
@@ -1223,17 +1391,48 @@ MetaPart* XmpParser::ParsePart(DOMElement* element, MetaAspect* metaAspect)
 	std::string role = tmpChar;
 	XMLString::release(&tmpChar);
 
-	// Get the role
+	// Get the primary
 	xmlch = element->getAttribute(XmpParser::ATTR_Primary);
 	tmpChar = XMLString::transcode(xmlch);
 	std::string primary = tmpChar;
 	XMLString::release(&tmpChar);
 
-	// Get the role
+	// Get the linked
 	xmlch = element->getAttribute(XmpParser::ATTR_Linked);
 	tmpChar = XMLString::transcode(xmlch);
 	std::string linked = tmpChar;
 	XMLString::release(&tmpChar);
+
+	// Get the kindaspect
+	xmlch = element->getAttribute(XmpParser::ATTR_Kindaspect);
+	tmpChar = XMLString::transcode(xmlch);
+	std::string kindaspect = tmpChar;
+	XMLString::release(&tmpChar);
+	
+	// Look one level nested
+	DOMNodeList* children = element->getChildNodes();
+	const XMLSize_t nodeCount = children->getLength();
+	// For all nodes, children in the XML tree.
+	for(XMLSize_t i = 0; i < nodeCount; ++i)
+	{
+		DOMNode* currentNode = children->item(i);
+		if( currentNode->getNodeType() &&  // true is not NULL
+		   currentNode->getNodeType() == DOMNode::ELEMENT_NODE ) // is element
+		{
+			// Found node which is an Element. Re-cast node as element
+			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
+			if( XMLString::equals(currentElement->getTagName(), XmpParser::TAG_RegNode) )
+			{
+				std::string key, value;
+				XmpParser::ParseRegNode(currentElement, key, value);
+				// Set the K-V pair in the object
+				result = metaPart->SetRegistryValue(key, value);
+				ASSERT( result == S_OK );
+			}
+		}
+	}
+	// Return the happy part
+	return metaPart;
 }
 
 
@@ -1260,6 +1459,7 @@ void XmpParser::CleanUp(void)
 	XMLString::release(&XmpParser::TAG_Part);
 	XMLString::release(&XmpParser::ATTR_Name);
 	XMLString::release(&XmpParser::ATTR_Uuid);
+	XMLString::release(&XmpParser::ATTR_Version);
 	XMLString::release(&XmpParser::ATTR_CDate);
 	XMLString::release(&XmpParser::ATTR_MDate);
 	XMLString::release(&XmpParser::ATTR_Metaref);
@@ -1270,6 +1470,7 @@ void XmpParser::CleanUp(void)
 	XMLString::release(&XmpParser::ATTR_Priority);
 	XMLString::release(&XmpParser::ATTR_Type);
 	XMLString::release(&XmpParser::ATTR_ValueType);
+	XMLString::release(&XmpParser::ATTR_Aliasenabled);
 	XMLString::release(&XmpParser::ATTR_DefValue);
 	XMLString::release(&XmpParser::ATTR_Value);
 	XMLString::release(&XmpParser::ATTR_Attributes);
@@ -1277,5 +1478,8 @@ void XmpParser::CleanUp(void)
 	XMLString::release(&XmpParser::ATTR_Kind);
 	XMLString::release(&XmpParser::ATTR_Primary);
 	XMLString::release(&XmpParser::ATTR_Linked);
+	XMLString::release(&XmpParser::ATTR_Min);
+	XMLString::release(&XmpParser::ATTR_Max);
+	XMLString::release(&XmpParser::ATTR_Kindaspect);
 }
 

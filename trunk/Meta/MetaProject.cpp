@@ -23,8 +23,7 @@ static std::string _CurrentTime(void)
 // --------------------------- Private MetaProject Methods --------------------------- //
 
 
-MetaProject::MetaProject(CoreProject* &coreProject) : _coreProject(coreProject),
-	_rootObject(), _namespace("")
+MetaProject::MetaProject(CoreProject* &coreProject) : _coreProject(coreProject), _rootObject()
 {
 	ASSERT( this->_coreProject != NULL );
 	// Setup the root object
@@ -385,72 +384,3 @@ const Result_t MetaProject::FindObject(const Uuid &uuid, MetaBase* &metaBase) th
 	return result;
 }
 
-/*
-void MetaProject::CreatePathItems(bstr_const_iterator i, bstr_const_iterator e, pathitems_type &pathitems)
-{
-	ASSERT( pathitems.empty() );
-
-	while( i != e && *(e-1) == L' ' )
-		--e;
-
-	while( i < e )
-	{
-		wchar_t *j = 0;
-		long metaref = wcstol(i, &j, 10);
-
-		if( i == j || j == 0 )
-			COMTHROW(E_INVALID_PATH);
-
-		metaobj_lookup_iterator k = metaobj_lookup.find(metaref);
-		if( k == metaobj_lookup.end() )
-			COMTHROW(E_INVALID_PATH);
-
-		pathitems.push_back(pathitem_type());
-		
-		COMTHROW( k->second->get_Name(PutOut(pathitems.back().continual_name)) );
-
-		CComObjPtr<IMgaMetaRole> role;
-		if( SUCCEEDED( ::QueryInterface(k->second, role)) )
-		{
-			CComObjPtr<IMgaMetaFCO> fco;
-			COMTHROW( role->get_Kind(PutOut(fco)) );
-			COMTHROW( fco->get_Name(PutOut(pathitems.back().terminal_name)) );
-		}
-		else
-		{
-			pathitems.back().terminal_name = pathitems.back().continual_name;
-		}
-
-		i = j;
-	}
-}
-
-void MetaProject::CreateJointPaths(BSTR paths, jointpaths_type &jointpaths)
-{
-	ASSERT( jointpaths.empty() );
-
-	bstr_const_iterator i = begin(paths);
-	bstr_const_iterator e = end(paths);
-	while( i != e )
-	{
-		i = std::find_if(i, e, std::bind2nd( std::not_equal_to<wchar_t>(), L' '));
-		if( i == e )
-			break;
-		
-		bstr_const_iterator j = std::find(i, e, L' ');
-		bstr_const_iterator k = std::find(j, e, L',');
-
-		jointpaths.push_back(jointpath_type());
-		CopyTo(i, j, jointpaths.back().ptrspec_name);
-
-		CreatePathItems(j, k, jointpaths.back().pathitems);
-
-		i = k;
-		if( i != e )
-		{
-			ASSERT( *i == L',' );
-			++i;
-		}
-	}
-}
-*/

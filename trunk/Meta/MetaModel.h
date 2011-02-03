@@ -50,7 +50,7 @@ public:
 	const Result_t CreateSet(MetaSet* &metaSet) throw();
 	const Result_t CreateConnection(MetaConnection* &metaConn) throw();
 	const Result_t CreateAspect(MetaAspect* &aspect) throw();
-	const Result_t CreateRole(const MetaFCO* &kind, MetaRole* &metaRole) throw();
+	const Result_t CreateRole(MetaFCO* &kind, MetaRole* &metaRole) throw();
 };
 
 

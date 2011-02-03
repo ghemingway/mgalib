@@ -27,11 +27,11 @@ protected:
 public:
 	virtual ~MetaFCO() { }
 
-	static const Result_t GetAttributeByName(MetaFCO* &metaFCO, const std::string &name, MetaAttribute* &metaAttribute) throw();
-	static const Result_t GetAttributeByRef(MetaFCO *metaFCO, const Uuid &uuid, MetaAttribute* &metaAttribute) throw();
-	static const Result_t GetDefinedAttributeByName(MetaFCO *metaFCO, const std::string &name, const bool &inscope, MetaAttribute* &metaAttribute) throw();
-	static const Result_t GetAliasingEnabled(MetaFCO *metaFCO, bool &value) throw();
-	static const Result_t SetAliasingEnabled(MetaFCO *metaFCO, const bool &value) throw();
+//	static const Result_t GetAttributeByName(MetaFCO* &metaFCO, const std::string &name, MetaAttribute* &metaAttribute) throw();
+//	static const Result_t GetAttributeByRef(MetaFCO *metaFCO, const Uuid &uuid, MetaAttribute* &metaAttribute) throw();
+//	static const Result_t GetDefinedAttributeByName(MetaFCO *metaFCO, const std::string &name, const bool &inscope, MetaAttribute* &metaAttribute) throw();
+//	static const Result_t GetAliasingEnabled(MetaFCO *metaFCO, bool &value) throw();
+//	static const Result_t SetAliasingEnabled(MetaFCO *metaFCO, const bool &value) throw();
 
 	virtual const Result_t GetDefinedIn(MetaBase* &metaBase) const throw();										//!<
 	virtual const Result_t GetDefinedAttributes(std::list<MetaAttribute*> &attribList) const throw();			//!<
@@ -43,7 +43,6 @@ public:
 	virtual const Result_t GetAttributeByRef(const Uuid &uuid, MetaAttribute* &attrib) const throw();			//!<
 	virtual const Result_t CreateAttribute(MetaAttribute* &metaAttribute) throw();								//!<
 	virtual const Result_t AddAttribute(MetaAttribute* &attrib) throw();										//!<
-	virtual const Result_t RemoveAttribute(MetaAttribute* &attrib) throw();										//!<
 	virtual const Result_t GetAliasingEnabled(bool &value) const throw();										//!<
 	virtual const Result_t SetAliasingEnabled(const bool &value) throw();										//!<
 };

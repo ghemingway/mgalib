@@ -7,8 +7,8 @@
 // --------------------------- MetaConstraint --------------------------- //
 
 
-MetaEnumItem::MetaEnumItem(CoreObject &coreObject, MetaProject* &metaProject) :
-_coreObject(coreObject), _metaProject(metaProject)
+MetaEnumItem::MetaEnumItem(CoreObject &coreObject, MetaProject* const &metaProject) :
+	_coreObject(coreObject), _metaProject(metaProject)
 {
 	ASSERT(coreObject != NULL);
 	ASSERT(metaProject != NULL);

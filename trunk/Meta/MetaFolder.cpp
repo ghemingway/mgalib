@@ -16,21 +16,21 @@
 const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
 {
 	// Use the MetaBase helper function to get a Folder from this pointer attribute
-	return this->ObjectFromAttribute(ATTRID_DEFFOLDER_PTR, folder);
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFFOLDER_PTR, folder);
 }
 
 
 const Result_t MetaFolder::GetChildFolders(std::list<MetaFolder*> &folderList) const throw()
 {
 	// Use the MetaBase helper function to get collection of child folders
-	return this->CollectionFromAttribute(ATTRID_DEFFOLDER_PTR, folderList);
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFFOLDER_PTR, folderList);
 }
 
 
 const Result_t MetaFolder::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {
 	// Use the MetaBase helper function to get collection of child FCOs
-	return this->CollectionFromAttribute(ATTRID_DEFFCO_PTR, fcoList);
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFFCO_PTR, fcoList);
 }
 
 
@@ -167,48 +167,48 @@ const Result_t MetaFolder::GetDefinedAttributeByName(const std::string &name, co
 const Result_t MetaFolder::CreateFolder(MetaFolder* &metaFolder) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAFOLDER, ATTRID_DEFFOLDER_PTR, metaFolder);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAFOLDER, ATTRID_DEFFOLDER_PTR, metaFolder);
 }
 
 
 const Result_t MetaFolder::CreateModel(MetaModel* &metaModel) throw()
 {
 	// Use the MetaBase helper function to create a new object
-	return this->CreateObject(METAID_METAMODEL, ATTRID_DEFFCO_PTR, metaModel);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAMODEL, ATTRID_DEFFCO_PTR, metaModel);
 }
 
 
 const Result_t MetaFolder::CreateAtom(MetaAtom* &metaAtom) throw()
 {
 	// Use the MetaBase helper function to create a new atom
-	return this->CreateObject(METAID_METAATOM, ATTRID_DEFFCO_PTR, metaAtom);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAATOM, ATTRID_DEFFCO_PTR, metaAtom);
 }
 
 
 const Result_t MetaFolder::CreateReference(MetaReference* &metaReference) throw()
 {
 	// Use the MetaBase helper function to create a new atom
-	return this->CreateObject(METAID_METAATOM, ATTRID_DEFFCO_PTR, metaReference);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAATOM, ATTRID_DEFFCO_PTR, metaReference);
 }
 
 
 const Result_t MetaFolder::CreateSet(MetaSet* &metaSet) throw()
 {
 	// Use the MetaBase helper function to create a new atom
-	return this->CreateObject(METAID_METASET, ATTRID_DEFFCO_PTR, metaSet);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METASET, ATTRID_DEFFCO_PTR, metaSet);
 }
 
 
 const Result_t MetaFolder::CreateConnection(MetaConnection* &metaConnection) throw()
 {
 	// Use the MetaBase helper function to create a new atom
-	return this->CreateObject(METAID_METACONNECTION, ATTRID_DEFFCO_PTR, metaConnection);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METACONNECTION, ATTRID_DEFFCO_PTR, metaConnection);
 }
 
 
 const Result_t MetaFolder::CreateAttribute(MetaAttribute* &metaAttribute) throw()
 {
 	// Use the MetaBase helper function to create a new attribute
-	return this->CreateObject(METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, metaAttribute);
+	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAATTRIBUTE, ATTRID_DEFATTR_PTR, metaAttribute);
 }
 

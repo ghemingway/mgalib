@@ -29,7 +29,6 @@ private:
 
 public:
 	virtual ~MetaConnection() { }
-//	static bool CheckPaths(CoreObject &coreObject, jointpaths_type jointPaths);
 	inline const Result_t IsSimple(bool &value)	const throw()	{ value = true; return S_OK; }
 
 	const Result_t GetJoints(std::list<MetaConnJoint*> &jointList) const throw();	//!<

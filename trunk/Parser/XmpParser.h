@@ -43,6 +43,7 @@ class MetaAttribute;
 class MetaSet;
 class MetaPointerItem;
 class MetaPointerSpec;
+class IMetaPointerSpec;
 class MetaConnection;
 class MetaConnJoint;
 class MetaReference;
@@ -61,7 +62,7 @@ class MetaPart;
 
 class XmpParser
 {
-private:
+public:
 	// Get XML strings ready
 	static XMLCh* TAG_Folder;
 	static XMLCh* TAG_Comment;
@@ -84,6 +85,7 @@ private:
 	static XMLCh* TAG_Part;
 	static XMLCh* ATTR_Name;
 	static XMLCh* ATTR_Uuid;
+	static XMLCh* ATTR_Version;
 	static XMLCh* ATTR_CDate;
 	static XMLCh* ATTR_MDate;
 	static XMLCh* ATTR_Metaref;
@@ -96,12 +98,17 @@ private:
 	static XMLCh* ATTR_ValueType;
 	static XMLCh* ATTR_DefValue;
 	static XMLCh* ATTR_Value;
+	static XMLCh* ATTR_Aliasenabled;
 	static XMLCh* ATTR_Attributes;
 	static XMLCh* ATTR_Desc;
 	static XMLCh* ATTR_Kind;
 	static XMLCh* ATTR_Primary;
 	static XMLCh* ATTR_Linked;
+	static XMLCh* ATTR_Min;
+	static XMLCh* ATTR_Max;
+	static XMLCh* ATTR_Kindaspect;
 
+private:
 	static MetaFolder* ParseFolder(DOMElement* element, MetaFolder* parentFolder);
 	static std::string ParseComment(DOMElement* element);
 	static std::string ParseAuthor(DOMElement* element);
@@ -110,14 +117,15 @@ private:
 	static MetaAttribute* ParseAttrdef(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
 	static void ParseRegNode(DOMElement* element, std::string &key, std::string &value);
 	static MetaEnumItem* ParseEnumitem(DOMElement* element, MetaAttribute* metaAttribute);
-	static MetaAtom* ParseAtom(DOMElement* element, MetaFolder* metaFolder);
-	static MetaSet* ParseSet(DOMElement* element, MetaFolder* metaFolder);
-	static MetaPointerSpec* ParsePointerspec(DOMElement* element, MetaSet* metaSet);
-	static MetaPointerItem* ParsePointeritem(DOMElement* element, MetaPointerSpec* metaPointerSpec);
-	static MetaConnection* ParseConnection(DOMElement* element, MetaFolder* metaFolder);
+	static MetaAtom* ParseAtom(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
+	static MetaSet* ParseSet(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
+	static MetaPointerSpec* ParsePointerspec(DOMElement* element, MetaConnJoint* metaConnJoint);
+	static IMetaPointerSpec* ParseIPointerspec(DOMElement* element, IMetaPointerSpec* iMetaPointerSpec);
+	static MetaPointerItem* ParsePointeritem(DOMElement* element, IMetaPointerSpec* metaPointerSpec);
+	static MetaConnection* ParseConnection(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel);
 	static MetaConnJoint* ParseConnjoint(DOMElement* element, MetaConnection* metaConnection);
-	static MetaReference* ParseReference(DOMElement* element, MetaFolder* metaFolder);
-	static MetaModel* ParseModel(DOMElement* element, MetaFolder* metaFolder);
+	static MetaReference* ParseReference(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel);
+	static MetaModel* ParseModel(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel);
 	static MetaRole* ParseRole(DOMElement* element, MetaModel* metaModel);
 	static MetaAspect* ParseAspect(DOMElement* element, MetaModel* metaModel);
 	static MetaPart* ParsePart(DOMElement* element, MetaAspect* metaAspect);

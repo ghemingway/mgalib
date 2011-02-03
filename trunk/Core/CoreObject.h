@@ -83,7 +83,7 @@ public:
 	}
 
 	template<class T>
-	const Result_t LoadedAttributeValue(const AttrID_t &attrID, const T &value) throw()
+	const Result_t LoadedAttributeValue(const AttrID_t &attrID, const T &value) const throw()
 	{
 		// Make sure we can find the desired attribute
 		std::map<AttrID_t,CoreAttributeBase*>::const_iterator mapIter = this->_attributeMap.find(attrID);
@@ -95,7 +95,7 @@ public:
 	}
 
 	template<class T>
-	const Result_t PreviousAttributeValue(const AttrID_t &attrID, const T &value) throw()
+	const Result_t PreviousAttributeValue(const AttrID_t &attrID, const T &value) const throw()
 	{
 		// Make sure we can find the desired attribute
 		std::map<AttrID_t,CoreAttributeBase*>::const_iterator mapIter = this->_attributeMap.find(attrID);
