@@ -107,23 +107,25 @@ public:
 	static XMLCh* ATTR_Min;
 	static XMLCh* ATTR_Max;
 	static XMLCh* ATTR_Kindaspect;
+	static XMLCh* ATTR_Viewable;
 
 private:
+	static std::map<std::string,std::string> metaRefMap;
 	static MetaFolder* ParseFolder(DOMElement* element, MetaFolder* parentFolder);
 	static std::string ParseComment(DOMElement* element);
 	static std::string ParseAuthor(DOMElement* element);
 	static MetaConstraint* ParseConstraint(DOMElement* element, MetaBase* metaBase);
-	static std::string ParseDispname(DOMElement* element);
-	static MetaAttribute* ParseAttrdef(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
+	static std::string ParseDisplayName(DOMElement* element);
+	static MetaAttribute* ParseAttribute(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
 	static void ParseRegNode(DOMElement* element, std::string &key, std::string &value);
-	static MetaEnumItem* ParseEnumitem(DOMElement* element, MetaAttribute* metaAttribute);
+	static MetaEnumItem* ParseEnumItem(DOMElement* element, MetaAttribute* metaAttribute);
 	static MetaAtom* ParseAtom(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
 	static MetaSet* ParseSet(DOMElement* element, MetaFolder* metaFolder, MetaFCO* metaFCO);
-	static MetaPointerSpec* ParsePointerspec(DOMElement* element, MetaConnJoint* metaConnJoint);
-	static IMetaPointerSpec* ParseIPointerspec(DOMElement* element, IMetaPointerSpec* iMetaPointerSpec);
-	static MetaPointerItem* ParsePointeritem(DOMElement* element, IMetaPointerSpec* metaPointerSpec);
+	static MetaPointerSpec* ParsePointerSpec(DOMElement* element, MetaConnJoint* metaConnJoint);
+	static IMetaPointerSpec* ParseIPointerSpec(DOMElement* element, IMetaPointerSpec* iMetaPointerSpec);
+	static MetaPointerItem* ParsePointerItem(DOMElement* element, IMetaPointerSpec* metaPointerSpec);
 	static MetaConnection* ParseConnection(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel);
-	static MetaConnJoint* ParseConnjoint(DOMElement* element, MetaConnection* metaConnection);
+	static MetaConnJoint* ParseConnJoint(DOMElement* element, MetaConnection* metaConnection);
 	static MetaReference* ParseReference(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel);
 	static MetaModel* ParseModel(DOMElement* element, MetaFolder* metaFolder, MetaModel* metaModel);
 	static MetaRole* ParseRole(DOMElement* element, MetaModel* metaModel);

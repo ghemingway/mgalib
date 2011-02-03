@@ -7,6 +7,14 @@
 // --------------------------- MetaPointerSpec --------------------------- //
 
 
+MetaPointerSpec::MetaPointerSpec(CoreObject &coreObject, MetaProject* const &metaProject) :
+	_coreObject(coreObject), _metaProject(metaProject)
+{
+	ASSERT(coreObject != NULL);
+	ASSERT(metaProject != NULL);
+}
+
+
 const Result_t MetaPointerSpec::GetParent(MetaBase* &parent) throw()
 {
 	// Use the MetaBase helper function to get an object from this pointer attribute

@@ -44,9 +44,10 @@ private:
 	MetaProject					*_metaProject;					//!< Contained in this metaProject
 
 	friend class MetaBase;
-	MetaConstraint(CoreObject &coreObject, MetaProject* &metaProject);
+	MetaConstraint(CoreObject &coreObject, MetaProject* const &metaProject);
 
 public:
+	inline const Result_t GetUuid(Uuid &uuid) const throw()	{ ASSERT( this->_coreObject != NULL ); return this->_coreObject->GetUuid(uuid); }
 	const Result_t GetParent(MetaBase* &metaBase) throw();					//!< Get the constraints parent MetaBase object
 	const Result_t GetName(std::string &name) const throw();				//!< Get name method
 	const Result_t SetName(const std::string &name) throw();				//!< Set name method
@@ -62,8 +63,6 @@ public:
 	const Result_t SetPriority(const int32_t &priority) throw();			//!< Set priority method
 	const Result_t GetType(ConstraintType &type) const throw();				//!< Get type method
 	const Result_t SetType(const ConstraintType &type) throw();				//!< Set type method
-	const Result_t GetDefinedForNamespace(std::string &value) const throw();//!< Get defined for namespace
-	const Result_t SetDefinedForNamespace(const std::string &value) throw();//!< Set defined for namespace
 };
 
 

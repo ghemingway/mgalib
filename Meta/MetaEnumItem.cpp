@@ -17,33 +17,8 @@ MetaEnumItem::MetaEnumItem(CoreObject &coreObject, MetaProject* const &metaProje
 
 const Result_t MetaEnumItem::GetParent(MetaAttribute* &metaAttribute) throw()
 {
-	Result_t result = this->_metaProject->BeginTransaction();
-	ASSERT( result == S_OK );
-	Uuid parentUuid = Uuid::Null();
-	result = this->_coreObject->GetAttributeValue(ATTRID_ENUMITEMS_COLL, parentUuid);
-	ASSERT( result == S_OK );
-	result = this->_metaProject->CommitTransaction();
-	ASSERT( result == S_OK );
-
-	// Is the Uuid valid
-	if (parentUuid == Uuid::Null()) metaAttribute = NULL;
-	// Convert this Uuid into a MetaAttribute
-	else
-	{
-		// Get the coreProject and coreObject for the parent metaAttribute
-		CoreProject *coreProject = NULL;
-		result = this->_coreObject->Project(coreProject);
-		ASSERT( result == S_OK );
-		ASSERT( coreProject != NULL );
-		CoreObject parentObject;
-		result = coreProject->Object(parentUuid, parentObject);
-		ASSERT( result == S_OK );
-		ASSERT( parentObject != NULL );
-		// Create the MetaAttribute with the coreObject and metaProject
-		metaAttribute = new MetaAttribute(parentObject, this->_metaProject);
-		ASSERT( metaAttribute != NULL );
-	}
-	return S_OK;
+	// Use the MetaBase helper function to get this pointer attribute
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ENUMITEMS_COLL, metaAttribute);
 }
 
 

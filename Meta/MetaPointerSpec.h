@@ -39,7 +39,7 @@ private:
 	MetaProject					*_metaProject;						//!< Contained in this metaProject
 
 	friend class MetaBase;
-	MetaPointerSpec(CoreObject &coreObject, MetaProject* &metaProject);
+	MetaPointerSpec(CoreObject &coreObject, MetaProject* const &metaProject);
 
 public:
 	const Result_t GetParent(MetaBase* &parent) throw();							//!<

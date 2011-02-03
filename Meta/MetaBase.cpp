@@ -136,6 +136,7 @@ const Result_t MetaBase::GetConstraints(std::list<MetaConstraint*> &constraintLi
 	return S_OK;
 }
 
+
 const Result_t MetaBase::CreateConstraint(MetaConstraint* &constraint) throw()
 {
 	// Get the associated coreProject

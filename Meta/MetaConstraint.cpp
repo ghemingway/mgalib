@@ -6,7 +6,7 @@
 // --------------------------- MetaConstraint --------------------------- //
 
 
-MetaConstraint::MetaConstraint(CoreObject &coreObject, MetaProject* &metaProject) :
+MetaConstraint::MetaConstraint(CoreObject &coreObject, MetaProject* const &metaProject) :
 	_coreObject(coreObject), _metaProject(metaProject)
 {
 	ASSERT(coreObject != NULL);
@@ -208,7 +208,7 @@ const Result_t MetaConstraint::SetType(const ConstraintType &type) throw()
 	return result;
 }
 
-
+/*
 const Result_t MetaConstraint::GetDefinedForNamespace(std::string &value) const throw()
 {
 	Result_t txResult = this->_metaProject->BeginTransaction();
@@ -229,4 +229,4 @@ const Result_t MetaConstraint::SetDefinedForNamespace(const std::string &value) 
 	ASSERT( txResult == S_OK );
 	return result;
 }
-
+*/
