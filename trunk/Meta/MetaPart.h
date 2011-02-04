@@ -25,7 +25,7 @@ private:
 	MetaPart(const MetaPart &);							//!< Deny access to copy constructor
 	MetaPart& operator=(const MetaPart &);				//!< Deny access to equals operator
 
-	friend class MetaBase;
+	friend class MetaAspect;
 	MetaPart(CoreObject &coreObject, MetaProject* const &metaProject) : ::MetaBase(coreObject, metaProject) { }
 
 public:
@@ -42,7 +42,6 @@ public:
 	const Result_t GetKindAspect(std::string &kind) const throw();			//!<
 	const Result_t SetKindAspect(const std::string &kind) throw();			//!<
 	const Result_t GetName(std::string &name) const throw();				//!<
-	const Result_t GetObjType(ObjType_t &objType) const throw();			//!<
 	const Result_t GetIsPrimary(bool &isPrimary) const throw();				//!<
 	const Result_t SetIsPrimary(const bool &isPrimary) throw();				//!<
 	const Result_t GetIsLinked(bool &isLinked) const throw();				//!<

@@ -4,7 +4,7 @@
 #include "MetaGeneric.h"
 
 
-// --------------------------- MetaSet --------------------------- //
+// --------------------------- Public MetaSet Methods --------------------------- //
 
 
 const Result_t MetaSet::GetItems(std::list<MetaPointerItem*> &pointerList) const throw()

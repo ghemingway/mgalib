@@ -2,6 +2,7 @@
 #include "MetaPart.h"
 #include "MetaGeneric.h"
 #include "MetaRole.h"
+#include "MetaAspect.h"
 
 
 /*** Locally Defined Values ***/
@@ -9,7 +10,7 @@
 #define METAPART_LINKED		0x0002
 
 
-// --------------------------- MetaPart --------------------------- //
+// --------------------------- Public MetaPart Methods --------------------------- //
 
 
 const Result_t MetaPart::GetRole(MetaRole* &metaRole) const throw()
@@ -56,14 +57,6 @@ const Result_t MetaPart::GetName(std::string &name) const throw()
 	result = role->GetName(name);
 	delete role;
 	return result;
-}
-
-
-const Result_t MetaPart::GetObjType(ObjType_t &objType) const throw()
-{
-	ASSERT(false);
-//	return ComGetObjType(GetUnknown(), p);
-	return S_OK;
 }
 
 

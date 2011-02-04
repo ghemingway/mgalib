@@ -4,7 +4,7 @@
 #include "MetaConnJoint.h"
 
 
-// --------------------------- MetaConnection --------------------------- //
+// --------------------------- Public MetaConnection Methods --------------------------- //
 
 
 const Result_t MetaConnection::GetJoints(std::list<MetaConnJoint*> &jointList) const throw()

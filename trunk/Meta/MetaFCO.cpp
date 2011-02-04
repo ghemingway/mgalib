@@ -4,7 +4,7 @@
 #include "MetaGeneric.h"
 
 
-// --------------------------- Static MetaFCO Methods --------------------------- //
+// --------------------------- Public MetaFCO Methods --------------------------- //
 
 
 const Result_t MetaFCO::GetDefinedIn(MetaBase* &metaBase) const throw()
@@ -74,7 +74,7 @@ const Result_t MetaFCO::GetAttributes(std::list<MetaAttribute*> &attribList) con
 const Result_t MetaFCO::GetAttributeByName(const std::string &name, MetaAttribute* &attrib) const throw()
 {
 	// Use the helper function to get the object from a collection by name
-	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_DEFATTR_PTR, name, attrib);
+	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_DEFATTR_PTR, ATTRID_NAME, name, attrib);
 }
 
 
@@ -92,11 +92,10 @@ const Result_t MetaFCO::CreateAttribute(MetaAttribute* &metaAttribute) throw()
 }
 
 
-const Result_t MetaFCO::AddAttribute(MetaAttribute* &attrib) throw()
+const Result_t MetaFCO::AddAttribute(MetaAttribute* &metaAttribute) throw()
 {
-	ASSERT(false);
-//	return ComAddLink(this, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to add a link between the attribute and the aspect
+	return MetaBase::AddLink(this->_coreObject, this->_metaProject, METAID_METAATTRLINK, ATTRID_ATTRLINK_USEDIN_PTR, ATTRID_ATTRLINK_ATTR_PTR, metaAttribute);
 }
 
 

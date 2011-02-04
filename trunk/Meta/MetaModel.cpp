@@ -7,10 +7,8 @@
 #include "MetaReference.h"
 #include "MetaSet.h"
 
-//#include "MetaPointerSpec.h"
 
-
-// --------------------------- MetaModel --------------------------- //
+// --------------------------- Public MetaModel Methods --------------------------- //
 
 
 const Result_t MetaModel::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
@@ -23,7 +21,6 @@ const Result_t MetaModel::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const thr
 
 const Result_t MetaModel::GetRoles(std::list<MetaRole*> &roleList) const throw()
 {
-	ASSERT(false);
 	// Use the MetaBase helper function to get collection of objects
 	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ROLES_COLL, roleList);
 }
@@ -31,7 +28,6 @@ const Result_t MetaModel::GetRoles(std::list<MetaRole*> &roleList) const throw()
 
 const Result_t MetaModel::GetAspects(std::list<MetaAspect*> &aspectList) const throw()
 {
-	ASSERT(false);
 	// Use the MetaBase helper function to get collection of objects
 	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_ASPECTS_COLL, aspectList);
 }
@@ -79,55 +75,15 @@ const Result_t MetaModel::GetDefinedFCOByName(const std::string &name, bool &inS
 
 const Result_t MetaModel::GetRoleByName(const std::string &name, MetaRole* &metaRole) const throw()
 {
-	ASSERT(false);
-/*
-	CCoreObjectPtr self(GetUnknown());
-	CComBstrObj_lightequal equal( GetUnknown());
-	coreobjects_type coreobjects;
-	self.GetCollectionValue(ATTRID_ROLES_COLL, coreobjects);
-	
-	coreobjects_iterator i = coreobjects.begin();
-	coreobjects_iterator e = coreobjects.end();
-	while( i != e )
-	{
-		CComBstrObj n;
-		(*i).GetStringValue(ATTRID_NAME, PutOut(n));
-		
-		if( equal(n, name))//if( n == name )
-			COMRETURN( ::QueryInterface(*i, p) );
-		
-		++i;
-	}
-	
-	COMRETURN(E_NOTFOUND);
-*/
-	return S_OK;
+	// Use the helper function to get the object from a collection by name
+	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_ROLES_COLL, ATTRID_NAME, name, metaRole);
 }
 
 
 const Result_t MetaModel::GetAspectByName(const std::string &name, MetaAspect* &metaAspect) const throw()
 {
-	ASSERT(false);
-/*
-	CCoreObjectPtr self(GetUnknown());
-	coreobjects_type coreobjects;
-	self.GetCollectionValue(ATTRID_ASPECTS_COLL, coreobjects);
-	coreobjects_iterator i = coreobjects.begin();
-	coreobjects_iterator e = coreobjects.end();
-	while( i != e )
-	{
-		CComBstrObj n;
-		(*i).GetStringValue(ATTRID_NAME, PutOut(n));
-		
-		if( n == name )
-			COMRETURN( ::QueryInterface(*i, p) );
-		
-		++i;
-	}
-	
-	COMRETURN(E_NOTFOUND);
-*/
-	return S_OK;
+	// Use the helper function to get the object from a collection by name
+	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_ASPECTS_COLL, ATTRID_NAME, name, metaAspect);
 }
 
 

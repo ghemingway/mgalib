@@ -2,9 +2,10 @@
 #include "MetaRole.h"
 #include "MetaPart.h"
 #include "MetaGeneric.h"
+#include "MetaModel.h"
 
 
-// --------------------------- MetaRole --------------------------- //
+// --------------------------- Public MetaRole Methods --------------------------- //
 
 
 const Result_t  MetaRole::GetParentModel(MetaModel* &metaModel) throw()

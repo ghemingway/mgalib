@@ -3,7 +3,7 @@
 #include "MetaGeneric.h"
 
 
-// --------------------------- MetaConstraint --------------------------- //
+// --------------------------- Public MetaConstraint Methods --------------------------- //
 
 
 MetaConstraint::MetaConstraint(CoreObject &coreObject, MetaProject* const &metaProject) :
@@ -16,33 +16,8 @@ MetaConstraint::MetaConstraint(CoreObject &coreObject, MetaProject* const &metaP
 
 const Result_t MetaConstraint::GetParent(MetaBase* &metaBase) throw()
 {
-	Result_t result = this->_metaProject->BeginTransaction();
-	ASSERT( result == S_OK );
-	Uuid parentUuid = Uuid::Null();
-	result = this->_coreObject->GetAttributeValue(ATTRID_CONSTRAINT_PTR, parentUuid);
-	ASSERT( result == S_OK );
-	result = this->_metaProject->CommitTransaction();
-	ASSERT( result == S_OK );
-	
-	// Is the Uuid valid
-	if (parentUuid == Uuid::Null()) metaBase = NULL;
-	// Convert this Uuid into a MetaBase
-	else
-	{
-		// Get the coreProject and coreObject for the parent metaAttribute
-		CoreProject *coreProject = NULL;
-		result = this->_coreObject->Project(coreProject);
-		ASSERT( result == S_OK );
-		ASSERT( coreProject != NULL );
-		CoreObject parentObject;
-		result = coreProject->Object(parentUuid, parentObject);
-		ASSERT( result == S_OK );
-		ASSERT( parentObject != NULL );
-		// Create the MetaBase with the coreObject and metaProject
-		metaBase = new MetaBase(parentObject, this->_metaProject);
-		ASSERT( metaBase != NULL );
-	}
-	return S_OK;
+	// Use the MetaBase helper function to get this pointer object
+	return MetaBase::ObjectFromAttribute(this->_coreObject, this->_metaProject, ATTRID_CONSTRAINT_PTR, metaBase);
 }
 
 
@@ -208,25 +183,3 @@ const Result_t MetaConstraint::SetType(const ConstraintType &type) throw()
 	return result;
 }
 
-/*
-const Result_t MetaConstraint::GetDefinedForNamespace(std::string &value) const throw()
-{
-	Result_t txResult = this->_metaProject->BeginTransaction();
-	ASSERT( txResult == S_OK );
-	Result_t result = this->_coreObject->GetAttributeValue(ATTRID_CONSNAMESPC, value);
-	txResult = this->_metaProject->CommitTransaction();
-	ASSERT( txResult == S_OK );
-	return result;
-}
-
-
-const Result_t MetaConstraint::SetDefinedForNamespace(const std::string &value) throw()
-{
-	Result_t txResult = this->_metaProject->BeginTransaction();
-	ASSERT( txResult == S_OK );
-	Result_t result = this->_coreObject->SetAttributeValue(ATTRID_CONSNAMESPC, value);
-	txResult = this->_metaProject->CommitTransaction();
-	ASSERT( txResult == S_OK );
-	return result;
-}
-*/

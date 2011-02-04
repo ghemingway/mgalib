@@ -10,7 +10,7 @@
 #include "MetaGeneric.h"
 
 
-// --------------------------- MetaFolder --------------------------- //
+// --------------------------- Public MetaFolder Methods --------------------------- //
 
 
 const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
@@ -22,23 +22,22 @@ const Result_t MetaFolder::GetDefinedIn(MetaFolder* &folder) const throw()
 
 const Result_t MetaFolder::GetChildFolders(std::list<MetaFolder*> &folderList) const throw()
 {
-	// Use the MetaBase helper function to get collection of child folders
+	// Use the MetaBase helper function to get collection of child objects
 	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFFOLDER_PTR, folderList);
 }
 
 
 const Result_t MetaFolder::GetDefinedFCOs(std::list<MetaFCO*> &fcoList) const throw()
 {
-	// Use the MetaBase helper function to get collection of child FCOs
+	// Use the MetaBase helper function to get collection of child objects
 	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFFCO_PTR, fcoList);
 }
 
 
 const Result_t MetaFolder::GetDefinedAttributes(std::list<MetaAttribute*> &attribList) const throw()
 {
-	ASSERT(false);
-//	return ComGetSortedCollValue<IMgaMetaAttribute>(GetUnknown(), ATTRID_DEFATTR_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get collection of child objects
+	return MetaBase::CollectionFromAttribute(this->_coreObject, this->_metaProject, ATTRID_DEFATTR_PTR, attribList);
 }
 
 
@@ -52,9 +51,8 @@ const Result_t MetaFolder::GetLegalChildFolders(std::list<MetaFolder*> &folderLi
 
 const Result_t MetaFolder::GetLegalChildFolderByName(const std::string &name, MetaFolder* &metaFolder) const throw()
 {
-	ASSERT(false);
-//	return ComGetLinkCollValueByName(name, GetUnknown(), ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get this pointer object by name
+	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_FOLDERLINK_PARENT_PTR, ATTRID_FOLDERLINK_CHILD_PTR, name, metaFolder);
 }
 
 
@@ -68,9 +66,8 @@ const Result_t MetaFolder::GetLegalRootObjects(std::list<MetaFCO*> &fcoList) con
 
 const Result_t MetaFolder::GetLegalRootObjectByName(const std::string &name, MetaFCO* &metaFCO) const throw()
 {
-	ASSERT(false);
-//	return ComGetLinkCollValueByName(name, GetUnknown(), ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, p);
-	return S_OK;
+	// Use the MetaBase helper function to get this pointer object by name
+	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_ROOTOBJLINK_FOLDER_PTR, ATTRID_ROOTOBJLINK_OBJECT_PTR, name, metaFCO);
 }
 
 
