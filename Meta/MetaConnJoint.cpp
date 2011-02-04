@@ -2,9 +2,10 @@
 #include "MetaConnJoint.h"
 #include "MetaPointerSpec.h"
 #include "MetaGeneric.h"
+#include "MetaConnection.h"
 
 
-// --------------------------- MetaConnJoint --------------------------- //
+// --------------------------- Public MetaConnJoint Methods --------------------------- //
 
 
 MetaConnJoint::MetaConnJoint(CoreObject &coreObject, MetaProject* const &metaProject) :
@@ -32,8 +33,7 @@ const Result_t MetaConnJoint::GetParent(MetaConnection* &parent) const throw()
 const Result_t MetaConnJoint::GetPointerSpecByName(const std::string &name, MetaPointerSpec* &pointerSpec) const throw()
 {
 	// Use the MetaBase helper function to get this pointer object by name
-//	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_PTRSPECS_COLL, ATTRID_PTRSPECNAME, pointerSpec);
-	return S_OK;
+	return MetaBase::ObjectFromCollectionByName(this->_coreObject, this->_metaProject, ATTRID_PTRSPECS_COLL, ATTRID_PTRSPECNAME, name, pointerSpec);
 }
 
 
@@ -41,6 +41,5 @@ const Result_t MetaConnJoint::CreatePointerSpec(MetaPointerSpec* &pointerSpec) t
 {
 	// Use the MetaBase helper function to create a new object
 	return MetaBase::CreateObject(this->_coreObject, this->_metaProject, METAID_METAPOINTERSPEC, ATTRID_PTRSPECS_COLL, pointerSpec);
-	return S_OK;
 }
 

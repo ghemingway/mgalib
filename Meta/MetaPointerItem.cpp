@@ -2,9 +2,10 @@
 #include "MetaPointerItem.h"
 #include "MetaBase.h"
 #include "MetaGeneric.h"
+#include "MetaPointerSpec.h"
 
 
-// --------------------------- MetaPointerItem
+// --------------------------- Public MetaPointerItem Methods --------------------------- //
 
 
 MetaPointerItem::MetaPointerItem(CoreObject &coreObject, MetaProject* const &metaProject) :

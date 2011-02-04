@@ -2,6 +2,7 @@
 #include "MetaAttribute.h"
 #include "MetaGeneric.h"
 #include "MetaEnumItem.h"
+#include "MetaFCO.h"
 
 
 // --------------------------- Public MetaAttribute Methods --------------------------- //

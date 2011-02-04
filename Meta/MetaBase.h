@@ -34,22 +34,38 @@ public:
 	template <class T>
 	static inline const Result_t ObjectFromAttribute(const CoreObject &coreObject, MetaProject* const &metaProject, const AttrID_t &attrID, T* &obj) throw()
 	{
-		Uuid uuid;
+		// Start us off with a transaction
+		Result_t txResult = metaProject->BeginTransaction();
+		ASSERT( txResult == S_OK );
+		Uuid uuid = Uuid::Null();
 		Result_t result = coreObject->GetAttributeValue(attrID, uuid);
-		if ( result != S_OK ) return result;
-		// Get a coreObject for the uuid
-		CoreProject* coreProject = NULL;
-		result = coreObject->Project(coreProject);
 		ASSERT( result == S_OK );
-		ASSERT( coreProject != NULL );
-		CoreObject newCoreObject;
-		result = coreProject->Object(uuid, newCoreObject);
-		ASSERT( result == S_OK );
-		ASSERT( newCoreObject != NULL );
-		// Create a new MetaBase object and cast to the correct type
-		obj = (T*)new MetaBase(newCoreObject, metaProject);
-		ASSERT(obj != NULL);
-		return S_OK;
+		// Is the Uuid valid
+		if (uuid == Uuid::Null())
+		{
+			obj = NULL;
+			result = E_NOTFOUND;
+		}
+		// Convert this Uuid into an object
+		else
+		{
+			// Get the coreProject and coreObject for the calling object
+			CoreProject *coreProject = NULL;
+			result = coreObject->Project(coreProject);
+			ASSERT( result == S_OK );
+			ASSERT( coreProject != NULL );
+			CoreObject newCoreObject;
+			result = coreProject->Object(uuid, newCoreObject);
+			ASSERT( result == S_OK );
+			ASSERT( newCoreObject != NULL );
+			// Create the object with the coreObject and metaProject
+			obj = new T(newCoreObject, metaProject);
+			ASSERT( obj != NULL );
+		}
+		// Close the transaction and be done
+		txResult = metaProject->CommitTransaction();
+		ASSERT( txResult == S_OK );
+		return result;
 	}
 
 	template <class T>
@@ -121,11 +137,12 @@ public:
 	}
 
 	template<class T>
-	const Result_t ObjectFromCollectionByName(const CoreObject &coreObject, MetaProject* const &metaProject, const AttrID_t &attrID, const std::string &name, T* &obj) const throw()
+	static inline const Result_t ObjectFromCollectionByName(const CoreObject &coreObject, MetaProject* const &metaProject, const AttrID_t &objAttrID, const AttrID_t &nameAttrID, const std::string &name, T* &obj) throw()
 	{
+		ASSERT(false);
 		// Use the helper function to get collection of objects
 		std::list<T*> objList;
-		Result_t result = MetaBase::CollectionFromAttribute(coreObject, metaProject, attrID, objList);
+		Result_t result = MetaBase::CollectionFromAttribute(coreObject, metaProject, objAttrID, objList);
 		ASSERT( result == S_OK );
 		// Iterate through the list to find the one with name
 		obj = NULL;
@@ -144,6 +161,19 @@ public:
 		}
 		// Did we find it
 		if (obj == NULL) return E_NOTFOUND;
+		return S_OK;
+	}
+
+	template<class T>
+	static inline const Result_t AddLink(const CoreObject &coreObject, MetaProject* const &metaProject, const MetaID_t &metaID, const AttrID_t &attrHere, const AttrID_t &attrThere, T* &obj) throw()
+	{
+		ASSERT(false);
+//		CCoreObjectPtr self(me);
+//		CCoreObjectPtr other(p);
+//		CCoreObjectPtr link;
+//		metaproject->CreateMetaObj(metaid, link);
+//		link.PutPointerValue(here, self);
+//		link.PutPointerValue(there, other);
 		return S_OK;
 	}
 

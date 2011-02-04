@@ -4,7 +4,7 @@
 #include "MetaAttribute.h"
 
 
-// --------------------------- MetaConstraint --------------------------- //
+// --------------------------- Public MetaConstraint Methods --------------------------- //
 
 
 MetaEnumItem::MetaEnumItem(CoreObject &coreObject, MetaProject* const &metaProject) :

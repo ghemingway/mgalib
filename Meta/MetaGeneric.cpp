@@ -196,7 +196,6 @@ const Result_t MGA::CreateMetaCoreMetaProject(CoreMetaProject* &metaProject)
 	CREATE_ATTRIBUTE(ATTRID_CONSDEPTH, "Depth", "Constraint Depth", ValueType::Long());
 	CREATE_ATTRIBUTE(ATTRID_CONSPRIORITY, "Priority", "Constraint Priority", ValueType::Long());
 	CREATE_ATTRIBUTE(ATTRID_CONSTYPE, "Type", "Constraint Type", ValueType::Long());
-	CREATE_ATTRIBUTE(ATTRID_CONSNAMESPC, "DesiredNamespace", "DesiredNamespace", ValueType::String());
 
 	return S_OK;
 }

@@ -4,7 +4,7 @@
 #include "MetaGeneric.h"
 
 
-// --------------------------- MetaPointerSpec --------------------------- //
+// --------------------------- Public MetaPointerSpec Methods --------------------------- //
 
 
 MetaPointerSpec::MetaPointerSpec(CoreObject &coreObject, MetaProject* const &metaProject) :
